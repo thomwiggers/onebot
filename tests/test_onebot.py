@@ -10,15 +10,15 @@ Tests for `onebot` module.
 
 import unittest
 
-from onebot import onebot
+from onebot import OneBot
 
 
 class TestOnebot(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.bot = OneBot(testing=True)
 
-    def test_something(self):
+    def test_init(self):
         pass
 
     def tearDown(self):
