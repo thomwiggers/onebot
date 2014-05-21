@@ -7,7 +7,6 @@ __version__ = '0.1.0'
 
 import irc3
 
-import logging
 
 class OneBot(irc3.IrcBot):
     """
