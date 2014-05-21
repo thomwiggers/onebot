@@ -9,10 +9,11 @@ python:
   - "3.4"
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -r requirements.txt
-  pip install flake8 coveralls coverage nose
+install: 
+  - pip install -r requirements.txt
+  - pip install flake8 coveralls coverage nose yanc
 
 # command to run tests, e.g. python setup.py test
-script: nosetests tests --with-coverage --cover-package=onebot
+script: nosetests tests --with-yanc --with-coverage --cover-package=onebot
 
 after_success: coveralls
