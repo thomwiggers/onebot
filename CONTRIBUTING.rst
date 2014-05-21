@@ -15,11 +15,14 @@ Report Bugs
 
 Report bugs at https://github.com/thomwiggers/onebot/issues.
 
-If you are reporting a bug, please include:
+If you are reporting a bug running an instance, please include:
 
 * Your operating system name and version.
+* Python version and versions of dependencies (`pip freeze` output)
 * Any details about your local setup that might be helpful in troubleshooting.
 * Detailed steps to reproduce the bug.
+
+If you are reporting a bug using an IRC plugin or command, include the output.
 
 Fix Bugs
 ~~~~~~~~
