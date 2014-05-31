@@ -42,4 +42,8 @@ setup(
     test_suite='tests',
     tests_require=[
     ],
+    entry_points='''
+    [console_scripts]
+    onebot = onebot:run
+    ''',
 )
