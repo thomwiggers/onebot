@@ -23,6 +23,7 @@ class OneBot(irc3.IrcBot):
         self.defaults['version'] = __version__
         super(OneBot, self).__init__(*args, **kwargs)
 
+
 def run(argv=None):
     """
     Run OneBot from a config file
@@ -44,9 +45,8 @@ def run(argv=None):
     args = docopt.docopt(textwrap.dedent(run.__doc__), argv)
     cfg = utils.parse_config(args['<config>'])
     cfg.update(
-            verbose=args['--verbose'],
-            debug=args['--debug'],
-    )
+        verbose=args['--verbose'],
+        debug=args['--debug'])
 
     pythonpath = cfg.get('pythonpath', [])
     pythonpath.append(cfg['here'])

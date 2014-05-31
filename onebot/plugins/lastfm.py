@@ -16,6 +16,7 @@ import datetime
 # TODO remove
 import json
 
+
 @irc3.plugin
 class LastfmPlugin(object):
     """
@@ -37,8 +38,8 @@ class LastfmPlugin(object):
                                self.config.get('cache_file'))
         except KeyError:
             raise Exception(
-                    "You need to set the Last.FM api_key and api_secret "
-                    "in the config section [{}]".format(__name__))
+                "You need to set the Last.FM api_key and api_secret "
+                "in the config section [{}]".format(__name__))
 
     @command
     def np(self, mask, target, args):
@@ -49,8 +50,10 @@ class LastfmPlugin(object):
         """
         user = args['<user>'] or mask.nick
         try:
-            result = self.app.user.get_recent_tracks(user,
-                    limit=1, extended=True)
+            result = self.app.user.get_recent_tracks(
+                user,
+                limit=1,
+                extended=True)
         except lastfm.exceptions.InvalidParameters as e:
             print(e)
         except Exception as e:
@@ -59,7 +62,7 @@ class LastfmPlugin(object):
         else:
             response = "{user}: ".format(user=user)
             print(result)
-            if not 'track' in result:
+            if 'track' not in result:
                 response += "found someone who never scrobbled before."
             else:
                 track = result['track']
