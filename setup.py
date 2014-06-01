@@ -11,9 +11,9 @@ import sys
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
-install_requires=['irc3','wheel']
+install_requires = ['irc3', 'wheel']
 
-if sys.version_info < (3,4):
+if sys.version_info < (3, 4):
     install_requires.append('trollius')
 
 setup(
