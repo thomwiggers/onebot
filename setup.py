@@ -6,8 +6,15 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import sys
+
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+
+install_requires=['irc3','wheel']
+
+if sys.version_info < (3,4):
+    install_requires.append('trollius')
 
 setup(
     name='onebot',
@@ -23,8 +30,7 @@ setup(
     package_dir={'onebot':
                  'onebot'},
     include_package_data=True,
-    install_requires=[
-    ],
+    install_requires=install_requires,
     license="BSD",
     zip_safe=False,
     keywords='onebot',
