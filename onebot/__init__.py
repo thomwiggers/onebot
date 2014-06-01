@@ -24,7 +24,7 @@ class OneBot(irc3.IrcBot):
         super(OneBot, self).__init__(*args, **kwargs)
 
 
-def run(argv=None):
+def run(argv=None):  # pragma: no cover
     """
     Run OneBot from a config file
 
