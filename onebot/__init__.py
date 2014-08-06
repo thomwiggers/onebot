@@ -33,6 +33,8 @@ def run(argv=None):  # pragma: no cover
     Options:
 
     --logdir DIRECTORY  Log directory to use instead of stderr
+    --logdate           Show datetimes in console output
+    -r,--raw            Show raw ric log on the console
     -v,--verbose        Increase verbosity
     -d,--debug          Add debug commands/utils
     """
