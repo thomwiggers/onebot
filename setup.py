@@ -13,7 +13,7 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 install_requires = ['irc3', 'wheel', 'lfmh']
-test_requires = ['pytest']
+test_requires = ['pytest>=2.6']
 
 if sys.version_info < (3, 4):
     install_requires.append('trollius')

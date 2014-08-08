@@ -24,16 +24,16 @@ In-channel::
     PRIVMSG #chan :foo: Fatal exception occurred. Aborting
 
 """
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals, print_function, absolute_import
 
 import datetime
 import logging
 import math
 
 import irc3
+import lastfm.exceptions
 from irc3.plugins.command import command
 from lastfm import lfm
-import lastfm.exceptions
 
 
 @irc3.plugin
