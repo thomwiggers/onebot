@@ -15,7 +15,7 @@ install:
 
 # command to run tests, e.g. python setup.py test
 script:
-  - coverage run --source=onebot python setup.py test
+  - coverage run --source=onebot setup.py test
   - make lint
 
 after_success: coveralls
