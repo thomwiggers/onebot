@@ -21,7 +21,7 @@ In-channel::
     >>> bot.test(':foo!m@h PRIVMSG #chan :!np')
     PRIVMSG #chan :foo: Fatal exception occurred. Aborting
     >>> bot.test(':bar!m@h PRIVMSG #chan :!np foo')
-    PRIVMSG #chan :foo: Fatal exception occurred. Aborting
+    PRIVMSG #chan :bar: Fatal exception occurred. Aborting
 
 """
 from __future__ import unicode_literals, print_function, absolute_import
