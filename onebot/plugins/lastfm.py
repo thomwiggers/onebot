@@ -1,17 +1,39 @@
+# -*- coding: utf8 -*-
 """
-Last.FM plugin for OneBot
+======================================================
+:mod:`onebot.plugins.lastfm` Last.FM plugin for OneBot
+======================================================
 
-Author: Thom Wiggers
+Usage::
+
+    >>> from irc3.testing import IrcBot
+    >>> bot = IrcBot(**{
+    ...     'onebot.plugins.lastfm': {'api_key': 'foo',
+    ...                               'api_secret': 'bar'},
+    ...     'cmd': '!'
+    ... })
+    >>> bot.include('onebot.plugins.lastfm')
+
+In-channel::
+
+    >>> # These examples will produce error messages since we don't have
+    >>> # a valid API key
+    >>> bot.test(':foo!m@h PRIVMSG #chan :!np')
+    PRIVMSG #chan :foo: Fatal exception occurred. Aborting
+    >>> bot.test(':bar!m@h PRIVMSG #chan :!np foo')
+    PRIVMSG #chan :foo: Fatal exception occurred. Aborting
+
 """
 from __future__ import unicode_literals, print_function
 
-import math
 import datetime
+import logging
+import math
 
 import irc3
-import lastfm.exceptions
 from irc3.plugins.command import command
 from lastfm import lfm
+import lastfm.exceptions
 
 
 @irc3.plugin
@@ -22,15 +44,20 @@ class LastfmPlugin(object):
     * compare users' lastfm accounts through the tasteometer.
     """
 
+    requires = [
+        'irc3.plugins.command'
+    ]
+
     def __init__(self, bot):
         """Initialise the plugin"""
         self.bot = bot
+        self.log = logging.getLogger(__name__)
         self.config = bot.config.get(__name__, {})
         try:
             self.app = lfm.App(self.config['api_key'],
                                self.config['api_secret'],
                                self.config.get('cache_file'))
-        except KeyError:
+        except KeyError:  # pragma: no cover
             raise Exception(
                 "You need to set the Last.FM api_key and api_secret "
                 "in the config section [{}]".format(__name__))
@@ -47,11 +74,16 @@ class LastfmPlugin(object):
                 user,
                 limit=1,
                 extended=True)
-        except lastfm.exceptions.InvalidParameters as e:
-            print(e)
-        except Exception as e:
-            self.bot.log.exception(e)
-            print("Random error")
+        except lastfm.exceptions.InvalidParameters:
+            self.log.exception("Exception when calling last.fm")
+            self.bot.privmsg(target,
+                             "{user}: Exception when calling last.fm"
+                             .format(user=user))
+        except Exception:
+            self.log.exception("Fatal exception when calling last.fm")
+            self.bot.privmsg(target,
+                             "{user}: Fatal exception occurred. "
+                             "Aborting".format(user=user))
         else:
             response = ["{user}".format(user=user)]
             if 'track' not in result:
@@ -109,6 +141,7 @@ class LastfmPlugin(object):
         return mask.nick
 
     def fetch_extra_trackinfo(self, username, info):
+        """Updates info with extra trackinfo from the last.fm API"""
         if 'mbid' in info:
             api_result = self.app.track.get_info(mbid=info['mbid'],
                                                  username=username)
@@ -117,26 +150,20 @@ class LastfmPlugin(object):
                                                  artist=info['artist'],
                                                  username=username)
 
-        result = {}
         if 'userplaycount' in api_result:
-            result['playcount'] = api_result['userplaycount']
+            info['playcount'] = api_result['userplaycount']
 
         if 'toptags' in api_result:
-            result['tags'] = [tag['name'] for tag in api_result['toptags']]
+            info['tags'] = [tag['name'] for tag in api_result['toptags']]
 
-        if 'userloved' in api_result:
-            result['loved'] = bool(int(api_result['userloved']))
-
-        return result
+        if 'userloved' in api_result and not info['loved']:
+            info['loved'] = bool(int(api_result['userloved']))
 
 
 def _parse_trackinfo(track):
     """Parses the track info into something more comprehensible
 
-    >>> dictionary = {'@attr':
-    ...         {'total': '34213', 'totalPages': '34213',
-    ...          'user': 'theguyofdoom', 'perPage': '1', 'page': '1'},
-    ...         'track': {
+    >>> dictionary = {
     ...             'artist': {
     ...                 'image':
     ...                 [{'#text':
@@ -175,15 +202,33 @@ def _parse_trackinfo(track):
     ...                      'uts': '1407332359'},
     ...             'streamable': '0',
     ...             'loved': '0',
-    ...             'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}}"
-    >>> _parse_trackinfo(dictionary)
-    {'artist': 'James Blake',
-     'album': 'Overgrown',
-     'loved': False,
-     'now playing': False,
-     'playtime': datetime.datetime(2014, 8, 6, 15, 39, 19),
-     'title': 'I am Sold',
-     'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
+    ...             'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
+    >>> a = _parse_trackinfo(dictionary)
+    >>> a['playtime'] == datetime.datetime(2014, 8, 6, 15, 39, 19)
+    True
+    >>> a == {
+    ... 'artist': 'James Blake',
+    ... 'album': 'Overgrown',
+    ... 'loved': False,
+    ... 'now playing': False,
+    ... 'playtime': datetime.datetime(2014, 8, 6, 15, 39, 19),
+    ... 'title': 'I Am Sold',
+    ... 'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
+    True
+    >>> dictionary['@attr'] = {'nowplaying': 'true'}
+    >>> a = _parse_trackinfo(dictionary)
+    >>> # Patch playtime to make it testable
+    >>> a['playtime'] = datetime.datetime(2014, 8, 6, 15, 39, 19)
+    >>> a == {
+    ... 'artist': 'James Blake',
+    ... 'album': 'Overgrown',
+    ... 'loved': False,
+    ... 'now playing': True,
+    ... 'playtime': datetime.datetime(2014, 8, 6, 15, 39, 19),
+    ... 'title': 'I Am Sold',
+    ... 'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
+    True
+
     """
     now_playing = False
     if '@attr' in track and 'nowplaying' in track['@attr']:

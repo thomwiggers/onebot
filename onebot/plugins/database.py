@@ -55,7 +55,8 @@ class DatabasePlugin(object):
         self.connection = sqlite3.connect(dbpath)
 
     def get_cursor(self):
-        """Return a database cursor to perform queries on
+        """Return a database cursor to perform queries on.
+
         ..
             >>> from irc3.testing import IrcBot
             >>> bot = IrcBot(database=':memory:')
@@ -72,6 +73,7 @@ class DatabasePlugin(object):
 
     def get_connection(self):
         """Return the database connection
+
         ..
             >>> from irc3.testing import IrcBot
             >>> bot = IrcBot(database=':memory:')
@@ -82,6 +84,7 @@ class DatabasePlugin(object):
 
             >>> db.get_connection()  # doctest: +ELLIPSIS
             <sqlite3.Connection object at 0x...>
+
         """
         return self.connection
 
