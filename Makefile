@@ -18,11 +18,14 @@ clean-build:
 	rm -fr build/
 	rm -fr dist/
 	rm -fr *.egg-info
+	rm -rf .tox
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -r {} +
+	rm -rf *.egg
 
 lint:
 	flake8 onebot tests
@@ -37,7 +40,7 @@ coverage:
 	coverage run --source onebot setup.py test
 	coverage report -m
 	coverage html
-	open htmlcov/index.html
+	xdg-open htmlcov/index.html
 
 docs:
 	rm -f docs/onebot.rst
@@ -45,7 +48,7 @@ docs:
 	sphinx-apidoc -o docs/ onebot
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
-	open docs/_build/html/index.html
+	xdg-open docs/_build/html/index.html
 
 release: clean
 	python setup.py sdist upload
