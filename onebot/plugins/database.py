@@ -27,6 +27,7 @@ INSERTing::
     >>> db.execute_and_commit_query("INSERT INTO people VALUES ('bob')")
     1
     >>> db.get_cursor().execute("SELECT * FROM people").fetchone() == ('bob',)
+    True
 """
 from __future__ import unicode_literals, print_function
 
@@ -134,6 +135,6 @@ class DatabasePlugin(object):
 
         Usage::
             >>> bot.get_database()  # doctest: +ELLIPSIS
-            <onebot.plugins.database.Database object at 0x...>
+            <onebot.plugins.database.DatabasePlugin object at 0x...>
         """
         return self
