@@ -206,27 +206,26 @@ def _parse_trackinfo(track):
     >>> a = _parse_trackinfo(dictionary)
     >>> a['playtime']  # doctest: +ELLIPSIS
     datetime.datetime(2014, 8, 6, ...)
+    >>> del a['playtime']
     >>> a == {
-    ... 'artist': 'James Blake',
-    ... 'album': 'Overgrown',
-    ... 'loved': False,
-    ... 'now playing': False,
-    ... 'playtime': datetime.datetime(2014, 8, 6, 15, 39, 19),
-    ... 'title': 'I Am Sold',
-    ... 'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
+    ...     'artist': 'James Blake',
+    ...     'album': 'Overgrown',
+    ...     'loved': False,
+    ...     'now playing': False,
+    ...     'title': 'I Am Sold',
+    ...     'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
     True
     >>> dictionary['@attr'] = {'nowplaying': 'true'}
     >>> a = _parse_trackinfo(dictionary)
     >>> # Patch playtime to make it testable
-    >>> a['playtime'] = datetime.datetime(2014, 8, 6, 15, 39, 19)
+    >>> del a['playtime']
     >>> a == {
-    ... 'artist': 'James Blake',
-    ... 'album': 'Overgrown',
-    ... 'loved': False,
-    ... 'now playing': True,
-    ... 'playtime': datetime.datetime(2014, 8, 6, 15, 39, 19),
-    ... 'title': 'I Am Sold',
-    ... 'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
+    ...     'artist': 'James Blake',
+    ...     'album': 'Overgrown',
+    ...     'loved': False,
+    ...     'now playing': True,
+    ...     'title': 'I Am Sold',
+    ...     'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
     True
 
     """
