@@ -2,6 +2,5 @@
 Usage
 ========
 
-To use OneBot in a project::
 
-	import onebot
+.. autofunction:: onebot.run

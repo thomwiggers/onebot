@@ -43,7 +43,7 @@ coverage:
 	xdg-open htmlcov/index.html
 
 docs:
-	rm -f docs/onebot.rst
+	rm -f docs/onebot*.rst
 	rm -f docs/modules.rst
 	sphinx-apidoc -o docs/ onebot
 	$(MAKE) -C docs clean
