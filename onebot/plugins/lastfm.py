@@ -68,10 +68,11 @@ class LastfmPlugin(object):
 
             %%np [<user>]
         """
-        user = args['<user>'] or self.get_lastfm_nick(mask)
+        lastfm_user = args['<user>'] or self.get_lastfm_nick(mask)
+        user = mask.nick
         try:
             result = self.app.user.get_recent_tracks(
-                user,
+                lastfm_user,
                 limit=1,
                 extended=True)
         except lastfm.exceptions.InvalidParameters:
@@ -79,22 +80,31 @@ class LastfmPlugin(object):
             self.bot.privmsg(target,
                              "{user}: Exception when calling last.fm"
                              .format(user=user))
-        except Exception:
+            return
+        except:
             self.log.exception("Fatal exception when calling last.fm")
             self.bot.privmsg(target,
                              "{user}: Fatal exception occurred. "
                              "Aborting".format(user=user))
+            return
         else:
             response = ["{user}".format(user=user)]
+
+            # Append 'on lastfm' to differentiate between !np lastfmnick and
+            # !np someone_else_in_channel. The latter we don't and won't do.
+            if args['<user>']:
+                response.append('({nick} on Last.FM)'.format(nick=lastfm_user))
+
+            # Empty result
             if 'track' not in result:
-                response.append("is someone who never scrobbled before.")
+                response.append("is someone who never scrobbled before")
             else:
                 track = result['track']
                 # The API might return a list. Strip it off.
                 if isinstance(track, list):
                     track = result['track'][0]
                 info = _parse_trackinfo(track)
-                info = self.fetch_extra_trackinfo(user, info)
+                self.fetch_extra_trackinfo(lastfm_user, info)
 
                 time_ago = datetime.datetime.now() - info['playtime']
                 if time_ago.days > 0 or time_ago.seconds > (20*60):
@@ -122,10 +132,15 @@ class LastfmPlugin(object):
                     title=info['title']))
 
                 if info['loved']:
-                    response.append(u'(♥)')
+                    response.append('(♥)')
+
+                if info.get('playcount', 0) > 0:
+                    if info['playcount'] == 1:
+                        response.append('(1 play)')
+                    else:
+                        response.append('({} plays)'.format(info['playcount']))
 
                 if not info['now playing']:
-
                     minutes = math.floor(time_ago.seconds / 60)
                     seconds = time_ago.seconds % 60
                     if minutes > 0:
@@ -154,7 +169,8 @@ class LastfmPlugin(object):
             info['playcount'] = api_result['userplaycount']
 
         if 'toptags' in api_result:
-            info['tags'] = [tag['name'] for tag in api_result['toptags']]
+            taglist = api_result['toptags']['tags']
+            info['tags'] = [tag['name'] for tag in taglist]
 
         if 'userloved' in api_result and not info['loved']:
             info['loved'] = bool(int(api_result['userloved']))
