@@ -10,4 +10,10 @@ Development Lead
 Contributors
 ------------
 
-None yet. Why not be the first?
+* Jim Rollenhagen <jim@jimrollenhagen.com>
+
+  * Feedback
+
+  * `Unit test refactor (PR #1)`_
+
+.. _Unit test refactor (PR #1): https://github.com/thomwiggers/onebot/pull/1
