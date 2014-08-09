@@ -53,12 +53,14 @@ class LastfmPluginTest(BotTestCase):
         'database': ':memory:'
     }
 
+    def setUp(self):
+        self.bot = self.callFTU()
+
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_never_played.json'))
     def test_no_user_found(self, mock):
-        bot = self.callFTU()
-        bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
+        self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
         mock.assert_called_with('bar', extended=True, limit=1)
         self.assertSent(['PRIVMSG #chan :bar is someone who never scrobbled '
                          'before.'])
@@ -67,15 +69,13 @@ class LastfmPluginTest(BotTestCase):
            side_effect=lastfm.exceptions.InvalidParameters('message'))
     def test_lastfm_error_invalid_params(self, mock):
         """InvalidParameters is raised e.g. when a user doesn't exist"""
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         self.assertSent(['PRIVMSG #chan :bar: Error: message'])
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            side_effect=lastfm.exceptions.OperationFailed('message'))
     def test_lastfm_error(self, mock):
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         self.assertSent(['PRIVMSG #chan :bar: Error: message'])
 
     @patch('lastfm.lfm.User.get_recent_tracks',
@@ -85,12 +85,10 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_result_now_playing(self, mock_a, mock_b):
-        bot = self.callFTU()
-
-        bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
                                   username='bar')
-        bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
                                   username='foo')
         self.assertSent(
@@ -101,11 +99,10 @@ class LastfmPluginTest(BotTestCase):
         )
 
     def test_get_lastfm_nick_from_database(self):
-        bot = self.callFTU()
-        bot.get_database().execute_and_commit_query(
+        self.bot.get_database().execute_and_commit_query(
             'INSERT INTO lastfm (lastfmuser, ident, host) VALUES (?, ?, ?)',
             'lastfmuser', 'ident', 'host')
-        lastfm = bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
+        lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
         assert lastfm.get_lastfm_nick(
             IrcString('nick!ident@host')) == 'lastfmuser'
 
@@ -116,8 +113,7 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_3_days_1_hour_ago(self, mock, mockb):
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #char :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
         self.assertSent(['PRIVMSG #char :bar is not currently playing '
                          'anything (last seen 3 days, 1 hour ago).'])
 
@@ -128,8 +124,7 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_3_days_2_hours_ago(self, mock, mockb):
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #char :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
         assert not mock.called, "Shouldn't call get_info if play not recent"
         self.assertSent(['PRIVMSG #char :bar is not currently playing '
                          'anything (last seen 3 days, 2 hours ago).'])
@@ -141,8 +136,7 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_3_days_1_minute_ago(self, mock, mockb):
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #char :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
         assert not mock.called, "Shouldn't call get_info if play not recent"
         self.assertSent(['PRIVMSG #char :bar is not currently playing '
                          'anything (last seen 3 days, 1 minute ago).'])
@@ -154,8 +148,7 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_3_days_2_minute_ago(self, mock, mockb):
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #char :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
         assert not mock.called, "Shouldn't call get_info if play not recent"
         self.assertSent(['PRIVMSG #char :bar is not currently playing '
                          'anything (last seen 3 days, 2 minutes ago).'])
@@ -167,8 +160,7 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_3_days_ago(self, mock, mockb):
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #char :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
         assert not mock.called, "Shouldn't call get_info if play not recent"
         self.assertSent(['PRIVMSG #char :bar is not currently playing '
                          'anything (last seen 3 days ago).'])
@@ -180,8 +172,7 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_1_day_ago(self, mock, mockb):
-        bot = self.callFTU()
-        bot.dispatch(':bar!id@host PRIVMSG #char :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
         assert not mock.called, "Shouldn't call get_info if play not recent"
         self.assertSent(['PRIVMSG #char :bar is not currently playing '
                          'anything (last seen 1 day ago).'])
