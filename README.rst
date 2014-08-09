@@ -2,16 +2,14 @@
 OneBot
 ===============================
 
-.. image:: https://badge.fury.io/py/onebot.png
-    :target: http://badge.fury.io/py/onebot
-    
-.. image:: https://travis-ci.org/thomwiggers/onebot.png?branch=master
+.. image:: https://travis-ci.org/thomwiggers/onebot.png?branch=develop
         :target: https://travis-ci.org/thomwiggers/onebot
 
+..
 .. image:: https://pypip.in/d/onebot/badge.png
         :target: https://pypi.python.org/pypi/onebot
 
-.. image:: https://coveralls.io/repos/thomwiggers/onebot/badge.png
+.. image:: https://coveralls.io/repos/thomwiggers/onebot/badge.png?branch=develop
         :target: https://coveralls.io/r/thomwiggers/onebot 
 
 OneBot is an ircbot based on irc3
@@ -22,4 +20,5 @@ OneBot is an ircbot based on irc3
 Features
 --------
 
-* TODO
+* Database plugin
+* Last.FM plugin
