@@ -75,6 +75,10 @@ class LastfmPlugin(object):
 
             %%np [<user>]
         """
+        self.bot.privmsg(target, self.now_playing_response(mask, target, args))
+
+    def now_playing_response(self, mask, target, args):
+        """Return appropriate response to np request"""
         lastfm_user = args['<user>'] or self.get_lastfm_nick(mask)
         user = mask.nick
         try:
@@ -85,15 +89,11 @@ class LastfmPlugin(object):
         except (lastfm.exceptions.InvalidParameters,
                 lastfm.exceptions.OperationFailed) as e:
             self.log.exception("Operation failed when fetching recent tracks")
-            self.bot.privmsg(target,
-                             "{user}: Error: {message}".format(user=user,
-                                                               message=e))
+            return "{user}: Error: {message}".format(user=user, message=e)
         except:
             self.log.exception("Fatal exception when calling last.fm")
-            self.bot.privmsg(target,
-                             "{user}: Fatal exception occurred. "
-                             "Aborting".format(user=user))
-            return
+            return "{user}: Fatal exception occurred. Aborting.".format(
+                user=user)
         else:
             response = ["{user}".format(user=user)]
 
@@ -112,14 +112,15 @@ class LastfmPlugin(object):
                     track = result['track'][0]
                 info = _parse_trackinfo(track)
 
+                self.log.error(datetime.datetime.utcnow())
+                self.log.error(info['playtime'])
                 time_ago = datetime.datetime.utcnow() - info['playtime']
                 if time_ago.days > 0 or time_ago.seconds > (20*60):
                     response.append('is not currently playing anything '
                                     '(last seen {time} ago).'.format(
                                         time=_time_ago(info['playtime'])))
 
-                    self.bot.privmsg(target, ' '.join(response))
-                    return
+                    return ' '.join(response)
 
                 self.fetch_extra_trackinfo(lastfm_user, info)
 
@@ -128,7 +129,7 @@ class LastfmPlugin(object):
                 else:
                     response.append('was just playing')
 
-                response.append(u'“{artist} – {title}”'.format(
+                response.append('“{artist} – {title}”'.format(
                     artist=info['artist'],
                     title=info['title']))
 
@@ -145,12 +146,12 @@ class LastfmPlugin(object):
                     minutes = math.floor(time_ago.seconds / 60)
                     seconds = time_ago.seconds % 60
                     if minutes > 0:
-                        response.append("({}m{}s ago)".format(minutes,
-                                                              seconds))
+                        response.append("({}m{:02}s ago)".format(minutes,
+                                                                 seconds))
                     else:
                         response.append("({}s ago)".format(seconds))
 
-            self.bot.privmsg(target, ' '.join(response) + '.')
+            return ' '.join(response) + '.'
 
     def get_lastfm_nick(self, mask):
         """Gets the last.fm nick associated with a user from the database
@@ -186,13 +187,13 @@ class LastfmPlugin(object):
                 api_result = self.app.track.get_info(track=info['title'],
                                                      artist=info['artist'],
                                                      username=username)
-        except lastfm.exceptions.InvalidParameters:  # pragma: no cover
+        except lastfm.exceptions.InvalidParameters:
             return
 
         if 'userplaycount' in api_result:
-            info['playcount'] = api_result['userplaycount']
+            info['playcount'] = int(api_result['userplaycount'])
 
-        if 'toptags' in api_result:
+        if 'toptags' in api_result and 'tag' in api_result['toptags']:
             taglist = api_result['toptags']['tag']
             info['tags'] = [tag['name'] for tag in taglist]
 

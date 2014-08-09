@@ -4,19 +4,26 @@ import calendar
 import datetime
 import json
 import os.path
+import unittest
 
 import lastfm.exceptions
+from freezegun import freeze_time
 from irc3.testing import BotTestCase, patch
 from irc3.utils import IrcString
+
+from onebot.plugins.lastfm import LastfmPlugin
 
 
 def _get_fixture(fixture_name):
     """Reads a fixture from a file"""
-    with open((os.path.dirname(__file__)
-               + '/fixtures/{}'.format(fixture_name)), 'r') as f:
+    with open(
+        os.path.join(
+            os.path.dirname(__file__),
+            'fixtures/{}'.format(fixture_name)), 'r') as f:
         return json.loads(f.read())
 
 
+@freeze_time("2014-01-01")
 def _get_patched_time_fixture(fixture_name, **kwargs):
     """Patches a fixture with a specified time difference
 
@@ -29,7 +36,7 @@ def _get_patched_time_fixture(fixture_name, **kwargs):
             seconds
     """
     fixture = _get_fixture(fixture_name)
-    date = datetime.datetime.utcnow()
+    date = datetime.datetime.utcnow().replace(microsecond=0)
     date -= datetime.timedelta(**kwargs)
     if not type(fixture['track']) == list:
         fixture['track']['date']['uts'] = str(
@@ -42,6 +49,7 @@ def _get_patched_time_fixture(fixture_name, **kwargs):
     return fixture
 
 
+@freeze_time("2014-01-01")
 class LastfmPluginTest(BotTestCase):
     """Test the LastFM plugin"""
 
@@ -54,7 +62,9 @@ class LastfmPluginTest(BotTestCase):
     }
 
     def setUp(self):
-        self.bot = self.callFTU()
+        super(LastfmPluginTest, self).setUp()
+        self.callFTU()
+        self.lastfm = LastfmPlugin(self.bot)
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
@@ -78,12 +88,25 @@ class LastfmPluginTest(BotTestCase):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         self.assertSent(['PRIVMSG #chan :bar: Error: message'])
 
+    @unittest.skip  # FIXME
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_now_playing_more_results.json'))
     @patch('lastfm.lfm.Track.get_info',
+           side_effect=lastfm.exceptions.InvalidParameters)
+    def test_lastfm_NP(self, mock_a, mock_b):
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!NP')
+        mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
+                                  username='bar')
+        self.assertSent(
+            ['PRIVMSG #chan :bar is now playing '
+             '“M83 – Skin of the Night”.'])
+
+    @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
-               'track_get_info_m83_graveyard_girl.json'))
+               'user_get_recent_tracks_now_playing_more_results.json'))
+    @patch('lastfm.lfm.Track.get_info',
+           side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_result_now_playing(self, mock_a, mock_b):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
@@ -95,8 +118,7 @@ class LastfmPluginTest(BotTestCase):
             ['PRIVMSG #chan :bar is now playing '
              '“M83 – Skin of the Night”.',
              'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
-             '“M83 – Skin of the Night”.']
-        )
+             '“M83 – Skin of the Night”.'])
 
     def test_get_lastfm_nick_from_database(self):
         self.bot.get_database().execute_and_commit_query(
@@ -110,36 +132,38 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, hours=1))
     @patch('lastfm.lfm.Track.get_info',
-           return_value=_get_fixture(
-               'track_get_info_m83_graveyard_girl.json'))
+           side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_1_hour_ago(self, mock, mockb):
-        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
-        self.assertSent(['PRIVMSG #char :bar is not currently playing '
-                         'anything (last seen 3 days, 1 hour ago).'])
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar is not currently playing '
+                                  'anything (last seen 3 days, 1 hour ago).')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, hours=2))
     @patch('lastfm.lfm.Track.get_info',
-           return_value=_get_fixture(
-               'track_get_info_m83_graveyard_girl.json'))
+           side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_2_hours_ago(self, mock, mockb):
-        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
-        assert not mock.called, "Shouldn't call get_info if play not recent"
-        self.assertSent(['PRIVMSG #char :bar is not currently playing '
-                         'anything (last seen 3 days, 2 hours ago).'])
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar is not currently playing '
+                                  'anything (last seen 3 days, 2 hours ago).')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, minutes=1))
     @patch('lastfm.lfm.Track.get_info',
-           return_value=_get_fixture(
-               'track_get_info_m83_graveyard_girl.json'))
+           side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_1_minute_ago(self, mock, mockb):
-        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar is not currently playing '
+                                  'anything (last seen 3 days, 1 minute ago).')
         assert not mock.called, "Shouldn't call get_info if play not recent"
-        self.assertSent(['PRIVMSG #char :bar is not currently playing '
-                         'anything (last seen 3 days, 1 minute ago).'])
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
@@ -148,33 +172,108 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_3_days_2_minute_ago(self, mock, mockb):
-        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
-        assert not mock.called, "Shouldn't call get_info if play not recent"
-        self.assertSent(['PRIVMSG #char :bar is not currently playing '
+        self.bot.dispatch(':bar!id@foo PRIVMSG #chan :!np')
+        self.assertSent(['PRIVMSG #chan :bar is not currently playing '
                          'anything (last seen 3 days, 2 minutes ago).'])
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar is not currently playing anything '
+                                  '(last seen 3 days, 2 minutes ago).')
+        assert not mock.called, "Shouldn't call get_info if play not recent"
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3))
     @patch('lastfm.lfm.Track.get_info',
-           return_value=_get_fixture(
-               'track_get_info_m83_graveyard_girl.json'))
+           side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_ago(self, mock, mockb):
-        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
-        assert not mock.called, "Shouldn't call get_info if play not recent"
-        self.assertSent(['PRIVMSG #char :bar is not currently playing '
-                         'anything (last seen 3 days ago).'])
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar is not currently playing anything '
+                                  '(last seen 3 days ago).')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=1))
     @patch('lastfm.lfm.Track.get_info',
+           side_effect=lastfm.exceptions.InvalidParameters)
+    def test_lastfm_played_1_day_ago(self, mock, mockb):
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar is not currently playing anything '
+                                  '(last seen 1 day ago).')
+        assert not mock.called, "Shouldn't call get_info if play not recent"
+
+    @patch('lastfm.lfm.User.get_recent_tracks',
+           return_value=_get_fixture(
+               'user_get_recent_tracks_loved_now_playing.json'))
+    @patch('lastfm.lfm.Track.get_info',
+           side_effect=lastfm.exceptions.InvalidParameters)
+    def test_lastfm_playing_loved(self, mocka, mockb):
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
+        self.assertSent(
+            ['PRIVMSG #chan :bar is now playing '
+             '“Etherwood – Weightless” (♥).',
+             'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
+             '“Etherwood – Weightless” (♥).'])
+
+    @patch('lastfm.lfm.User.get_recent_tracks',
+           return_value=_get_patched_time_fixture(
+               'user_get_recent_tracks_played.json', minutes=3))
+    @patch('lastfm.lfm.Track.get_info',
+           side_effect=lastfm.exceptions.InvalidParameters)
+    def test_lastfm_played_3_minutes_ago(self, mock, mockb):
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar was just playing '
+                                  '“M83 – Kim & Jessie” (3m00s ago).')
+
+    @patch('lastfm.lfm.User.get_recent_tracks',
+           return_value=_get_patched_time_fixture(
+               'user_get_recent_tracks_played_loved.json', minutes=3))
+    @patch('lastfm.lfm.Track.get_info',
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
-    def test_lastfm_played_1_day_ago(self, mock, mockb):
-        self.bot.dispatch(':bar!id@host PRIVMSG #char :!np')
-        assert not mock.called, "Shouldn't call get_info if play not recent"
-        self.assertSent(['PRIVMSG #char :bar is not currently playing '
-                         'anything (last seen 1 day ago).'])
+    def test_lastfm_played_loved_3_minutes_ago(self, mock, mockb):
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar was just playing '
+                                  '“M83 – Kim & Jessie” (♥) (3m00s ago).')
 
-    # TODO write tests for 'played X 3 minutes ago'
+    @patch('lastfm.lfm.User.get_recent_tracks',
+           return_value=_get_patched_time_fixture(
+               'user_get_recent_tracks_played_loved.json', minutes=3))
+    @patch('lastfm.lfm.Track.get_info',
+           return_value=_get_fixture(
+               'track_get_info_m83_midnight_city_not_loved_5_plays.json'))
+    def test_lastfm_played_loved_count(self, mock, mockb):
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar was just playing '
+                                  '“M83 – Kim & Jessie” (♥) '
+                                  '(5 plays) (3m00s ago).')
+
+    @patch('lastfm.lfm.User.get_recent_tracks',
+           return_value=_get_patched_time_fixture(
+               'user_get_recent_tracks_played.json', minutes=3))
+    @patch('lastfm.lfm.Track.get_info',
+           return_value=_get_fixture(
+               'track_get_info_etherwood_weightless_no_tags_loved.json'))
+    def test_lastfm_played_3_minutes_ago_loved_from_extra_info(
+            self, mock, mockb):
+        assert self.lastfm.now_playing_response(
+            IrcString('bar!id@host'),
+            '#chan',
+            {'<user>': None}) == ('bar was just playing '
+                                  '“M83 – Kim & Jessie” (♥) '
+                                  '(9 plays) (3m00s ago).')
+
+if __name__ == '__main__':
+    unittest.main()

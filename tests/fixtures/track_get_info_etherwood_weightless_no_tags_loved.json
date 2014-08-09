@@ -1,0 +1,48 @@
+{
+    "name": "Weightless",
+    "userplaycount": "9",
+    "url": "http:\\/\\/www.last.fm\\/music\\/Etherwood\\/_\\/Weightless",
+    "artist": {
+        "name": "Etherwood",
+        "url": "http:\\/\\/www.last.fm\\/music\\/Etherwood",
+        "mbid": "82812eab-f342-4bec-8a3d-756de2e00ca6"
+    },
+    "duration": "328000",
+    "mbid": "",
+    "playcount": "19548",
+    "streamable": {
+        "fulltrack": "0",
+        "#text": "0"
+    },
+    "toptags": "\n      ",
+    "userloved": "1",
+    "listeners": "4050",
+    "id": "682942300",
+    "album": {
+        "@attr": {
+            "position": "2"
+        },
+        "mbid": "a5fd4b30-fb23-4ce7-a36b-9fafe7e7b750",
+        "image": [
+            {
+                "#text": "http:\\/\\/userserve-ak.last.fm\\/serve\\/64s\\/94362491.png",
+                "size": "small"
+            },
+            {
+                "#text": "http:\\/\\/userserve-ak.last.fm\\/serve\\/126\\/94362491.png",
+                "size": "medium"
+            },
+            {
+                "#text": "http:\\/\\/userserve-ak.last.fm\\/serve\\/174s\\/94362491.png",
+                "size": "large"
+            },
+            {
+                "#text": "http:\\/\\/userserve-ak.last.fm\\/serve\\/300x300\\/94362491.png",
+                "size": "extralarge"
+            }
+        ],
+        "url": "http:\\/\\/www.last.fm\\/music\\/Etherwood\\/Etherwood",
+        "title": "Etherwood",
+        "artist": "Etherwood"
+    }
+}
