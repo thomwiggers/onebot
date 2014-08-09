@@ -15,15 +15,6 @@ Usage::
     ... })
     >>> bot.include('onebot.plugins.lastfm')
 
-In-channel::
-
-    >>> # These examples will produce error messages since we don't have
-    >>> # a valid API key
-    >>> bot.test(':foo!m@h PRIVMSG #chan :!np')
-    PRIVMSG #chan :foo: Fatal exception occurred. Aborting
-    >>> bot.test(':bar!m@h PRIVMSG #chan :!np foo')
-    PRIVMSG #chan :bar: Fatal exception occurred. Aborting
-
 """
 from __future__ import unicode_literals, print_function, absolute_import
 
