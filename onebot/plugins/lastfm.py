@@ -20,7 +20,6 @@ from __future__ import unicode_literals, print_function, absolute_import
 
 import datetime
 import logging
-import math
 
 import irc3
 import lastfm.exceptions
@@ -132,7 +131,7 @@ class LastfmPlugin(object):
                         response.append('({} plays)'.format(info['playcount']))
 
                 if not info['now playing']:
-                    minutes = math.floor(time_ago.seconds / 60)
+                    minutes = time_ago.seconds // 60
                     seconds = time_ago.seconds % 60
                     if minutes > 0:
                         response.append("({}m{:02}s ago)".format(minutes,
