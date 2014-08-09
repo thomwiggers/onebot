@@ -23,7 +23,7 @@ class OneBot(irc3.IrcBot):
         self.defaults['ctcp']['version'] = 'OneBot {version}'
         self.defaults['version'] = __version__
 
-        locale.setlocale(locale.LC_ALL, kwargs.get('locale', 'en_GB'))
+        locale.setlocale(locale.LC_ALL, kwargs.get('locale', 'en_US'))
 
         super(OneBot, self).__init__(*args, **kwargs)
 
