@@ -112,8 +112,6 @@ class LastfmPlugin(object):
                     track = result['track'][0]
                 info = _parse_trackinfo(track)
 
-                self.log.error(datetime.datetime.utcnow())
-                self.log.error(info['playtime'])
                 time_ago = datetime.datetime.utcnow() - info['playtime']
                 if time_ago.days > 0 or time_ago.seconds > (20*60):
                     response.append('is not currently playing anything '
