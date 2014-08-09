@@ -10,7 +10,8 @@ Usage::
     >>> bot = IrcBot(**{
     ...     'onebot.plugins.lastfm': {'api_key': 'foo',
     ...                               'api_secret': 'bar'},
-    ...     'cmd': '!'
+    ...     'cmd': '!',
+    ...     'database': ':memory:'
     ... })
     >>> bot.include('onebot.plugins.lastfm')
 
@@ -45,7 +46,8 @@ class LastfmPlugin(object):
     """
 
     requires = [
-        'irc3.plugins.command'
+        'irc3.plugins.command',
+        'onebot.plugins.database'
     ]
 
     def __init__(self, bot):
@@ -59,8 +61,13 @@ class LastfmPlugin(object):
                                self.config.get('cache_file'))
         except KeyError:  # pragma: no cover
             raise Exception(
-                "You need to set the Last.FM api_key and api_secret "
+                "You need to set the Last.FM api_key and api_scret "
                 "in the config section [{}]".format(__name__))
+
+        if not self.bot.get_database().fetchone(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+                "AND name=?", 'lastfm'):
+            self._init_database()
 
     @command
     def np(self, mask, target, args):
@@ -75,12 +82,12 @@ class LastfmPlugin(object):
                 lastfm_user,
                 limit=1,
                 extended=True)
-        except lastfm.exceptions.InvalidParameters:
-            self.log.exception("Exception when calling last.fm")
+        except (lastfm.exceptions.InvalidParameters,
+                lastfm.exceptions.OperationFailed) as e:
+            self.log.exception("Operation failed when fetching recent tracks")
             self.bot.privmsg(target,
-                             "{user}: Exception when calling last.fm"
-                             .format(user=user))
-            return
+                             "{user}: Error: {message}".format(user=user,
+                                                               message=e))
         except:
             self.log.exception("Fatal exception when calling last.fm")
             self.bot.privmsg(target,
@@ -104,23 +111,17 @@ class LastfmPlugin(object):
                 if isinstance(track, list):
                     track = result['track'][0]
                 info = _parse_trackinfo(track)
-                self.fetch_extra_trackinfo(lastfm_user, info)
 
-                time_ago = datetime.datetime.now() - info['playtime']
+                time_ago = datetime.datetime.utcnow() - info['playtime']
                 if time_ago.days > 0 or time_ago.seconds > (20*60):
-                    if time_ago.days > 0:
-                        timestr = "{days} days, {minutes} minutes".format(
-                            days=time_ago.days,
-                            minutes=math.floor(time_ago.seconds/60))
-                    else:
-                        timestr = "{minutes} minutes".format(
-                            minutes=math.floor(time_ago.seconds/60))
                     response.append('is not currently playing anything '
                                     '(last seen {time} ago).'.format(
-                                        time=timestr))
+                                        time=_time_ago(info['playtime'])))
 
                     self.bot.privmsg(target, ' '.join(response))
                     return
+
+                self.fetch_extra_trackinfo(lastfm_user, info)
 
                 if info['now playing']:
                     response.append('is now playing')
@@ -152,105 +153,88 @@ class LastfmPlugin(object):
             self.bot.privmsg(target, ' '.join(response) + '.')
 
     def get_lastfm_nick(self, mask):
-        """Gets the last.fm nick associated with a user"""
-        return mask.nick
+        """Gets the last.fm nick associated with a user from the database
+
+        TODO more reliably identify the user (nickserv account?)
+        """
+        QUERY = "SELECT lastfmuser FROM lastfm WHERE ident = ? AND host = ?"
+        (ident, host) = mask.host.split('@')
+        cursor = self.bot.get_database().get_cursor()
+        cursor.execute(QUERY, (ident, host))
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return mask.nick
+
+    def _init_database(self):
+        QUERY = ("CREATE TABLE lastfm ("
+                 "lastfmuser VARCHAR(50) NOT NULL,"
+                 "ident VARCHAR(40) NOT NULL,"
+                 "host VARCHAR(40) NOT NULL,"
+                 "PRIMARY KEY (ident, host))")
+
+        self.bot.get_database().execute_and_commit_query(QUERY)
 
     def fetch_extra_trackinfo(self, username, info):
         """Updates info with extra trackinfo from the last.fm API"""
-        if 'mbid' in info:
-            api_result = self.app.track.get_info(mbid=info['mbid'],
-                                                 username=username)
-        else:
-            api_result = self.app.track.get_info(track=info['title'],
-                                                 artist=info['artist'],
-                                                 username=username)
+        try:
+            if 'mbid' in info:
+                api_result = self.app.track.get_info(mbid=info['mbid'],
+                                                     username=username)
+            else:
+                api_result = self.app.track.get_info(track=info['title'],
+                                                     artist=info['artist'],
+                                                     username=username)
+        except lastfm.exceptions.InvalidParameters:  # pragma: no cover
+            return
 
         if 'userplaycount' in api_result:
             info['playcount'] = api_result['userplaycount']
 
         if 'toptags' in api_result:
-            taglist = api_result['toptags']['tags']
+            taglist = api_result['toptags']['tag']
             info['tags'] = [tag['name'] for tag in taglist]
 
         if 'userloved' in api_result and not info['loved']:
             info['loved'] = bool(int(api_result['userloved']))
 
 
+def _time_ago(time):
+    """Represent time past as a friendly string"""
+    time_ago = datetime.datetime.utcnow() - time
+    timestr = []
+    if time_ago.days > 1:
+        timestr.append("{} days".format(time_ago.days))
+    elif time_ago.days == 1:
+        timestr.append("1 day")
+
+    # hours
+    hours = time_ago.seconds//(60*60)
+    if hours > 1:
+        timestr.append("{} hours".format(hours))
+    elif hours == 1:
+        timestr.append("1 hour")
+
+    # minutes
+    minutes = time_ago.seconds % (60*60)//60
+    if minutes > 1:
+        timestr.append("{} minutes".format(minutes))
+    elif minutes == 1:
+        timestr.append("1 minute")
+
+    return ', '.join(timestr)
+
+
 def _parse_trackinfo(track):
-    """Parses the track info into something more comprehensible
-
-    >>> dictionary = {
-    ...             'artist': {
-    ...                 'image':
-    ...                 [{'#text':
-    ...                   'http://userserve-ak.last.fm/serve/34/89024929.png',
-    ...                   'size': 'small'},
-    ...                  {'#text':
-    ...                   'http://userserve-ak.last.fm/serve/64/89024929.png',
-    ...                   'size': 'medium'},
-    ...                  {'#text':
-    ...                   'http://userserve-ak.last.fm/serve/126/89024929.png',
-    ...                   'size': 'large'},
-    ...                  {'#text':
-    ...                   'http://userserve-ak.last.fm/serve/252/89024929.png',
-    ...                   'size': 'extralarge'}],
-    ...                 'mbid': '8dc08b1f-e393-4f85-a5dd-300f7693a8b8',
-    ...                 'url': 'James Blake', 'name': 'James Blake'},
-    ...             'album': {'mbid': '809bf04c-b498-46e8-8aab-3dceb37cc4a5',
-    ...                       '#text': 'Overgrown'},
-    ...             'url': 'http://www.last.fm/music/James+Blake/_/I+Am+Sold',
-    ...             'name': 'I Am Sold',
-    ...             'image': [{
-    ...                 '#text':
-    ...                 'http://userserve-ak.last.fm/serve/34s/88946193.png',
-    ...                 'size': 'small'},
-    ...                 {'#text':
-    ...                  'http://userserve-ak.last.fm/serve/64s/88946193.png',
-    ...                  'size': 'medium'},
-    ...                 {'#text':
-    ...                  'http://userserve-ak.last.fm/serve/126/88946193.png',
-    ...                  'size': 'large'},
-    ...                 {'#text':
-    ...                  ('http://userserve-ak.last.fm/serve/300x300/'
-    ...                  '88946193.png'),
-    ...                  'size': 'extralarge'}],
-    ...             'date': {'#text': '6 Aug 2014, 13:39',
-    ...                      'uts': '1407332359'},
-    ...             'streamable': '0',
-    ...             'loved': '0',
-    ...             'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
-    >>> a = _parse_trackinfo(dictionary)
-    >>> a['playtime']  # doctest: +ELLIPSIS
-    datetime.datetime(2014, 8, 6, ...)
-    >>> del a['playtime']
-    >>> a == {
-    ...     'artist': 'James Blake',
-    ...     'album': 'Overgrown',
-    ...     'loved': False,
-    ...     'now playing': False,
-    ...     'title': 'I Am Sold',
-    ...     'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
-    True
-    >>> dictionary['@attr'] = {'nowplaying': 'true'}
-    >>> a = _parse_trackinfo(dictionary)
-    >>> # Patch playtime to make it testable
-    >>> del a['playtime']
-    >>> a == {
-    ...     'artist': 'James Blake',
-    ...     'album': 'Overgrown',
-    ...     'loved': False,
-    ...     'now playing': True,
-    ...     'title': 'I Am Sold',
-    ...     'mbid': '65af6bac-56af-4744-aa8a-8f7a8605b2c1'}
-    True
-
-    """
+    """Parses the track info into something more comprehensible"""
     now_playing = False
     if '@attr' in track and 'nowplaying' in track['@attr']:
         now_playing = bool(track['@attr']['nowplaying'])
-        playtime = datetime.datetime.now()
+        playtime = datetime.datetime.utcnow()
     else:
-        playtime = datetime.datetime.fromtimestamp(int(track['date']['uts']))
+        playtime = datetime.datetime.utcfromtimestamp(
+            int(track['date']['uts']))
 
     loved = False
     if 'loved' in track:

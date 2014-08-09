@@ -107,7 +107,7 @@ class DatabasePlugin(object):
             >>> db.execute_and_commit_query("CREATE TABLE robots (name)")
             >>> # No result because there's no lastrowid
             >>> db.execute_and_commit_query("INSERT INTO robots "
-            ...                             "VALUES ('Marvin')")
+            ...                             "VALUES (?)", 'Marvin')
             1
 
         Returns the last row id when available (i.e. when query is
@@ -115,7 +115,7 @@ class DatabasePlugin(object):
         """
         self.log.debug("Executing query '%s' with arguments %s",
                        query, args)
-        cursor = self.connection.execute(query, *args)
+        cursor = self.connection.execute(query, args)
 
         # Return last row id when available
         # It's usually available on an insert query
@@ -123,6 +123,11 @@ class DatabasePlugin(object):
             return cursor.lastrowid
 
         self.connection.commit()
+
+    def fetchone(self, query, *args):
+        """Execute a query and return the fetchone() result"""
+        self.log.debug("executing query '%s' with args %s", query, args)
+        return self.connection.execute(query, args).fetchone()
 
     @irc3.extend
     def get_database(self):

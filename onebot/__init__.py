@@ -7,6 +7,7 @@ __author__ = 'Thom Wiggers'
 __email__ = 'thom@thomwiggers.nl'
 __version__ = '0.1.0'
 
+import locale
 import irc3
 
 
@@ -21,6 +22,9 @@ class OneBot(irc3.IrcBot):
         self.defaults['url'] = 'https://github.com/thomwiggers/OneBot/'
         self.defaults['ctcp']['version'] = 'OneBot {version}'
         self.defaults['version'] = __version__
+
+        locale.setlocale(locale.LC_ALL, kwargs.get('locale', 'en_GB'))
+
         super(OneBot, self).__init__(*args, **kwargs)
 
 
