@@ -16,9 +16,9 @@ Doing queries::
 
     >>> db = bot.get_database()
     >>> db.get_cursor()  # doctest: +ELLIPSIS
-    <sqlite3.Cursor object at 0x...>
+    <...sqlite3.Cursor object at 0x...>
     >>> db.get_connection()  # doctest: +ELLIPSIS
-    <sqlite3.Connection object at 0x...>
+    <...sqlite3.Connection object at 0x...>
     >>> db.execute_and_commit_query("CREATE TABLE people (name)")
 
 `execute_and_commit()` returns the new row id of the created row when
@@ -67,7 +67,7 @@ class DatabasePlugin(object):
         Usage::
 
             >>> db.get_cursor()  # doctest: +ELLIPSIS
-            <sqlite3.Cursor object at 0x...>
+            <...sqlite3.Cursor object at 0x...>
 
         """
         return self.connection.cursor()
@@ -83,7 +83,7 @@ class DatabasePlugin(object):
         Usage::
 
             >>> db.get_connection()  # doctest: +ELLIPSIS
-            <sqlite3.Connection object at 0x...>
+            <...sqlite3.Connection object at 0x...>
 
         """
         return self.connection
