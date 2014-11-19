@@ -56,6 +56,7 @@ class LastfmPluginTest(BotTestCase):
         'includes': ['onebot.plugins.lastfm'],
         'onebot.plugins.lastfm': {'api_key': '',
                                   'api_secret': ''},
+        'onebot.plugins.users': {'identified_by': 'mask'},
         'cmd': '!',
         'database': ':memory:'
     }
@@ -64,6 +65,7 @@ class LastfmPluginTest(BotTestCase):
         super(LastfmPluginTest, self).setUp()
         self.callFTU()
         self.lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
+        self.bot.dispatch(':bar!foo@host JOIN #chan')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
@@ -121,11 +123,12 @@ class LastfmPluginTest(BotTestCase):
 
     def test_get_lastfm_nick_from_database(self):
         self.bot.get_database().execute_and_commit_query(
-            'INSERT INTO lastfm (lastfmuser, host) VALUES (?, ?)',
+            'INSERT INTO lastfm (lastfmuser, userid) VALUES (?, ?)',
             'lastfmuser', 'ident@host')
+        self.bot.dispatch(':nick!ident@host JOIN #chan')
         lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
-        assert lastfm.get_lastfm_nick(
-            IrcString('nick!ident@host')) == 'lastfmuser'
+        mask = IrcString('nick!ident@host')
+        assert lastfm.get_lastfm_nick(mask) == 'lastfmuser'
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(

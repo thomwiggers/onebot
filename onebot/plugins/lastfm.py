@@ -37,7 +37,8 @@ class LastfmPlugin(object):
 
     requires = [
         'irc3.plugins.command',
-        'onebot.plugins.database'
+        'onebot.plugins.database',
+        'onebot.plugins.users'
     ]
 
     def __init__(self, bot):
@@ -143,12 +144,11 @@ class LastfmPlugin(object):
 
     def get_lastfm_nick(self, mask):
         """Gets the last.fm nick associated with a user from the database
-
-        TODO more reliably identify the user (nickserv account?)
         """
-        QUERY = "SELECT lastfmuser FROM lastfm WHERE host = ?"
+        QUERY = "SELECT lastfmuser FROM lastfm WHERE userid = ?"
         cursor = self.bot.get_database().get_cursor()
-        cursor.execute(QUERY, [mask.host])
+        userid = self.bot.get_user(mask.nick).getid()
+        cursor.execute(QUERY, [userid])
         result = cursor.fetchone()
         if result:
             return result[0]
@@ -158,8 +158,8 @@ class LastfmPlugin(object):
     def _init_database(self):
         QUERY = ("CREATE TABLE lastfm ("
                  "lastfmuser VARCHAR(50) NOT NULL,"
-                 "host VARCHAR(80) NOT NULL,"
-                 "PRIMARY KEY (host) )")
+                 "userid VARCHAR(80) NOT NULL,"
+                 "PRIMARY KEY (userid) )")
 
         self.bot.get_database().execute_and_commit_query(QUERY)
 

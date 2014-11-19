@@ -20,10 +20,11 @@ IDENTIFY_BY_NICKSERV = 'nickserv'
 class User(object):
     """User object"""
 
-    def __init__(self, mask, channels):
+    def __init__(self, mask, channels, id_):
         self.nick = mask.nick
         self.host = mask.host
         self.channels = set()
+        self._id = id_
         try:
             for c in iter(channels):
                 self.channels.add(c)
@@ -44,6 +45,9 @@ class User(object):
     def still_in_channels(self):
         return len(self.channels) > 0
 
+    def getid(self):
+        return self._id
+
     def __eq__(self, user):
         return self.nick == user.nick
 
@@ -60,7 +64,6 @@ class UsersPlugin(object):
         """Initialises the plugin"""
         self.bot = bot
         config = bot.config.get(__name__, {})
-        self.identifying_method = 'mask'
         self.identifying_method = config.get('identify_by', 'mask')
 
         self.connection_lost()
@@ -99,7 +102,7 @@ class UsersPlugin(object):
         self.channels.add(kwargs['channel'])
 
         if nick not in self.active_users:
-            self.active_users[nick] = User(mask, [channel])
+            self.active_users[nick] = self.create_user(mask, [channel])
 
         self.active_users[nick].join(channel)
 
@@ -139,9 +142,16 @@ class UsersPlugin(object):
         if nick not in self.active_users:
             mask = irc3.utils.IrcString('{}!{}@{}'.format(
                 nick, username, server))
-            self.active_users[nick] = User(mask, [channel])
+            self.active_users[nick] = self.create_user(mask, [channel])
         else:
             self.active_users[nick].join(channel)
 
     def _init_database(self):
         """Make sure we have a database to write users to"""
+
+    def create_user(self, mask, channels):
+        """Return a User object"""
+        if self.identifying_method == 'mask':
+            return User(mask, channels, mask.host)
+        else:  # pragma: no cover
+            raise ValueError("A valid identifying method should be configured")
