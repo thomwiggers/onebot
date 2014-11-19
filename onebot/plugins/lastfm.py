@@ -146,10 +146,9 @@ class LastfmPlugin(object):
 
         TODO more reliably identify the user (nickserv account?)
         """
-        QUERY = "SELECT lastfmuser FROM lastfm WHERE ident = ? AND host = ?"
-        (ident, host) = mask.host.split('@')
+        QUERY = "SELECT lastfmuser FROM lastfm WHERE host = ?"
         cursor = self.bot.get_database().get_cursor()
-        cursor.execute(QUERY, (ident, host))
+        cursor.execute(QUERY, [mask.host])
         result = cursor.fetchone()
         if result:
             return result[0]
@@ -159,9 +158,8 @@ class LastfmPlugin(object):
     def _init_database(self):
         QUERY = ("CREATE TABLE lastfm ("
                  "lastfmuser VARCHAR(50) NOT NULL,"
-                 "ident VARCHAR(40) NOT NULL,"
-                 "host VARCHAR(40) NOT NULL,"
-                 "PRIMARY KEY (ident, host))")
+                 "host VARCHAR(80) NOT NULL,"
+                 "PRIMARY KEY (host) )")
 
         self.bot.get_database().execute_and_commit_query(QUERY)
 

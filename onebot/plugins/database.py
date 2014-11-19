@@ -74,7 +74,6 @@ class DatabasePlugin(object):
 
     def get_connection(self):
         """Return the database connection
-
         ..
             >>> from irc3.testing import IrcBot
             >>> bot = IrcBot(database=':memory:')
@@ -136,7 +135,6 @@ class DatabasePlugin(object):
             >>> from irc3.testing import IrcBot
             >>> bot = IrcBot(database=':memory:')
             >>> bot.include('onebot.plugins.database')
-            >>> db = bot.get_database()
 
         Usage::
             >>> bot.get_database()  # doctest: +ELLIPSIS

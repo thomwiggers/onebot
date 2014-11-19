@@ -12,8 +12,6 @@ from freezegun import freeze_time
 from irc3.testing import BotTestCase, patch
 from irc3.utils import IrcString
 
-from onebot.plugins.lastfm import LastfmPlugin
-
 
 def _get_fixture(fixture_name):
     """Reads a fixture from a file"""
@@ -65,7 +63,7 @@ class LastfmPluginTest(BotTestCase):
     def setUp(self):
         super(LastfmPluginTest, self).setUp()
         self.callFTU()
-        self.lastfm = LastfmPlugin(self.bot)
+        self.lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
@@ -123,8 +121,8 @@ class LastfmPluginTest(BotTestCase):
 
     def test_get_lastfm_nick_from_database(self):
         self.bot.get_database().execute_and_commit_query(
-            'INSERT INTO lastfm (lastfmuser, ident, host) VALUES (?, ?, ?)',
-            'lastfmuser', 'ident', 'host')
+            'INSERT INTO lastfm (lastfmuser, host) VALUES (?, ?)',
+            'lastfmuser', 'ident@host')
         lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
         assert lastfm.get_lastfm_nick(
             IrcString('nick!ident@host')) == 'lastfmuser'
