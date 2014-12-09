@@ -1,5 +1,5 @@
 # -*- coding: utf8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import calendar
 import datetime
@@ -8,8 +8,9 @@ import os.path
 import unittest
 
 import lastfm.exceptions
+import mongomock
 from freezegun import freeze_time
-from irc3.testing import BotTestCase, patch
+from irc3.testing import BotTestCase, patch, MagicMock
 from irc3.utils import IrcString
 
 
@@ -49,6 +50,7 @@ def _get_patched_time_fixture(fixture_name, **kwargs):
 
 
 @freeze_time("2014-01-01")
+@patch('onebot.plugins.users.UsersPlugin', new=MagicMock())
 class LastfmPluginTest(BotTestCase):
     """Test the LastFM plugin"""
 
@@ -58,20 +60,21 @@ class LastfmPluginTest(BotTestCase):
                                   'api_secret': ''},
         'onebot.plugins.users': {'identified_by': 'mask'},
         'cmd': '!',
-        'database': ':memory:'
     }
 
-    def setUp(self):
+    @patch('onebot.plugins.database.DatabasePlugin', spec=True)
+    def setUp(self, mock):
         super(LastfmPluginTest, self).setUp()
         self.callFTU()
         self.lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
-        self.bot.dispatch(':bar!foo@host JOIN #chan')
+        self.lastfm.get_lastfm_nick = MagicMock(return_value='bar')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_never_played.json'))
     def test_no_user_found(self, mock):
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
+        assert self.lastfm.get_lastfm_nick.called
         mock.assert_called_with('bar', extended=True, limit=1)
         self.assertSent(['PRIVMSG #chan :bar is someone who never scrobbled '
                          'before.'])
@@ -89,13 +92,13 @@ class LastfmPluginTest(BotTestCase):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         self.assertSent(['PRIVMSG #chan :bar: Error: message'])
 
-    @unittest.skip  # FIXME
+    @unittest.skip("FIXME")  # FIXME
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_now_playing_more_results.json'))
     @patch('lastfm.lfm.Track.get_info',
            side_effect=lastfm.exceptions.InvalidParameters)
-    def test_lastfm_NP(self, mock_a, mock_b):
+    def test_lastfm_np_caps(self, mock_a, mock_b):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!NP')
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
                                   username='bar')
@@ -112,6 +115,7 @@ class LastfmPluginTest(BotTestCase):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
                                   username='bar')
+        self.lastfm.get_lastfm_nick.reset_mock()
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
                                   username='foo')
@@ -121,14 +125,18 @@ class LastfmPluginTest(BotTestCase):
              'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
              '“M83 – Skin of the Night”.'])
 
+    @patch('pymongo.MongoClient', new=mongomock.Connection)
     def test_get_lastfm_nick_from_database(self):
-        self.bot.get_database().execute_and_commit_query(
-            'INSERT INTO lastfm (lastfmuser, userid) VALUES (?, ?)',
-            'lastfmuser', 'ident@host')
-        self.bot.dispatch(':nick!ident@host JOIN #chan')
+        mock2 = MagicMock(name='mock2')
+        mock2.getid.return_value = 'ident@host'
+        mock_user = MagicMock(name='woo', return_value=mock2)
+        self.callFTU()
+        self.bot.get_user = mock_user
+        self.bot.get_database().users.insert({'lastfmuser': 'lastfmuser',
+                                              'userid': 'ident@host'})
         lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
         mask = IrcString('nick!ident@host')
-        assert lastfm.get_lastfm_nick(mask) == 'lastfmuser'
+        assert str(lastfm.get_lastfm_nick(mask)) == 'lastfmuser'
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(

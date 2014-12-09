@@ -13,9 +13,6 @@ from __future__ import unicode_literals, print_function
 
 import irc3
 
-IDENTIFY_BY_MASK = 'mask'
-IDENTIFY_BY_NICKSERV = 'nickserv'
-
 
 class User(object):
     """User object"""
@@ -145,9 +142,6 @@ class UsersPlugin(object):
             self.active_users[nick] = self.create_user(mask, [channel])
         else:
             self.active_users[nick].join(channel)
-
-    def _init_database(self):
-        """Make sure we have a database to write users to"""
 
     def create_user(self, mask, channels):
         """Return a User object"""

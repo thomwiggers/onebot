@@ -12,7 +12,7 @@ from __future__ import unicode_literals
 import pytest
 import unittest
 
-from irc3.testing import BotTestCase
+from irc3.testing import BotTestCase, patch
 
 
 class UsersPluginTest(BotTestCase):
@@ -20,11 +20,11 @@ class UsersPluginTest(BotTestCase):
     config = {
         'includes': ['onebot.plugins.users'],
         'cmd': '!',
-        'database': ':memory:'
     }
 
-    def setUp(self):
-        self.bot = self.callFTU()
+    @patch('pymongo.MongoClient')
+    def setUp(self, mock):
+        self.callFTU()
         self.users = self.bot.get_plugin('onebot.plugins.users.UsersPlugin')
 
     def test_join(self):

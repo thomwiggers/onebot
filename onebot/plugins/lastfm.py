@@ -6,14 +6,15 @@
 
 Usage::
 
-    >>> from irc3.testing import IrcBot
+    >>> from irc3.testing import IrcBot, patch
     >>> bot = IrcBot(**{
     ...     'onebot.plugins.lastfm': {'api_key': 'foo',
     ...                               'api_secret': 'bar'},
     ...     'cmd': '!',
     ...     'database': ':memory:'
     ... })
-    >>> bot.include('onebot.plugins.lastfm')
+    >>> with patch('pymongo.MongoClient'):
+    ...     bot.include('onebot.plugins.lastfm')
 
 """
 from __future__ import unicode_literals, print_function, absolute_import
@@ -54,11 +55,6 @@ class LastfmPlugin(object):
             raise Exception(
                 "You need to set the Last.FM api_key and api_scret "
                 "in the config section [{}]".format(__name__))
-
-        if not self.bot.get_database().fetchone(
-            "SELECT name FROM sqlite_master WHERE type='table' "
-                "AND name=?", 'lastfm'):
-            self._init_database()
 
     @command
     def np(self, mask, target, args):
@@ -145,23 +141,13 @@ class LastfmPlugin(object):
     def get_lastfm_nick(self, mask):
         """Gets the last.fm nick associated with a user from the database
         """
-        QUERY = "SELECT lastfmuser FROM lastfm WHERE userid = ?"
-        cursor = self.bot.get_database().get_cursor()
         userid = self.bot.get_user(mask.nick).getid()
-        cursor.execute(QUERY, [userid])
-        result = cursor.fetchone()
+        result = self.bot.get_database().users.find_one(
+            {'userid': userid})
         if result:
-            return result[0]
+            return result.get('lastfmuser', mask.nick)
         else:
             return mask.nick
-
-    def _init_database(self):
-        QUERY = ("CREATE TABLE lastfm ("
-                 "lastfmuser VARCHAR(50) NOT NULL,"
-                 "userid VARCHAR(80) NOT NULL,"
-                 "PRIMARY KEY (userid) )")
-
-        self.bot.get_database().execute_and_commit_query(QUERY)
 
     def fetch_extra_trackinfo(self, username, info):
         """Updates info with extra trackinfo from the last.fm API"""
