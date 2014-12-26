@@ -125,18 +125,19 @@ class LastfmPluginTest(BotTestCase):
              'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
              '“M83 – Skin of the Night”.'])
 
+    # Mock client because otherwise database will connect.
     @patch('pymongo.MongoClient', new=mongomock.Connection)
     def test_get_lastfm_nick_from_database(self):
-        mock2 = MagicMock(name='mock2')
-        mock2.getid.return_value = 'ident@host'
-        mock_user = MagicMock(name='woo', return_value=mock2)
+        # mock get_setting
+        mock2 = MagicMock(name='MockUser')
+        mock2.get_setting.return_value = 'lastfmuser'
+        # we need to have a mock return the mocked user with get_setting
+        mock_user = MagicMock(name='MockGetUser', return_value=mock2)
         self.callFTU()
         self.bot.get_user = mock_user
-        self.bot.get_database().users.insert({'lastfmuser': 'lastfmuser',
-                                              'userid': 'ident@host'})
         lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
         mask = IrcString('nick!ident@host')
-        assert str(lastfm.get_lastfm_nick(mask)) == 'lastfmuser'
+        assert lastfm.get_lastfm_nick(mask) == 'lastfmuser'
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(

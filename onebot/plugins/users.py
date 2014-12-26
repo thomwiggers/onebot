@@ -17,11 +17,12 @@ import irc3
 class User(object):
     """User object"""
 
-    def __init__(self, mask, channels, id_):
+    def __init__(self, mask, channels, id_, database=None):
         self.nick = mask.nick
         self.host = mask.host
         self.channels = set()
         self._id = id_
+        self.database = database
         try:
             for c in iter(channels):
                 self.channels.add(c)
@@ -32,6 +33,16 @@ class User(object):
     @property
     def mask(self):
         return irc3.utils.IrcString('{}!{}'.format(self.nick, self.host))
+
+    def get_settings(self):
+        return self.database.users.find_one({'id': self._id})
+
+    def get_setting(self, setting, default=None):
+        document = self.get_settings()
+        if document is not None:
+            return document.get(setting, default)
+        else:
+            return default
 
     def join(self, channel):
         self.channels.add(channel)
@@ -146,6 +157,6 @@ class UsersPlugin(object):
     def create_user(self, mask, channels):
         """Return a User object"""
         if self.identifying_method == 'mask':
-            return User(mask, channels, mask.host)
+            return User(mask, channels, mask.host, self.bot.get_database())
         else:  # pragma: no cover
             raise ValueError("A valid identifying method should be configured")

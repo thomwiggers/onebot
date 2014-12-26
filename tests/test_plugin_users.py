@@ -12,7 +12,10 @@ from __future__ import unicode_literals
 import pytest
 import unittest
 
-from irc3.testing import BotTestCase, patch
+from irc3.testing import BotTestCase, patch, MagicMock
+from irc3.utils import IrcString
+
+from onebot.plugins.users import User
 
 
 class UsersPluginTest(BotTestCase):
@@ -89,6 +92,46 @@ class UsersPluginTest(BotTestCase):
         assert user.nick == 'bar'
         assert user.host == '~user@serv'
         assert user.channels == set(('#chan',))
+
+
+class UserObjectTest(unittest.TestCase):
+
+    def setUp(self):
+        mask = IrcString('nick!user@host')
+        self.user = User(mask, ['#foo'], mask.host)
+
+    def test_init(self):
+        assert self.user.nick == 'nick'
+        assert self.user.host == 'user@host'
+        assert self.user.mask == IrcString('nick!user@host')
+        assert self.user.getid() == 'user@host'
+
+    def test_still_in_channels(self):
+        assert self.user.still_in_channels()
+        self.user.part('#foo')
+        assert not self.user.still_in_channels()
+
+    def test_join_part(self):
+        self.user.channels = set(['#foo'])
+        self.user.join('#foo')
+        assert self.user.channels == set(['#foo'])
+        self.user.join('#bar')
+        assert self.user.channels == set(['#foo', '#bar'])
+        self.user.part('#foo')
+        assert self.user.channels == set(['#bar'])
+        self.user.part('#bar')
+        assert self.user.channels == set()
+
+    @patch('onebot.plugins.database.DatabasePlugin.get_database')
+    def test_get_settings(self, mock):
+        mock.users = MagicMock()
+        mock.users.find_one.return_value = {'setting': 'hi'}
+        self.user.database = mock
+        assert self.user.get_settings() == {'setting': 'hi'}
+        assert self.user.get_setting('foo') is None
+        assert self.user.get_setting('foo', 'default') == 'default'
+        assert self.user.get_setting('setting') == 'hi'
+        assert self.user.get_setting('setting', 'default') == 'hi'
 
 
 if __name__ == '__main__':

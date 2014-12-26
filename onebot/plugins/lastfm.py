@@ -141,13 +141,7 @@ class LastfmPlugin(object):
     def get_lastfm_nick(self, mask):
         """Gets the last.fm nick associated with a user from the database
         """
-        userid = self.bot.get_user(mask.nick).getid()
-        result = self.bot.get_database().users.find_one(
-            {'userid': userid})
-        if result:
-            return result.get('lastfmuser', mask.nick)
-        else:
-            return mask.nick
+        return self.bot.get_user(mask.nick).get_setting('lastfmuser', mask.nick)
 
     def fetch_extra_trackinfo(self, username, info):
         """Updates info with extra trackinfo from the last.fm API"""
