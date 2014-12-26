@@ -24,6 +24,8 @@ class User(object):
         self._id = id_
         self.database = database
         try:
+            if isinstance(channels, str):
+                raise ValueError("You must specify a list of channels!")
             for c in iter(channels):
                 self.channels.add(c)
         except TypeError:
@@ -122,15 +124,15 @@ class UsersPlugin(object):
             del self.active_users[nick]
 
     def part(self, nick, mask, **kwargs):
-        if nick not in self.active_users:
-            return
-
         if nick == self.bot.nick:
-            for (n, user) in self.active_users.items():
+            for (n, user) in self.active_users.copy().items():
                 user.part(kwargs['channel'])
-                if not user.still_in_channels:
+                if not user.still_in_channels():
                     del self.active_users[n]
                 self.channels.remove(kwargs['channel'])
+
+        if nick not in self.active_users:
+            return
 
         self.active_users[nick].part(kwargs['channel'])
         if not self.active_users[nick].still_in_channels():
