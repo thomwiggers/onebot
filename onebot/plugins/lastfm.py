@@ -75,9 +75,16 @@ class LastfmPlugin(object):
                 extended=True)
         except (lastfm.exceptions.InvalidParameters,
                 lastfm.exceptions.OperationFailed) as e:
-            self.log.exception("Operation failed when fetching recent tracks")
-            return "{user}: Error: {message}".format(user=user, message=e)
-        except:
+            self.log.exception("Operation failed when fetching recent tracks",
+                               exc_info=e)
+            errmsg = str(e)
+            if (lastfm_user != user
+                    and lastfm_user in errmsg):  # pragma: no cover
+                errmsg = "(Error message withheld)"
+                self.log.critical("Error message contained user name!")
+            return "{user}: Error: {message}".format(user=user,
+                                                     message=errmsg)
+        except:  # pragma: no cover
             self.log.exception("Fatal exception when calling last.fm")
             return "{user}: Fatal exception occurred. Aborting.".format(
                 user=user)
