@@ -156,6 +156,8 @@ class UserObjectTest(unittest.TestCase):
         assert self.user.get_setting('foo', 'default') == 'default'
         assert self.user.get_setting('setting') == 'hi'
         assert self.user.get_setting('setting', 'default') == 'hi'
+        mock.users.find_one.return_value = None
+        assert self.user.get_setting('foo', 'default') == 'default'
 
 
 if __name__ == '__main__':
