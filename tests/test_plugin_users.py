@@ -103,9 +103,9 @@ class UsersPluginTest(BotTestCase):
         assert user.channels == set(('#chan',))
 
         # Test adding chans to existing users
-        self.users.channels.add('#chan2')
-        self.bot.dispatch(':server 352 irc3 #chan2 ~user host serv bar H@ :hoi')
-        assert '#chan2' in user.channels
+        self.users.channels.add('#chn2')
+        self.bot.dispatch(':server 352 irc3 #chn2 ~user host serv bar H@ :hoi')
+        assert '#chn2' in user.channels
 
 
 class UserObjectTest(unittest.TestCase):

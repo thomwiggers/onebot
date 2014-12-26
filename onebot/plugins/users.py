@@ -8,10 +8,10 @@ Keeps track of the users in channels. Also provides an authorisation system.
 This plugin uses WHOIS to figure out someones NickServ account and then links
 that to an automatically created, in-bot account.
 """
-
 from __future__ import unicode_literals, print_function
 
 import irc3
+from irc3.utils import IrcString, BaseString
 
 
 class User(object):
@@ -24,7 +24,7 @@ class User(object):
         self._id = id_
         self.database = database
         try:
-            if isinstance(channels, str):
+            if isinstance(channels, BaseString):
                 raise ValueError("You must specify a list of channels!")
             for c in iter(channels):
                 self.channels.add(c)
@@ -34,7 +34,7 @@ class User(object):
 
     @property
     def mask(self):
-        return irc3.utils.IrcString('{}!{}'.format(self.nick, self.host))
+        return IrcString('{}!{}'.format(self.nick, self.host))
 
     def get_settings(self):
         return self.database.users.find_one({'id': self._id})
@@ -150,8 +150,7 @@ class UsersPlugin(object):
             return
 
         if nick not in self.active_users:
-            mask = irc3.utils.IrcString('{}!{}@{}'.format(
-                nick, username, server))
+            mask = IrcString('{}!{}@{}'.format(nick, username, server))
             self.active_users[nick] = self.create_user(mask, [channel])
         else:
             self.active_users[nick].join(channel)
