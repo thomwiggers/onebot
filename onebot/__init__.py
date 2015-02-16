@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Main onebot class and the command line runner"""
+import locale
+
+import irc3
 
 
 __author__ = 'Thom Wiggers'
 __email__ = 'thom@thomwiggers.nl'
 __version__ = '0.1.0'
 
-import locale
-import irc3
 
 
 class OneBot(irc3.IrcBot):

@@ -76,8 +76,8 @@ class LastfmPlugin(object):
             self.log.exception("Operation failed when fetching recent tracks",
                                exc_info=e)
             errmsg = str(e)
-            if (lastfm_user != user
-                    and lastfm_user in errmsg):  # pragma: no cover
+            if (lastfm_user != user and
+                    lastfm_user in errmsg):  # pragma: no cover
                 errmsg = "(Error message withheld)"
                 self.log.critical("Error message contained user name!")
             return "{user}: Error: {message}".format(user=user,
