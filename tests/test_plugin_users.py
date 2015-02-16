@@ -116,6 +116,7 @@ class UsersPluginTest(BotTestCase):
         assert user.nick == 'bar'
         assert user.host == 'foo@host'
         assert user.channels == set(('#chan',))
+        self.users.channels.add('#chan2')
         self.bot.dispatch(':bar!foo@host PRIVMSG #chan2 :hi!')
         assert user.channels == set(('#chan', '#chan2'))
 
