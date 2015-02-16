@@ -11,7 +11,6 @@ __email__ = 'thom@thomwiggers.nl'
 __version__ = '0.1.0'
 
 
-
 class OneBot(irc3.IrcBot):
     """Main class, extensions of IrcBot"""
 
