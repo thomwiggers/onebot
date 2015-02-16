@@ -29,17 +29,11 @@ class DatabasePluginTest(BotTestCase):
     def setUp(self):
         self.callFTU()
 
-    def test_get_database(self):
-        assert self.bot.get_database().__class__.__name__ == 'DatabasePlugin'
-
     def test_getattr(self):
         assert isinstance(self.bot.get_database().users, mongomock.Collection)
-        assert isinstance(self.bot.get_database().get_connection().other,
-                          mongomock.Collection)
 
-    def test_get_connection(self):
-        assert isinstance(self.bot.get_database().get_connection(),
-                          mongomock.Database)
+    def test_get_database(self):
+        assert isinstance(self.bot.get_database(), mongomock.Database)
 
 
 if __name__ == '__main__':

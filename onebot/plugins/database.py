@@ -68,7 +68,4 @@ class DatabasePlugin(object):
             >>> bot.get_database()  # doctest: +SKIP
             <onebot.plugins.database.DatabasePlugin object at 0x...>
         """
-        return self
-
-    def __getattr__(self, name):
-        return self.connection.__getattr__(name)
+        return self.connection

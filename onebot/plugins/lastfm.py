@@ -20,7 +20,6 @@ Usage::
 from __future__ import unicode_literals, print_function, absolute_import
 
 import datetime
-import logging
 
 import irc3
 import lastfm.exceptions
@@ -38,14 +37,13 @@ class LastfmPlugin(object):
 
     requires = [
         'irc3.plugins.command',
-        'onebot.plugins.database',
         'onebot.plugins.users'
     ]
 
     def __init__(self, bot):
         """Initialise the plugin"""
         self.bot = bot
-        self.log = logging.getLogger(__name__)
+        self.log = bot.log.getChild(__name__)
         self.config = bot.config.get(__name__, {})
         try:
             self.app = lfm.App(self.config['api_key'],
@@ -148,8 +146,11 @@ class LastfmPlugin(object):
     def get_lastfm_nick(self, mask):
         """Gets the last.fm nick associated with a user from the database
         """
-        return self.bot.get_user(mask.nick).get_setting('lastfmuser',
-                                                        mask.nick)
+        user = self.bot.get_user(mask.nick)
+        if user:
+            return user.get_setting('lastfmuser', mask.nick)
+        else:
+            return mask.nick
 
     def fetch_extra_trackinfo(self, username, info):
         """Updates info with extra trackinfo from the last.fm API"""

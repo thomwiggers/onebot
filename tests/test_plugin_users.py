@@ -9,7 +9,6 @@ Tests for `onebot` module.
 """
 from __future__ import unicode_literals
 
-import pytest
 import unittest
 
 from irc3.testing import BotTestCase, patch, MagicMock
@@ -52,8 +51,7 @@ class UsersPluginTest(BotTestCase):
         self.bot.dispatch(':adm!in@other KICK #chan bar')
         assert self.bot.get_user('bar').channels == set(('#chan2',))
         self.bot.dispatch(':bar!foo@host PART #chan2')
-        with pytest.raises(KeyError):
-            self.bot.get_user('bar')
+        assert self.bot.get_user('bar') is None
 
         # make sure unknowns don't break things
         self.bot.dispatch(':anon!dont@know PART #chan')
@@ -61,8 +59,7 @@ class UsersPluginTest(BotTestCase):
     def test_bot_part(self):
         self.bot.dispatch(':bar!foo@host JOIN #chan')
         self.bot.dispatch(':{}!foo@bar PART #chan'.format(self.bot.nick))
-        with pytest.raises(KeyError):
-            self.bot.get_user('bar')
+        assert self.bot.get_user('bar') is None
 
     def test_nick_change(self):
         self.bot.dispatch(':bar!foo@host JOIN #chan')
@@ -71,8 +68,7 @@ class UsersPluginTest(BotTestCase):
         assert user.nick == 'bar2'
         assert user.host == 'foo@host'
         # test other user gone
-        with pytest.raises(KeyError):
-            self.bot.get_user('bar')
+        assert self.bot.get_user('bar') is None
 
         # Make sure we don't need to know the person
         self.bot.dispatch(':anonymous!dont@know NICK anon')
@@ -80,14 +76,12 @@ class UsersPluginTest(BotTestCase):
     def test_quit(self):
         self.bot.dispatch(':bar!foo@host JOIN #chan')
         self.bot.dispatch(':bar!foo@host QUIT :quitmessage')
-        with pytest.raises(KeyError):
-            self.bot.get_user('bar')
+        assert self.bot.get_user('bar') is None
 
         self.bot.dispatch(':bar!foo@host JOIN #chan')
         msg = ':{}!foo@bar QUIT :quitmsg'.format(self.bot.nick)
         self.bot.dispatch(msg)
-        with pytest.raises(KeyError):
-            self.bot.get_user('bar')
+        assert self.bot.get_user('bar') is None
         assert self.users.channels == set()
 
     def test_who(self):
@@ -106,6 +100,24 @@ class UsersPluginTest(BotTestCase):
         self.users.channels.add('#chn2')
         self.bot.dispatch(':server 352 irc3 #chn2 ~user host serv bar H@ :hoi')
         assert '#chn2' in user.channels
+
+    def test_privmsg(self):
+        # Only accept these if we're in that channel
+        self.bot.dispatch(':foo!bar@baz PRIVMSG #chan :hi')
+        self.bot.dispatch(':foo2!ba2@baz NOTICE #chan :hi')
+        assert self.bot.get_user('foo') is None
+        assert self.bot.get_user('foo2') is None
+        assert len(self.users.active_users) == 0
+
+        self.users.channels.add('#chan')
+        self.bot.dispatch(':bar!foo@host PRIVMSG #chan :hi!')
+        self.bot.dispatch(':bar!foo@host PRIVMSG #chan :hi!')
+        user = self.bot.get_user('bar')
+        assert user.nick == 'bar'
+        assert user.host == 'foo@host'
+        assert user.channels == set(('#chan',))
+        self.bot.dispatch(':bar!foo@host PRIVMSG #chan2 :hi!')
+        assert user.channels == set(('#chan', '#chan2'))
 
 
 class UserObjectTest(unittest.TestCase):

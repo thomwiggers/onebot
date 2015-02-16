@@ -64,7 +64,11 @@ class User(object):
 
 @irc3.plugin
 class UsersPlugin(object):
-    """User management plugin for OneBot"""
+    """User management plugin for OneBot
+
+    Doesn't do anything with NAMES because we can't get hosts through
+    NAMES
+    """
 
     requires = [
         'onebot.plugins.database'
@@ -80,7 +84,7 @@ class UsersPlugin(object):
 
     @irc3.extend
     def get_user(self, nick):
-        return self.active_users[nick]
+        return self.active_users.get(nick, None)
 
     @irc3.event(irc3.rfc.JOIN_PART_QUIT)
     def on_join_part_quit(self, mask=None, event=None, **kwargs):
@@ -100,6 +104,16 @@ class UsersPlugin(object):
             user.nick = new_nick
             self.active_users[new_nick] = user
             del self.active_users[nick.nick]
+
+    @irc3.event(irc3.rfc.PRIVMSG)
+    def on_privmsg(self, mask=None, event=None, target=None, data=None):
+        if target not in self.channels:
+            return
+        if mask.nick not in self.active_users:
+            self.bot.log.debug("Found user %s via PRIVMSG", mask.nick)
+            self.active_users[mask.nick] = self.create_user(mask, [target])
+        else:
+            self.active_users[mask.nick].join(target)
 
     def connection_lost(self):
         self.channels = set()
@@ -147,7 +161,11 @@ class UsersPlugin(object):
         Should only be processed for channels we are currently in!
         """
         if channel not in self.channels:
+            self.bot.log.debug(
+                "Got WHO for channel I'm not in: {chan}".format(chan=channel))
             return
+
+        self.bot.log.debug("Got WHO for {chan}".format(chan=channel))
 
         if nick not in self.active_users:
             mask = IrcString('{}!{}@{}'.format(nick, username, server))

@@ -49,7 +49,7 @@ def run(argv=None):  # pragma: no cover
     from irc3 import utils, config
     argv = argv or sys.argv[1:]
     args = docopt.docopt(textwrap.dedent(run.__doc__), argv)
-    cfg = utils.parse_config(*args['<config>'])
+    cfg = utils.parse_config('bot', *args['<config>'])
     cfg.update(
         verbose=args['--verbose'],
         debug=args['--debug'])
