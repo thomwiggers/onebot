@@ -1,0 +1,170 @@
+{
+    "result": {
+        "score": "1",
+        "artists": {
+            "@attr": {
+                "matches": "10"
+            },
+            "artist": [
+                {
+                    "url": "http://www.last.fm/music/M83",
+                    "image": [
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/126/28961357.jpg",
+                            "size": "large"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/64/28961357.jpg",
+                            "size": "medium"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/34/28961357.jpg",
+                            "size": "small"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/252/28961357.jpg",
+                            "size": "extralarge"
+                        }
+                    ],
+                    "name": "M83"
+                },
+                {
+                    "url": "http://www.last.fm/music/J%C3%B3hann+J%C3%B3hannsson",
+                    "image": [
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/126/96289259.png",
+                            "size": "large"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/64/96289259.png",
+                            "size": "medium"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/34/96289259.png",
+                            "size": "small"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/252/96289259.png",
+                            "size": "extralarge"
+                        }
+                    ],
+                    "name": "J\u00f3hann J\u00f3hannsson"
+                },
+                {
+                    "url": "http://www.last.fm/music/Metronomy",
+                    "image": [
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/126/67703982.png",
+                            "size": "large"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/64/67703982.png",
+                            "size": "medium"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/34/67703982.png",
+                            "size": "small"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/252/67703982.png",
+                            "size": "extralarge"
+                        }
+                    ],
+                    "name": "Metronomy"
+                },
+                {
+                    "url": "http://www.last.fm/music/Lone",
+                    "image": [
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/126/91444031.png",
+                            "size": "large"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/64/91444031.png",
+                            "size": "medium"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/34/91444031.png",
+                            "size": "small"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/252/91444031.png",
+                            "size": "extralarge"
+                        }
+                    ],
+                    "name": "Lone"
+                },
+                {
+                    "url": "http://www.last.fm/music/The+Avalanches",
+                    "image": [
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/126/273256.jpg",
+                            "size": "large"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/64/273256.jpg",
+                            "size": "medium"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/34/273256.jpg",
+                            "size": "small"
+                        },
+                        {
+                            "#text": "http://userserve-ak.last.fm/serve/252/273256.jpg",
+                            "size": "extralarge"
+                        }
+                    ],
+                    "name": "The Avalanches"
+                }
+            ]
+        }
+    },
+    "input": {
+        "user": [
+            {
+                "url": "http://www.last.fm/user/theguyofdoom",
+                "image": [
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/126/57698651.png",
+                        "size": "large"
+                    },
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/64/57698651.png",
+                        "size": "medium"
+                    },
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/34/57698651.png",
+                        "size": "small"
+                    },
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/252/57698651.png",
+                        "size": "extralarge"
+                    }
+                ],
+                "name": "theguyofdoom"
+            },
+            {
+                "url": "http://www.last.fm/user/theguyofdoom",
+                "image": [
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/126/57698651.png",
+                        "size": "large"
+                    },
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/64/57698651.png",
+                        "size": "medium"
+                    },
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/34/57698651.png",
+                        "size": "small"
+                    },
+                    {
+                        "#text": "http://userserve-ak.last.fm/serve/252/57698651.png",
+                        "size": "extralarge"
+                    }
+                ],
+                "name": "theguyofdoom"
+            }
+        ]
+    }
+}
