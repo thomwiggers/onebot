@@ -12,8 +12,8 @@ from setuptools.command.test import test as TestCommand
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
-install_requires = ['irc3>=0.8.0', 'wheel', 'lfmh', 'pymongo']
-test_requires = ['pytest>=2.6', 'freezegun', 'mongomock']
+install_requires = ['irc3>=0.8.0', 'wheel', 'lfmh']
+test_requires = ['pytest>=2.6', 'freezegun']
 
 if sys.version_info < (3, 4):
     install_requires.append('trollius')
