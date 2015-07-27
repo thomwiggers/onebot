@@ -36,29 +36,45 @@ class User(object):
     def mask(self):
         return IrcString('{}!{}'.format(self.nick, self.host))
 
+    def set_settings(self, settings):
+        """Replaces the settings with the provided dictionary"""
+        self.database[self._id] = settings
+
+    def set_setting(self, setting, value):
+        """Set a specified setting to a value"""
+        if self._id not in self.database:
+            self.database[self._id] = dict()
+        self.database[self._id][setting] = value
+
     def get_settings(self):
-        return self.database.users.find_one({'id': self._id})
+        """Get this users settings"""
+        return self.database.get(self._id, dict())
 
     def get_setting(self, setting, default=None):
-        document = self.get_settings()
-        if document is not None:
-            return document.get(setting, default)
-        else:
-            return default
+        """Gets a setting for the users"""
+        return self.get_settings().get(setting, default)
 
     def join(self, channel):
+        """Register that the user joined a channel"""
         self.channels.add(channel)
 
     def part(self, channel):
+        """Register that the user parted a channel"""
         self.channels.remove(channel)
 
     def still_in_channels(self):
+        """Is the user still in channels?"""
         return len(self.channels) > 0
 
     def getid(self):
+        """Get the identifier for this user"""
         return self._id
 
     def __eq__(self, user):
+        """Compare users by nick
+
+        Since nicks are unique this works for exactly one irc server.
+        """
         return self.nick == user.nick
 
 
@@ -71,7 +87,7 @@ class UsersPlugin(object):
     """
 
     requires = [
-        'onebot.plugins.database'
+        'irc3.plugins.storage'
     ]
 
     def __init__(self, bot):
@@ -176,6 +192,6 @@ class UsersPlugin(object):
     def create_user(self, mask, channels):
         """Return a User object"""
         if self.identifying_method == 'mask':
-            return User(mask, channels, mask.host, self.bot.get_database())
+            return User(mask, channels, mask.host, self.bot.db)
         else:  # pragma: no cover
             raise ValueError("A valid identifying method should be configured")

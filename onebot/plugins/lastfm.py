@@ -4,6 +4,12 @@
 :mod:`onebot.plugins.lastfm` Last.FM plugin for OneBot
 ======================================================
 
+..
+    >>> import tempfile
+    >>> fd = tempfile.NamedTemporaryFile(prefix='irc3', suffix='.json')
+    >>> json_file = fd.name
+    >>> fd.close()
+
 Usage::
 
     >>> from irc3.testing import IrcBot, patch
@@ -11,10 +17,9 @@ Usage::
     ...     'onebot.plugins.lastfm': {'api_key': 'foo',
     ...                               'api_secret': 'bar'},
     ...     'cmd': '!',
-    ...     'database': ':memory:'
+    ...     'storage': 'json://%(json_file)s' % {'json_file' : json_file}
     ... })
-    >>> with patch('pymongo.MongoClient'):
-    ...     bot.include('onebot.plugins.lastfm')
+    >>> bot.include('onebot.plugins.lastfm')
 
 """
 from __future__ import unicode_literals, print_function, absolute_import
@@ -61,6 +66,37 @@ class LastfmPlugin(object):
             %%np [<user>]
         """
         self.bot.privmsg(target, self.now_playing_response(mask, target, args))
+
+    @command
+    def compare(self, mask, target, args):
+        """Gets the tasteometer for the user and the target
+
+            %%compare <other_user>
+        """
+        lastfm_user = self.get_lastfm_nick(mask)
+        lastfm_user = 'Theguyofdoom'
+        args['<other_user>'] = lastfm_user
+
+        try:
+            self.log.info("Performing tasteometer on %s and %s",
+                          lastfm_user, args['<other_user>'])
+            result = self.app.tasteometer.compare(
+                'user', lastfm_user, 'user', args['<other_user>'])
+        except (lastfm.exceptions.InvalidParameters,
+                lastfm.exceptions.OperationFailed) as e:
+            self.log.exception('Operation failed when tasteometering',
+                               exc_info=e)
+            errmsg = str(e)
+            if (lastfm_user != mask.nick and
+                    lastfm_user in errmsg):  # pragma: no cover
+                errmsg = '(Error message withheld)'
+                self.log.critical('Error message contained user name!')
+            self.bot.privmsg(target, '{user}: Error: {message}'.format(
+                user=mask.nick, message=errmsg))
+
+        print(result)
+
+        self.bot.privmsg(target, 'not yet implemented')
 
     def now_playing_response(self, mask, target, args):
         """Return appropriate response to np request"""

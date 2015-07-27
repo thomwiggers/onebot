@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from irc3.testing import BotTestCase, patch, MagicMock
+from irc3.testing import BotTestCase, patch
 from irc3.utils import IrcString
 
 from onebot.plugins.users import User
@@ -24,9 +24,10 @@ class UsersPluginTest(BotTestCase):
         'cmd': '!',
     }
 
-    @patch('pymongo.MongoClient')
+    @patch('irc3.plugins.storage.Storage')
     def setUp(self, mock):
         self.callFTU()
+        self.bot.db = dict()
         self.users = self.bot.get_plugin('onebot.plugins.users.UsersPlugin')
 
     def test_join(self):
@@ -125,7 +126,7 @@ class UserObjectTest(unittest.TestCase):
 
     def setUp(self):
         mask = IrcString('nick!user@host')
-        self.user = User(mask, ['#foo'], mask.host)
+        self.user = User(mask, ['#foo'], mask.host, dict())
 
     def test_user_needs_channels(self):
         with self.assertRaises(ValueError):
@@ -159,18 +160,16 @@ class UserObjectTest(unittest.TestCase):
         self.user.part('#bar')
         assert self.user.channels == set()
 
-    @patch('onebot.plugins.database.DatabasePlugin.get_database')
-    def test_get_settings(self, mock):
-        mock.users = MagicMock()
-        mock.users.find_one.return_value = {'setting': 'hi'}
-        self.user.database = mock
+    def test_get_settings(self):
+        self.user.set_settings({'setting': 'hi'})
         assert self.user.get_settings() == {'setting': 'hi'}
         assert self.user.get_setting('foo') is None
         assert self.user.get_setting('foo', 'default') == 'default'
         assert self.user.get_setting('setting') == 'hi'
         assert self.user.get_setting('setting', 'default') == 'hi'
-        mock.users.find_one.return_value = None
         assert self.user.get_setting('foo', 'default') == 'default'
+        self.user.set_setting('setting', 'bar')
+        assert self.user.get_setting('setting') == 'bar'
 
 
 if __name__ == '__main__':

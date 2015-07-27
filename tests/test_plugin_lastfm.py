@@ -8,7 +8,6 @@ import os.path
 import unittest
 
 import lastfm.exceptions
-import mongomock
 from freezegun import freeze_time
 from irc3.testing import BotTestCase, patch, MagicMock
 from irc3.utils import IrcString
@@ -20,7 +19,7 @@ def _get_fixture(fixture_name):
         os.path.join(
             os.path.dirname(__file__),
             'fixtures/{}'.format(fixture_name)), 'r') as f:
-        return json.loads(f.read())
+        return json.load(f)
 
 
 @freeze_time("2014-01-01")
@@ -62,7 +61,7 @@ class LastfmPluginTest(BotTestCase):
         'cmd': '!',
     }
 
-    @patch('onebot.plugins.database.DatabasePlugin', spec=True)
+    @patch('irc3.plugins.storage.Storage', spec=True)
     def setUp(self, mock):
         super(LastfmPluginTest, self).setUp()
         self.callFTU()
@@ -92,7 +91,7 @@ class LastfmPluginTest(BotTestCase):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         self.assertSent(['PRIVMSG #chan :bar: Error: message'])
 
-    @unittest.skip("FIXME")  # FIXME
+    @unittest.skip("FIXME caps don't work")
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_now_playing_more_results.json'))
@@ -125,8 +124,6 @@ class LastfmPluginTest(BotTestCase):
              'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
              '“M83 – Skin of the Night”.'])
 
-    # Mock client because otherwise database will connect.
-    @patch('pymongo.MongoClient', new=mongomock.Connection)
     def test_get_lastfm_nick_from_database(self):
         # mock get_setting
         mock2 = MagicMock(name='MockUser')
