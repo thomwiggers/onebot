@@ -24,6 +24,7 @@ Usage::
 """
 from __future__ import unicode_literals, print_function, absolute_import
 
+import asyncio
 import datetime
 
 import irc3
@@ -65,25 +66,47 @@ class LastfmPlugin(object):
 
             %%np [<user>]
         """
-        self.bot.privmsg(target, self.now_playing_response(mask, target, args))
+        asyncio.async(self.now_playing_response(mask, target, args))
 
     @command
-    def compare(self, mask, target, args):
+    def compare(self, *args):
         """Gets the tasteometer for the user and the target
 
             %%compare <other_user>
         """
-        lastfm_user = self.get_lastfm_nick(mask)
-        lastfm_user = 'Theguyofdoom'
-        args['<other_user>'] = lastfm_user
+        asyncio.async(self.compare_result(*args))
+
+    @asyncio.coroutine
+    def compare_result(self, mask, target, args):
+        lastfm_user = yield from self.get_lastfm_nick(mask.nick)
+        nocompare = yield from self.bot.get_user(
+            args['<other_user>']).get_setting('nocompare')
+        lastfm_target = yield from self.get_lastfm_nick(args['<other_user>'])
+
+        if nocompare:
+            self.bot.privmsg(target,
+                             ('{user}: This user has asked to be '
+                              'left out of compare'.format(user=mask.nick)))
+            return
 
         try:
             self.log.info("Performing tasteometer on %s and %s",
-                          lastfm_user, args['<other_user>'])
+                          lastfm_user, lastfm_target)
             result = self.app.tasteometer.compare(
-                'user', lastfm_user, 'user', args['<other_user>'])
+                'user', lastfm_user, 'user', lastfm_target)
+            score = round(100.0 * float(result['result']['score']), 2)
+            artists = [artist['name'] for artist
+                       in result['result']['artists'].get('artist', [])[:5]]
+            print("Score: %d, artists: %s" % (score, ', '.join(artists)))
+            self.bot.privmsg(
+                target,
+                ('{user} and {target} are {score}% compatible! '
+                 'Common artists: {artists}'.format(
+                     user=mask.nick, target=args['<other_user>'],
+                     score=score, artists=', '.join(artists))))
         except (lastfm.exceptions.InvalidParameters,
-                lastfm.exceptions.OperationFailed) as e:
+                lastfm.exceptions.OperationFailed,
+                lastfm.exceptions.AuthenticationFailed) as e:
             self.log.exception('Operation failed when tasteometering',
                                exc_info=e)
             errmsg = str(e)
@@ -93,14 +116,55 @@ class LastfmPlugin(object):
                 self.log.critical('Error message contained user name!')
             self.bot.privmsg(target, '{user}: Error: {message}'.format(
                 user=mask.nick, message=errmsg))
+        except lastfm.exceptions.InvalidResourceSpecified as e:
+            self.bot.privmsg(target, '{user}: Error: Invalid username'.format(
+                user=mask.nick))
 
-        print(result)
+    @command
+    def setuser(self, mask, target, args):
+        """Sets the lastfm username of the user
 
-        self.bot.privmsg(target, 'not yet implemented')
+            %%setuser <lastfmnick>
+        """
+        self.log.info("Storing lastfmuser %s for %s",
+                      args['<lastfmnick>'], mask.nick)
+        self.bot.get_user(mask.nick).set_setting(
+            'lastfmuser', args['<lastfmnick>'])
+        self.bot.privmsg(
+            target,
+            'Ok, so you are https://last.fm/user/{username}'.format(
+                username=args['<lastfmnick>']))
 
+    @command
+    def ignoreme(self, mask, target, args):
+        """Sets that the user wants to be excluded from %%compare
+
+            %%ignoreme
+        """
+        self.log.info("Excluding %s from .compare", mask.nick)
+        self.bot.get_user(mask.nick).set_setting('nocompare', True)
+        self.bot.privmsg(
+            target,
+            ("I will leave out {nick} from compare. Re-enable compare by "
+             "using the unignoreme command").format(nick=mask.nick))
+
+    @command
+    def unignoreme(self, mask, target, args):
+        """Sets that the user wants to be included again in %%compare
+
+            %%unignoreme
+        """
+        self.log.info("Including %s in .compare", mask.nick)
+        self.bot.get_user(mask.nick).set_setting('nocompare', False)
+        self.bot.privmsg(target, "Ok, enabled compare for {user}".format(
+            user=mask.nick))
+
+    @asyncio.coroutine
     def now_playing_response(self, mask, target, args):
         """Return appropriate response to np request"""
-        lastfm_user = args['<user>'] or self.get_lastfm_nick(mask)
+        lastfm_user = args['<user>']
+        if not lastfm_user:
+            lastfm_user = yield from self.get_lastfm_nick(mask.nick)
         user = mask.nick
         try:
             result = self.app.user.get_recent_tracks(
@@ -108,7 +172,8 @@ class LastfmPlugin(object):
                 limit=1,
                 extended=True)
         except (lastfm.exceptions.InvalidParameters,
-                lastfm.exceptions.OperationFailed) as e:
+                lastfm.exceptions.OperationFailed,
+                lastfm.exceptions.AuthenticationFailed) as e:
             self.log.exception("Operation failed when fetching recent tracks",
                                exc_info=e)
             errmsg = str(e)
@@ -143,50 +208,53 @@ class LastfmPlugin(object):
                 time_ago = datetime.datetime.utcnow() - info['playtime']
                 if time_ago.days > 0 or time_ago.seconds > (20*60):
                     response.append('is not currently playing anything '
-                                    '(last seen {time} ago).'.format(
+                                    '(last seen {time} ago)'.format(
                                         time=_time_ago(info['playtime'])))
 
-                    return ' '.join(response)
-
-                self.fetch_extra_trackinfo(lastfm_user, info)
-
-                if info['now playing']:
-                    response.append('is now playing')
                 else:
-                    response.append('was just playing')
 
-                response.append('“{artist} – {title}”'.format(
-                    artist=info['artist'],
-                    title=info['title']))
+                    self.fetch_extra_trackinfo(lastfm_user, info)
 
-                if info['loved']:
-                    response.append('(♥)')
-
-                if info.get('playcount', 0) > 0:
-                    if info['playcount'] == 1:
-                        response.append('(1 play)')
+                    if info['now playing']:
+                        response.append('is now playing')
                     else:
-                        response.append('({} plays)'.format(info['playcount']))
+                        response.append('was just playing')
 
-                if not info['now playing']:
-                    minutes = time_ago.seconds // 60
-                    seconds = time_ago.seconds % 60
-                    if minutes > 0:
-                        response.append("({}m{:02}s ago)".format(minutes,
-                                                                 seconds))
-                    else:
-                        response.append("({}s ago)".format(seconds))
+                    response.append('“{artist} – {title}”'.format(
+                        artist=info['artist'],
+                        title=info['title']))
 
-            return ' '.join(response) + '.'
+                    if info['loved']:
+                        response.append('(♥)')
 
-    def get_lastfm_nick(self, mask):
+                    if info.get('playcount', 0) > 0:
+                        if info['playcount'] == 1:
+                            response.append('(1 play)')
+                        else:
+                            response.append(
+                                '({} plays)'.format(info['playcount']))
+
+                    if not info['now playing']:
+                        minutes = time_ago.seconds // 60
+                        seconds = time_ago.seconds % 60
+                        if minutes > 0:
+                            response.append("({}m{:02}s ago)".format(minutes,
+                                                                     seconds))
+                        else:
+                            response.append("({}s ago)".format(seconds))
+
+                self.bot.privmsg(target, ' '.join(response) + '.')
+
+    @asyncio.coroutine
+    def get_lastfm_nick(self, nick):
         """Gets the last.fm nick associated with a user from the database
         """
-        user = self.bot.get_user(mask.nick)
+        user = self.bot.get_user(nick)
         if user:
-            return user.get_setting('lastfmuser', mask.nick)
+            result = yield from user.get_setting('lastfmuser', nick)
+            return result
         else:
-            return mask.nick
+            return nick
 
     def fetch_extra_trackinfo(self, username, info):
         """Updates info with extra trackinfo from the last.fm API"""

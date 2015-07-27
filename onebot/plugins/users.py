@@ -10,6 +10,9 @@ that to an automatically created, in-bot account.
 """
 from __future__ import unicode_literals, print_function
 
+import asyncio
+from functools import partial
+
 import irc3
 from irc3.utils import IrcString, BaseString
 
@@ -21,7 +24,7 @@ class User(object):
         self.nick = mask.nick
         self.host = mask.host
         self.channels = set()
-        self._id = id_
+        self.id = partial(id_, self)
         self.database = database
         try:
             if isinstance(channels, BaseString):
@@ -38,21 +41,36 @@ class User(object):
 
     def set_settings(self, settings):
         """Replaces the settings with the provided dictionary"""
-        self.database[self._id] = settings
+
+        @asyncio.coroutine
+        def wrapper():
+            id_ = yield from self.id()
+            self.database[id_] = settings
+        asyncio.async(wrapper())
 
     def set_setting(self, setting, value):
         """Set a specified setting to a value"""
-        if self._id not in self.database:
-            self.database[self._id] = dict()
-        self.database[self._id][setting] = value
+        print("Trying to set %s to %s" % (setting, value))
 
+        @asyncio.coroutine
+        def wrapper():
+            id_ = yield from self.id()
+            if id_ not in self.database:
+                self.database[id_] = dict()
+            self.database[id_][setting] = value
+        asyncio.async(wrapper())
+
+    @asyncio.coroutine
     def get_settings(self):
         """Get this users settings"""
-        return self.database.get(self._id, dict())
+        id_ = yield from self.id()
+        return self.database.get(id_, dict())
 
+    @asyncio.coroutine
     def get_setting(self, setting, default=None):
         """Gets a setting for the users"""
-        return self.get_settings().get(setting, default)
+        settings = yield from self.get_settings()
+        return settings.get(setting, default)
 
     def join(self, channel):
         """Register that the user joined a channel"""
@@ -68,7 +86,7 @@ class User(object):
 
     def getid(self):
         """Get the identifier for this user"""
-        return self._id
+        return self.id
 
     def __eq__(self, user):
         """Compare users by nick
@@ -87,7 +105,8 @@ class UsersPlugin(object):
     """
 
     requires = [
-        'irc3.plugins.storage'
+        'irc3.plugins.storage',
+        'irc3.plugins.async'
     ]
 
     def __init__(self, bot):
@@ -100,7 +119,7 @@ class UsersPlugin(object):
 
     @irc3.extend
     def get_user(self, nick):
-        return self.active_users.get(nick, None)
+        return self.active_users.get(nick)
 
     @irc3.event(irc3.rfc.JOIN_PART_QUIT)
     def on_join_part_quit(self, mask=None, event=None, **kwargs):
@@ -192,6 +211,19 @@ class UsersPlugin(object):
     def create_user(self, mask, channels):
         """Return a User object"""
         if self.identifying_method == 'mask':
-            return User(mask, channels, mask.host, self.bot.db)
+            return User(mask, channels, lambda x: mask.host, self.bot.db)
+        if self.identifying_method == 'nickserv':
+            @asyncio.coroutine
+            def get_account(mask, bot, user):
+                if hasattr(user, 'account'):
+                    return user.account
+                result = yield from bot.async.whois(mask.nick)
+                print("ACOUNT BECAUSE OF BUG FIXME")
+                if result['success'] and 'acount' in result:
+                    user.account = str(result['acount'])
+                    return user.account
+
+            return User(mask, channels, partial(get_account, mask, self.bot),
+                        self.bot.db)
         else:  # pragma: no cover
             raise ValueError("A valid identifying method should be configured")

@@ -28,6 +28,10 @@ class OneBot(irc3.IrcBot):
 
         super(OneBot, self).__init__(*args, **kwargs)
 
+    def join(self, target):
+        super(OneBot, self).join(target)
+        self.send('WHO {}'.format(target))
+
 
 def run(argv=None):  # pragma: no cover
     """Run OneBot from a config file
