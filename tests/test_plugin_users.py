@@ -140,7 +140,8 @@ class UserObjectTest(unittest.TestCase):
         assert self.user.mask == IrcString('nick!user@host')
 
     def test_equal(self):
-        u = User(IrcString('nick!otheruser@otherhost'), ['#bar'], lambda x: 'otherid')
+        u = User(IrcString('nick!otheruser@otherhost'),
+                 ['#bar'], lambda x: 'otherid')
         assert u == self.user
 
     def test_still_in_channels(self):
