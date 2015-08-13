@@ -61,12 +61,14 @@ class LastfmPlugin(object):
                 "in the config section [{}]".format(__name__))
 
     @command
+    @asyncio.coroutine
     def np(self, mask, target, args):
         """Show currently playing track
 
             %%np [<user>]
         """
-        asyncio.async(self.now_playing_response(mask, target, args))
+        message = yield from self.now_playing_response(mask, args)
+        self.bot.privmsg(target, message)
 
     @command
     def compare(self, *args):
@@ -79,8 +81,10 @@ class LastfmPlugin(object):
     @asyncio.coroutine
     def compare_result(self, mask, target, args):
         lastfm_user = yield from self.get_lastfm_nick(mask.nick)
-        nocompare = yield from self.bot.get_user(
-            args['<other_user>']).get_setting('nocompare')
+        user = self.bot.get_user(args['<other_user>'])
+        nocompare = False
+        if user:
+            nocompare = yield from user.get_setting('nocompare')
         lastfm_target = yield from self.get_lastfm_nick(args['<other_user>'])
 
         if nocompare:
@@ -160,7 +164,7 @@ class LastfmPlugin(object):
             user=mask.nick))
 
     @asyncio.coroutine
-    def now_playing_response(self, mask, target, args):
+    def now_playing_response(self, mask, args):
         """Return appropriate response to np request"""
         lastfm_user = args['<user>']
         if not lastfm_user:
@@ -243,7 +247,7 @@ class LastfmPlugin(object):
                         else:
                             response.append("({}s ago)".format(seconds))
 
-                self.bot.privmsg(target, ' '.join(response) + '.')
+            return ' '.join(response) + '.'
 
     @asyncio.coroutine
     def get_lastfm_nick(self, nick):
