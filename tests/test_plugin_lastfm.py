@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals, print_function
 
+import asyncio
 import calendar
 import datetime
 import json
@@ -11,6 +12,7 @@ import lastfm.exceptions
 from freezegun import freeze_time
 from irc3.testing import BotTestCase, patch, MagicMock
 from irc3.utils import IrcString
+import pytest
 
 
 def _get_fixture(fixture_name):
@@ -63,32 +65,46 @@ class LastfmPluginTest(BotTestCase):
 
     @patch('irc3.plugins.storage.Storage', spec=True)
     def setUp(self, mock):
+        policy = asyncio.get_event_loop_policy()
+        policy.get_event_loop().close()
+        self.event_loop = policy.new_event_loop()
+        policy.set_event_loop(self.event_loop)
         super(LastfmPluginTest, self).setUp()
         self.callFTU()
         self.lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
         self.lastfm.get_lastfm_nick = MagicMock(return_value='bar')
 
+    def tearDown(self):
+        self.event_loop.close()
+        pass
+
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_never_played.json'))
     def test_no_user_found(self, mock):
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
+        yield from asyncio.sleep(1)
         assert self.lastfm.get_lastfm_nick.called
         mock.assert_called_with('bar', extended=True, limit=1)
         self.assertSent(['PRIVMSG #chan :bar is someone who never scrobbled '
                          'before.'])
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            side_effect=lastfm.exceptions.InvalidParameters('message'))
     def test_lastfm_error_invalid_params(self, mock):
         """InvalidParameters is raised e.g. when a user doesn't exist"""
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
+        yield from asyncio.sleep(1)
         self.assertSent(['PRIVMSG #chan :bar: Error: message'])
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            side_effect=lastfm.exceptions.OperationFailed('message'))
     def test_lastfm_error(self, mock):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
+        yield from asyncio.sleep(1)
         self.assertSent(['PRIVMSG #chan :bar: Error: message'])
 
     @unittest.skip("FIXME caps don't work")
@@ -105,6 +121,7 @@ class LastfmPluginTest(BotTestCase):
             ['PRIVMSG #chan :bar is now playing '
              '“M83 – Skin of the Night”.'])
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_now_playing_more_results.json'))
@@ -114,8 +131,10 @@ class LastfmPluginTest(BotTestCase):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
                                   username='bar')
+        yield from asyncio.sleep(1)
         self.lastfm.get_lastfm_nick.reset_mock()
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
+        yield from asyncio.sleep(1)
         mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
                                   username='foo')
         self.assertSent(
@@ -124,6 +143,7 @@ class LastfmPluginTest(BotTestCase):
              'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
              '“M83 – Skin of the Night”.'])
 
+    @pytest.mark.asyncio
     def test_get_lastfm_nick_from_database(self):
         # mock get_setting
         mock2 = MagicMock(name='MockUser')
@@ -134,45 +154,53 @@ class LastfmPluginTest(BotTestCase):
         self.bot.get_user = mock_user
         lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
         mask = IrcString('nick!ident@host')
-        assert lastfm.get_lastfm_nick(mask) == 'lastfmuser'
+        lastfmnick = yield from lastfm.get_lastfm_nick(mask)
+        assert lastfmnick == 'lastfmuser'
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, hours=1))
     @patch('lastfm.lfm.Track.get_info',
            side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_1_hour_ago(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar is not currently playing '
-                                  'anything (last seen 3 days, 1 hour ago).')
+            {'<user>': None})
+        assert response == ('bar is not currently playing '
+                            'anything (last seen 3 days, 1 hour ago).')
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, hours=2))
     @patch('lastfm.lfm.Track.get_info',
            side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_2_hours_ago(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar is not currently playing '
-                                  'anything (last seen 3 days, 2 hours ago).')
+            {'<user>': None})
+        assert response == ('bar is not currently playing '
+                            'anything (last seen 3 days, 2 hours ago).')
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, minutes=1))
     @patch('lastfm.lfm.Track.get_info',
            side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_1_minute_ago(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar is not currently playing '
-                                  'anything (last seen 3 days, 1 minute ago).')
+            {'<user>': None})
+        assert response == ('bar is not currently playing '
+                            'anything (last seen 3 days, 1 minute ago).')
         assert not mock.called, "Shouldn't call get_info if play not recent"
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, minutes=2))
@@ -183,11 +211,12 @@ class LastfmPluginTest(BotTestCase):
         self.bot.dispatch(':bar!id@foo PRIVMSG #chan :!np')
         self.assertSent(['PRIVMSG #chan :bar is not currently playing '
                          'anything (last seen 3 days, 2 minutes ago).'])
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar is not currently playing anything '
-                                  '(last seen 3 days, 2 minutes ago).')
+            {'<user>': None})
+        assert response == ('bar is not currently playing anything '
+                            '(last seen 3 days, 2 minutes ago).')
         assert not mock.called, "Shouldn't call get_info if play not recent"
 
     @patch('lastfm.lfm.User.get_recent_tracks',
@@ -196,11 +225,12 @@ class LastfmPluginTest(BotTestCase):
     @patch('lastfm.lfm.Track.get_info',
            side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_days_ago(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar is not currently playing anything '
-                                  '(last seen 3 days ago).')
+            {'<user>': None})
+        assert response == ('bar is not currently playing anything '
+                            '(last seen 3 days ago).')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
@@ -208,13 +238,15 @@ class LastfmPluginTest(BotTestCase):
     @patch('lastfm.lfm.Track.get_info',
            side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_1_day_ago(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar is not currently playing anything '
-                                  '(last seen 1 day ago).')
+            {'<user>': None})
+        assert response == ('bar is not currently playing anything '
+                            '(last seen 1 day ago).')
         assert not mock.called, "Shouldn't call get_info if play not recent"
 
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_loved_now_playing.json'))
@@ -223,6 +255,7 @@ class LastfmPluginTest(BotTestCase):
     def test_lastfm_playing_loved(self, mocka, mockb):
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
         self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
+        yield from asyncio.sleep(1)
         self.assertSent(
             ['PRIVMSG #chan :bar is now playing '
              '“Etherwood – Weightless” (♥).',
@@ -235,11 +268,12 @@ class LastfmPluginTest(BotTestCase):
     @patch('lastfm.lfm.Track.get_info',
            side_effect=lastfm.exceptions.InvalidParameters)
     def test_lastfm_played_3_minutes_ago(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar was just playing '
-                                  '“M83 – Kim & Jessie” (3m00s ago).')
+            {'<user>': None})
+        assert response == ('bar was just playing '
+                            '“M83 – Kim & Jessie” (3m00s ago).')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
@@ -248,11 +282,12 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
     def test_lastfm_played_loved_3_minutes_ago(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar was just playing '
-                                  '“M83 – Kim & Jessie” (♥) (3m00s ago).')
+            {'<user>': None})
+        assert response == ('bar was just playing '
+                            '“M83 – Kim & Jessie” (♥) (3m00s ago).')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
@@ -261,12 +296,13 @@ class LastfmPluginTest(BotTestCase):
            return_value=_get_fixture(
                'track_get_info_m83_midnight_city_not_loved_5_plays.json'))
     def test_lastfm_played_loved_count(self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar was just playing '
-                                  '“M83 – Kim & Jessie” (♥) '
-                                  '(5 plays) (3m00s ago).')
+            {'<user>': None})
+        assert response == ('bar was just playing '
+                            '“M83 – Kim & Jessie” (♥) '
+                            '(5 plays) (3m00s ago).')
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
@@ -276,12 +312,13 @@ class LastfmPluginTest(BotTestCase):
                'track_get_info_etherwood_weightless_no_tags_loved.json'))
     def test_lastfm_played_3_minutes_ago_loved_from_extra_info(
             self, mock, mockb):
-        assert self.lastfm.now_playing_response(
+        response = yield from self.lastfm.now_playing_response(
             IrcString('bar!id@host'),
             '#chan',
-            {'<user>': None}) == ('bar was just playing '
-                                  '“M83 – Kim & Jessie” (♥) '
-                                  '(9 plays) (3m00s ago).')
+            {'<user>': None})
+        assert response == ('bar was just playing '
+                            '“M83 – Kim & Jessie” (♥) '
+                            '(9 plays) (3m00s ago).')
 
 if __name__ == '__main__':
     unittest.main()
