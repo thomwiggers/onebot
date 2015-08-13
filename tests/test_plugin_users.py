@@ -9,10 +9,13 @@ Tests for `onebot` module.
 """
 from __future__ import unicode_literals
 
+import asyncio
 import unittest
 
 from irc3.testing import BotTestCase, patch
 from irc3.utils import IrcString
+
+import pytest
 
 from onebot.plugins.users import User
 
@@ -160,9 +163,10 @@ class UserObjectTest(unittest.TestCase):
         self.user.part('#bar')
         assert self.user.channels == set()
 
-    @unittest.skip("This is now async and thus a PAIN IN THE ASS")
+    @pytest.mark.asyncio
     def test_get_settings(self):
         self.user.set_settings({'setting': 'hi'})
+        yield from asyncio.sleep(1)
         assert self.user.get_settings() == {'setting': 'hi'}
         assert self.user.get_setting('foo') is None
         assert self.user.get_setting('foo', 'default') == 'default'

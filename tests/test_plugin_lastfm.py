@@ -65,18 +65,10 @@ class LastfmPluginTest(BotTestCase):
 
     @patch('irc3.plugins.storage.Storage', spec=True)
     def setUp(self, mock):
-        policy = asyncio.get_event_loop_policy()
-        policy.get_event_loop().close()
-        self.event_loop = policy.new_event_loop()
-        policy.set_event_loop(self.event_loop)
         super(LastfmPluginTest, self).setUp()
         self.callFTU()
         self.lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
         self.lastfm.get_lastfm_nick = MagicMock(return_value='bar')
-
-    def tearDown(self):
-        self.event_loop.close()
-        pass
 
     @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
@@ -156,6 +148,26 @@ class LastfmPluginTest(BotTestCase):
         mask = IrcString('nick!ident@host')
         lastfmnick = yield from lastfm.get_lastfm_nick(mask)
         assert lastfmnick == 'lastfmuser'
+
+    @pytest.mark.asyncio
+    def test_setuser(self):
+        mock = MagicMock(name='MockGetUser')
+        self.callFTU()
+        self.bot.get_user = mock
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!setuser foo')
+        mock().set_setting.assert_called_with('lastfmuser', 'foo')
+        self.assertSent(['PRIVMSG #chan :Ok, so you are '
+                         'https://last.fm/user/foo'])
+
+    @pytest.mark.asyncio
+    def test_ignoreme(self):
+        mock = MagicMock(name='MockGetUser')
+        self.callFTU()
+        self.bot.get_user = mock
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!ignoreme')
+        mock().set_setting.assert_called_with('nocompare', True)
+        self.assertSent(['PRIVMSG #chan :I will leave out bar from compare. '
+                         'Re-enable compare by using the unignoreme command'])
 
     @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
@@ -319,6 +331,7 @@ class LastfmPluginTest(BotTestCase):
         assert response == ('bar was just playing '
                             '“M83 – Kim & Jessie” (♥) '
                             '(9 plays) (3m00s ago).')
+
 
 if __name__ == '__main__':
     unittest.main()
