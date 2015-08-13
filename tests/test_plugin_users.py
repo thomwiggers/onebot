@@ -15,8 +15,6 @@ import unittest
 from irc3.testing import BotTestCase, patch
 from irc3.utils import IrcString
 
-import pytest
-
 from onebot.plugins.users import User
 
 
@@ -129,7 +127,12 @@ class UserObjectTest(unittest.TestCase):
 
     def setUp(self):
         mask = IrcString('nick!user@host')
-        self.user = User(mask, ['#foo'], lambda x: mask.host, dict())
+
+        @asyncio.coroutine
+        def id_func(self):
+            return mask
+
+        self.user = User(mask, ['#foo'], id_func, dict())
 
     def test_user_needs_channels(self):
         with self.assertRaises(ValueError):
@@ -163,18 +166,25 @@ class UserObjectTest(unittest.TestCase):
         self.user.part('#bar')
         assert self.user.channels == set()
 
-    @pytest.mark.asyncio
     def test_get_settings(self):
-        self.user.set_settings({'setting': 'hi'})
-        yield from asyncio.sleep(1)
-        assert self.user.get_settings() == {'setting': 'hi'}
-        assert self.user.get_setting('foo') is None
-        assert self.user.get_setting('foo', 'default') == 'default'
-        assert self.user.get_setting('setting') == 'hi'
-        assert self.user.get_setting('setting', 'default') == 'hi'
-        assert self.user.get_setting('foo', 'default') == 'default'
-        self.user.set_setting('setting', 'bar')
-        assert self.user.get_setting('setting') == 'bar'
+
+        @asyncio.coroutine
+        def wrap():
+            self.user.set_settings({'setting': 'hi'})
+            yield from asyncio.sleep(0.01)
+            assert (yield from self.user.get_settings()) == {'setting': 'hi'}
+            assert (yield from self.user.get_setting('foo')) is None
+            assert (yield from self.user.get_setting(
+                'foo', 'default')) == 'default'
+            assert (yield from self.user.get_setting('setting')) == 'hi'
+            assert (yield from self.user.get_setting(
+                'setting', 'default')) == 'hi'
+            assert (yield from self.user.get_setting(
+                'foo', 'default')) == 'default'
+            self.user.set_setting('setting', 'bar')
+            yield from asyncio.sleep(0.01)
+            assert (yield from self.user.get_setting('setting')) == 'bar'
+        asyncio.get_event_loop().run_until_complete(wrap())
 
 
 if __name__ == '__main__':
