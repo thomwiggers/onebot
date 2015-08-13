@@ -170,6 +170,15 @@ class LastfmPluginTest(BotTestCase):
                          'Re-enable compare by using the unignoreme command'])
 
     @pytest.mark.asyncio
+    def test_unignoreme(self):
+        mock = MagicMock(name='MockGetUser')
+        self.callFTU()
+        self.bot.get_user = mock
+        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!ignoreme')
+        mock().set_setting.assert_called_with('nocompare', False)
+        self.assertSent(['PRIVMSG #chan :Ok, enabled compare for bar'])
+
+    @pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, hours=1))
