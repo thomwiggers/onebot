@@ -48,10 +48,12 @@ def _get_patched_time_fixture(fixture_name, **kwargs):
         fixture['track'][0]['date']['#text'] = date.strftime('%D %b %Y, %h:%M')
     return fixture
 
+
 @asyncio.coroutine
 def get_lastfm_nick_mock(nick):
     yield from asyncio.sleep(0.01)
     return nick
+
 
 @freeze_time("2014-01-01")
 @patch('onebot.plugins.users.UsersPlugin', new=MagicMock())
@@ -92,22 +94,21 @@ class LastfmPluginTest(BotTestCase):
             self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
             yield from asyncio.sleep(1)
             mock.assert_called_with('bar', extended=True, limit=1)
-            self.assertSent(['PRIVMSG #chan :bar is someone who never scrobbled '
-                             'before.'])
+            self.assertSent(['PRIVMSG #chan :bar is someone who never '
+                             'scrobbled before.'])
         self.bot.loop.run_until_complete(wrap())
 
     @patch('lastfm.lfm.User.get_recent_tracks',
-           side_effect=lastfm.exceptions.InvalidParameters('message_from_mock'))
+           side_effect=lastfm.exceptions.InvalidParameters('message_frommock'))
     def test_lastfm_error_invalid_params(self, mock):
         """InvalidParameters is raised e.g. when a user doesn't exist"""
         @asyncio.coroutine
         def wrap():
             self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
             yield from asyncio.sleep(1)
-            self.assertSent(['PRIVMSG #chan :bar: Error: message_from_mock'])
+            self.assertSent(['PRIVMSG #chan :bar: Error: message_frommock'])
         self.bot.loop.run_until_complete(wrap())
 
-    #@pytest.mark.asyncio
     @patch('lastfm.lfm.User.get_recent_tracks',
            side_effect=lastfm.exceptions.OperationFailed('message'))
     def test_lastfm_error(self, mock):
@@ -128,8 +129,9 @@ class LastfmPluginTest(BotTestCase):
         @asyncio.coroutine
         def wrap():
             self.bot.dispatch(':bar!id@host PRIVMSG #chan :!NP')
-            mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
-                                      username='bar')
+            mock_a.assert_called_with(
+                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
+                username='bar')
             self.assertSent(
                 ['PRIVMSG #chan :bar is now playing '
                  '“M83 – Skin of the Night”.'])
@@ -145,12 +147,14 @@ class LastfmPluginTest(BotTestCase):
         def wrap():
             self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
             yield from asyncio.sleep(1)
-            mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
-                                      username='bar')
+            mock_a.assert_called_with(
+                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
+                username='bar')
             self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
             yield from asyncio.sleep(1)
-            mock_a.assert_called_with(mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
-                                      username='foo')
+            mock_a.assert_called_with(
+                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
+                username='foo')
             self.assertSent(
                 ['PRIVMSG #chan :bar is now playing '
                  '“M83 – Skin of the Night”.',
@@ -160,6 +164,7 @@ class LastfmPluginTest(BotTestCase):
 
     def test_get_lastfm_nick_from_database(self):
         mock = MagicMock()
+
         # mock get_setting
         @asyncio.coroutine
         def mock_get_setting(setting, default):
@@ -172,6 +177,7 @@ class LastfmPluginTest(BotTestCase):
         self.callFTU()
         self.bot.get_user = mock_user
         lastfm = self.bot.get_plugin('onebot.plugins.lastfm.LastfmPlugin')
+
         def wrap():
             lastfmnick = yield from lastfm.get_lastfm_nick('nick')
             assert lastfmnick == 'lastfmuser'
@@ -252,7 +258,7 @@ class LastfmPluginTest(BotTestCase):
             yield from asyncio.sleep(0.1)
             assert response == ('bar is not currently playing '
                                 'anything (last seen 3 days, 1 minute ago).')
-            assert not mock.called, "Shouldn't call get_info if play not recent"
+            assert not mock.called, "Shouldn't call get_info if not recent"
         self.bot.loop.run_until_complete(wrap())
 
     @patch('lastfm.lfm.User.get_recent_tracks',
@@ -265,7 +271,8 @@ class LastfmPluginTest(BotTestCase):
         @asyncio.coroutine
         def wrap():
             self.bot.dispatch(':bar!id@foo PRIVMSG #chan :!np')
-            yield from asyncio.sleep(2)  # bit longer delay, otherwise the next call gets eaten.
+            # bit longer delay, otherwise the next call gets eaten.
+            yield from asyncio.sleep(2)
             self.assertSent(['PRIVMSG #chan :bar is not currently playing '
                              'anything (last seen 3 days, 2 minutes ago).'])
             response = yield from self.lastfm.now_playing_response(
@@ -273,7 +280,7 @@ class LastfmPluginTest(BotTestCase):
                 {'<user>': None})
             assert response == ('bar is not currently playing anything '
                                 '(last seen 3 days, 2 minutes ago).')
-            assert not mock.called, "Shouldn't call get_info if play not recent"
+            assert not mock.called, "Shouldn't call get_info if not recent"
         self.bot.loop.run_until_complete(wrap())
 
     @patch('lastfm.lfm.User.get_recent_tracks',
@@ -306,7 +313,7 @@ class LastfmPluginTest(BotTestCase):
             yield from asyncio.sleep(0.01)
             assert response == ('bar is not currently playing anything '
                                 '(last seen 1 day ago).')
-            assert not mock.called, "Shouldn't call get_info if play not recent"
+            assert not mock.called, "Shouldn't call get_info if not recent"
         self.bot.loop.run_until_complete(wrap())
 
     @patch('lastfm.lfm.User.get_recent_tracks',
