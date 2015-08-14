@@ -211,7 +211,10 @@ class UsersPlugin(object):
     def create_user(self, mask, channels):
         """Return a User object"""
         if self.identifying_method == 'mask':
-            return User(mask, channels, lambda x: mask.host, self.bot.db)
+            @asyncio.coroutine
+            def id_func(user):
+                return mask.host
+            return User(mask, channels, id_func, self.bot.db)
         if self.identifying_method == 'nickserv':
             @asyncio.coroutine
             def get_account(mask, bot, user):

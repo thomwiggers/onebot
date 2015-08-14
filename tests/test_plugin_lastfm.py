@@ -82,7 +82,7 @@ class LastfmPluginTest(BotTestCase):
         self.lastfm.get_lastfm_nick = get_lastfm_nick_mock
 
     def assertSent(self, lines):
-        """Assert that these lines have been sent"""  # FIXME
+        """Assert that these lines have been sent"""
         self.assertEqual(self.bot.sent, lines)
 
     @patch('lastfm.lfm.User.get_recent_tracks',
