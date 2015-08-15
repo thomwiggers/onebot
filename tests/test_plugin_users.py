@@ -126,6 +126,10 @@ class UsersPluginTest(BotTestCase):
         self.bot.dispatch(':bar!foo@host PRIVMSG #chan2 :hi!')
         assert user.channels == set(('#chan', '#chan2'))
 
+    def test_who_on_join(self):
+        self.bot.dispatch(':{}!bar@baz JOIN #chan2'.format(self.bot.nick))
+        self.assertSent(['WHO #chan2'])
+
 
 class UserObjectTest(unittest.TestCase):
 

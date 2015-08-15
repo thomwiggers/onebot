@@ -162,6 +162,8 @@ class UsersPlugin(object):
         self.log.debug('%s joined channel %s', nick, channel)
         # This can only be observed if we're in that channel
         self.channels.add(channel)
+        if nick == self.bot.nick:
+            self.bot.send('WHO {}'.format(channel))
 
         if nick not in self.active_users:
             self.active_users[nick] = self.create_user(mask, [channel])
@@ -230,6 +232,8 @@ class UsersPlugin(object):
                 if result['success'] and 'acount' in result:
                     user.account = str(result['acount'])
                     return user.account
+                else:
+                    return mask.host
 
             return User(mask, channels, partial(get_account, mask, self.bot),
                         self.bot.db)

@@ -21,13 +21,6 @@ class TestOnebot(TestCase):
     def test_init(self):
         pass
 
-    @mock.patch('irc3.IrcBot.join')
-    @mock.patch('onebot.OneBot.send')
-    def test_join(self, mock2, mock1):
-        self.bot.join('#ru')
-        mock1.assert_called_with('#ru')
-        mock2.assert_called_with('WHO #ru')
-
     def tearDown(self):
         pass
 
