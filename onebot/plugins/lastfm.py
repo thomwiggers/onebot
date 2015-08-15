@@ -67,8 +67,8 @@ class LastfmPlugin(object):
 
             %%np [<user>]
         """
-        message = yield from self.now_playing_response(mask, args)
-        self.bot.privmsg(target, message)
+        response = yield from self.now_playing_response(mask, args)
+        return response
 
     @command
     def compare(self, *args):

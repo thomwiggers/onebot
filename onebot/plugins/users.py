@@ -190,7 +190,7 @@ class UsersPlugin(object):
 
         self.active_users[nick].part(channel)
         if not self.active_users[nick].still_in_channels():
-            self.log.debug("Lost {} out of sight", mask.nick)
+            self.log.debug("Lost %s out of sight", mask.nick)
             del self.active_users[nick]
 
     @irc3.event(irc3.rfc.RPL_WHOREPLY)

@@ -74,7 +74,8 @@ class BotUI(object):
         %%quit [<reason>]
         """
 
-        self.bot.quit((args['<reason>'] or '') + ' -- {}'.format(mask.nick))
+        reason = ' '.join(args['<reason>']) or ''
+        self.bot.quit(reason + ' -- {}'.format(mask.nick))
         self.bot.loop.stop()
 
     @command(permission='admin')
@@ -101,26 +102,30 @@ class BotUI(object):
         """
         Msg - Send a message
 
-        %%msg <target> <message>
+        %%msg <target> <message>...
         """
 
-        self.bot.privmsg(args['<target>'], args['<message>'])
+        msg = ' '.join(args['<message>'])
+        self.bot.privmsg(args['<target>'], msg)
 
     @command(permission='admin')
     def quote(self, mask, target, args):
         """Send a raw string to the ircd
 
-        %%quote <string>
+           %%quote <string>...
         """
-        self.bot.send(args['<string>'])
+        cmd = ' '.join(args['<string>'])
+        self.bot.privmsg(target, "Sending {}".format(cmd))
+        self.bot.send(cmd)
 
     @command(permission='admin')
     def restart(self, mask, target, args):
         """Quit the IRC bot with an error code to signal restart
 
-          %%restart [<reason>]
+          %%restart [<reason>...]
         """
         import sys
-        self.bot.quit((args['<reason>'] or '') + ' -- {}'.format(mask.nick))
+        reason = ' '.join(args['<reason>']) or ''
+        self.bot.quit(reason + ' -- {}'.format(mask.nick))
         self.bot.loop.stop()
         sys.exit(2)

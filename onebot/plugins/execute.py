@@ -15,11 +15,11 @@ Config:
       PRIVMSG SomeBot :LetMeIn
 """
 
+import irc3
+
 
 class ExecutePlugin:
     """Execute commands after having connected"""
-
-    __irc3_plugin__ = True
 
     def __init__(self, bot):
         self.bot = bot
@@ -27,6 +27,10 @@ class ExecutePlugin:
         config = bot.config.get(__name__, {})
         self.commands = config.get('commands', [])
 
+    @irc3.event(irc3.rfc.CONNECTED)
     def connection_made(self, **kwargs):
         for command in self.commands:
+            self.log.debug("Sending command %s", command)
             self.bot.send(command)
+        if not self.commands:
+            self.log.warning("No perform commands!")
