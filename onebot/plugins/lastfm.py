@@ -61,14 +61,17 @@ class LastfmPlugin(object):
                 "in the config section [{}]".format(__name__))
 
     @command
-    @asyncio.coroutine
     def np(self, mask, target, args):
         """Show currently playing track
 
             %%np [<user>]
         """
-        response = yield from self.now_playing_response(mask, args)
-        return response
+        @asyncio.coroutine
+        def wrap():
+            response = yield from self.now_playing_response(mask, args)
+            self.log.debug(response)
+            self.bot.privmsg(target, response)
+        asyncio.async(wrap())
 
     @command
     def compare(self, *args):
