@@ -60,7 +60,8 @@ class ACLPlugin(object):
 
     available_permissions = [
         'operator',
-        'admin'
+        'admin',
+        'view'
     ]
 
     def __init__(self, bot):
