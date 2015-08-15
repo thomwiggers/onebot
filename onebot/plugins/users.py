@@ -114,26 +114,30 @@ class UsersPlugin(object):
         self.bot = bot
         config = bot.config.get(__name__, {})
         self.identifying_method = config.get('identify_by', 'mask')
-
+        self.log = bot.log.getChild(__name__)
         self.connection_lost()
 
     @irc3.extend
     def get_user(self, nick):
-        return self.active_users.get(nick)
+        user = self.active_users.get(nick)
+        if not user:
+            self.log.warning("Couldn't find %s!", nick)
+        return user
 
     @irc3.event(irc3.rfc.JOIN_PART_QUIT)
-    def on_join_part_quit(self, mask=None, event=None, **kwargs):
-        self.bot.log.debug("%s %sed", mask.nick, event)
+    def on_join_part_quit(self, mask=None, **kwargs):
+        event = kwargs['event']
+        self.log.debug("%s %sed", mask.nick, event.lower())
         getattr(self, event.lower())(mask.nick, mask, **kwargs)
 
     @irc3.event(irc3.rfc.KICK)
-    def on_kick(self, mask=None, event=None, target=None, **kwargs):
-        self.bot.log.debug("%s kicked %s", mask.nick, target.nick)
+    def on_kick(self, mask=None, target=None, **kwargs):
+        self.log.debug("%s kicked %s", mask.nick, target.nick)
         self.part(target.nick, target, **kwargs)
 
     @irc3.event(irc3.rfc.NEW_NICK)
     def on_new_nick(self, nick=None, new_nick=None, **kwargs):
-        self.bot.log.debug("%s renamed to %s", nick.nick, new_nick)
+        self.log.debug("%s renamed to %s", nick.nick, new_nick)
         if nick.nick in self.active_users:
             user = self.active_users[nick.nick]
             user.nick = new_nick
@@ -145,7 +149,7 @@ class UsersPlugin(object):
         if target not in self.channels:
             return
         if mask.nick not in self.active_users:
-            self.bot.log.debug("Found user %s via PRIVMSG", mask.nick)
+            self.log.debug("Found user %s via PRIVMSG", mask.nick)
             self.active_users[mask.nick] = self.create_user(mask, [target])
         else:
             self.active_users[mask.nick].join(target)
@@ -154,11 +158,10 @@ class UsersPlugin(object):
         self.channels = set()
         self.active_users = dict()
 
-    def join(self, nick, mask, **kwargs):
-        channel = kwargs['channel']
-
+    def join(self, nick, mask, channel=None, **kwargs):
+        self.log.debug('%s joined channel %s', nick, channel)
         # This can only be observed if we're in that channel
-        self.channels.add(kwargs['channel'])
+        self.channels.add(channel)
 
         if nick not in self.active_users:
             self.active_users[nick] = self.create_user(mask, [channel])
@@ -172,20 +175,22 @@ class UsersPlugin(object):
         if nick in self.active_users:
             del self.active_users[nick]
 
-    def part(self, nick, mask, **kwargs):
+    def part(self, nick, mask, channel=None, **kwargs):
         if nick == self.bot.nick:
+            self.log.info('%s left %s by %s', nick, channel, kwargs['event'])
             for (n, user) in self.active_users.copy().items():
-                user.part(kwargs['channel'])
+                user.part(channel)
                 if not user.still_in_channels():
                     del self.active_users[n]
-                self.channels.remove(kwargs['channel'])
+            # Remove channel from administration
+            self.channels.remove(channel)
 
         if nick not in self.active_users:
             return
 
-        self.active_users[nick].part(kwargs['channel'])
+        self.active_users[nick].part(channel)
         if not self.active_users[nick].still_in_channels():
-            self.bot.log.debug("Lost {} out of sight", mask.nick)
+            self.log.debug("Lost {} out of sight", mask.nick)
             del self.active_users[nick]
 
     @irc3.event(irc3.rfc.RPL_WHOREPLY)
@@ -196,11 +201,11 @@ class UsersPlugin(object):
         Should only be processed for channels we are currently in!
         """
         if channel not in self.channels:
-            self.bot.log.debug(
+            self.log.debug(
                 "Got WHO for channel I'm not in: {chan}".format(chan=channel))
             return
 
-        self.bot.log.debug("Got WHO for {chan}".format(chan=channel))
+        self.log.debug("Got WHO for {chan}".format(chan=channel))
 
         if nick not in self.active_users:
             mask = IrcString('{}!{}@{}'.format(nick, username, server))

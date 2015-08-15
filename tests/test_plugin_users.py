@@ -60,8 +60,12 @@ class UsersPluginTest(BotTestCase):
 
     def test_bot_part(self):
         self.bot.dispatch(':bar!foo@host JOIN #chan')
+        self.bot.dispatch(':bar2!foo@host JOIN #chan')
+        self.bot.dispatch(':bar3!foo@host JOIN #chan')
         self.bot.dispatch(':{}!foo@bar PART #chan'.format(self.bot.nick))
         assert self.bot.get_user('bar') is None
+        assert self.bot.get_user('bar2') is None
+        assert self.bot.get_user('bar3') is None
 
     def test_nick_change(self):
         self.bot.dispatch(':bar!foo@host JOIN #chan')
