@@ -74,7 +74,7 @@ class BotUI(object):
         %%quit [<reason>]
         """
 
-        reason = ' '.join(args['<reason>']) or ''
+        reason = ' '.join(args['<reason>'] or [])
         self.bot.quit(reason + ' -- {}'.format(mask.nick))
         self.bot.loop.stop()
 
@@ -105,7 +105,7 @@ class BotUI(object):
         %%msg <target> <message>...
         """
 
-        msg = ' '.join(args['<message>'])
+        msg = ' '.join(args['<message>'] or [])
         self.bot.privmsg(args['<target>'], msg)
 
     @command(permission='admin')
@@ -114,7 +114,7 @@ class BotUI(object):
 
            %%quote <string>...
         """
-        cmd = ' '.join(args['<string>'])
+        cmd = ' '.join(args['<string>'] or [])
         self.bot.privmsg(target, "Sending {}".format(cmd))
         self.bot.send(cmd)
 
@@ -125,7 +125,7 @@ class BotUI(object):
           %%restart [<reason>...]
         """
         import sys
-        reason = ' '.join(args['<reason>']) or ''
+        reason = ' '.join(args['<reason>'] or [])
         self.bot.quit(reason + ' -- {}'.format(mask.nick))
         self.bot.loop.stop()
         sys.exit(2)
