@@ -22,8 +22,6 @@ Usage::
     >>> bot.include('onebot.plugins.lastfm')
 
 """
-from __future__ import unicode_literals, print_function, absolute_import
-
 import asyncio
 import datetime
 
@@ -66,6 +64,9 @@ class LastfmPlugin(object):
 
             %%np [<user>]
         """
+        if target == self.bot.nick:
+            target = mask.nick
+
         @asyncio.coroutine
         def wrap():
             response = yield from self.now_playing_response(mask, args)
@@ -104,13 +105,14 @@ class LastfmPlugin(object):
             score = round(100.0 * float(result['result']['score']), 2)
             artists = [artist['name'] for artist
                        in result['result']['artists'].get('artist', [])[:5]]
-            print("Score: %d, artists: %s" % (score, ', '.join(artists)))
-            self.bot.privmsg(
-                target,
-                ('{user} and {target} are {score}% compatible! '
-                 'Common artists: {artists}'.format(
-                     user=mask.nick, target=args['<other_user>'],
-                     score=score, artists=', '.join(artists))))
+            self.log.debug("Score: %d, artists: %s", score, ', '.join(artists))
+            msg = '{user} and {target} are {score}% compatible!'.format(
+                user=mask.nick, target=args['<other_user>'], score=score)
+            if len(artists) > 0:
+                msg += ' Common artist{}: {}'.format(
+                    's' if len(artists) > 1 else '',
+                    ', '.join(artists))
+            self.bot.privmsg(target, msg)
         except (lastfm.exceptions.InvalidParameters,
                 lastfm.exceptions.OperationFailed,
                 lastfm.exceptions.AuthenticationFailed) as e:
@@ -124,7 +126,7 @@ class LastfmPlugin(object):
             self.bot.privmsg(target, '{user}: Error: {message}'.format(
                 user=mask.nick, message=errmsg))
         except lastfm.exceptions.InvalidResourceSpecified as e:
-            self.bot.privmsg(target, '{user}: Error: Invalid username'.format(
+            self.bot.privmsg(target, '{user}: Error: Unknown user'.format(
                 user=mask.nick))
 
     @command
@@ -184,7 +186,10 @@ class LastfmPlugin(object):
             self.log.exception("Operation failed when fetching recent tracks",
                                exc_info=e)
             errmsg = str(e)
-            if (lastfm_user != user and
+            if errmsg == "No user with that name was found":
+                errmsg = "No Last.fm user found for {username}".format(
+                    username=user)
+            elif (lastfm_user != user and
                     lastfm_user in errmsg):  # pragma: no cover
                 errmsg = "(Error message withheld)"
                 self.log.critical("Error message contained user name!")
@@ -250,6 +255,10 @@ class LastfmPlugin(object):
                         else:
                             response.append("({}s ago)".format(seconds))
 
+                    if 'tags' in info:
+                        response.append(
+                            '({})'.format(', '.join(info['tags'][:5])))
+
             return ' '.join(response) + '.'
 
     @asyncio.coroutine
@@ -267,13 +276,17 @@ class LastfmPlugin(object):
         """Updates info with extra trackinfo from the last.fm API"""
         try:
             if 'mbid' in info:
+                self.log.debug("asking via mbid")
                 api_result = self.app.track.get_info(mbid=info['mbid'],
                                                      username=username)
             else:
+                self.log.debug("Asking via track")
                 api_result = self.app.track.get_info(track=info['title'],
                                                      artist=info['artist'],
                                                      username=username)
         except lastfm.exceptions.InvalidParameters:
+            self.log.warning("Last.fm returned InvalidParameters "
+                             "for trackinfo")
             return
 
         if 'userplaycount' in api_result:
@@ -281,7 +294,10 @@ class LastfmPlugin(object):
 
         if 'toptags' in api_result and 'tag' in api_result['toptags']:
             taglist = api_result['toptags']['tag']
-            info['tags'] = [tag['name'] for tag in taglist]
+            if not isinstance(api_result['toptags']['tag'], list):
+                self.log.warning("Tags is not a list: %r", taglist)
+            else:
+                info['tags'] = [tag['name'] for tag in taglist]
 
         if 'userloved' in api_result and not info['loved']:
             info['loved'] = bool(int(api_result['userloved']))
