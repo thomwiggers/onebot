@@ -29,11 +29,14 @@ class user_based_policy(object):
         if user:
             perms = yield from user.get_setting('permissions', set())
 
+        self.log.debug("Found permissions for %s: %r", mask.nick, perms)
+
         if permission in perms or 'all_permissions' in perms:
             return True
 
         return False
 
+    @asyncio.coroutine
     def __call__(self, predicates, meth, client, target, args, **kwargs):
         permitted = yield from self.has_permission(
             client, predicates.get('permission'))

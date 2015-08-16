@@ -196,8 +196,8 @@ class UsersPlugin(object):
             del self.active_users[nick]
 
     @irc3.event(irc3.rfc.RPL_WHOREPLY)
-    def on_who(self, channel=None, nick=None, username=None, server=None,
-               **kwargs):
+    def on_who(self, channel=None, nick=None, username=None, host=None,
+               server=None, **kwargs):
         """Process a WHO reply since it could contain new information.
 
         Should only be processed for channels we are currently in!
@@ -207,10 +207,10 @@ class UsersPlugin(object):
                 "Got WHO for channel I'm not in: {chan}".format(chan=channel))
             return
 
-        self.log.debug("Got WHO for {chan}".format(chan=channel))
+        self.log.debug("Got WHO for %s: %s (%s)", channel, nick, host)
 
         if nick not in self.active_users:
-            mask = IrcString('{}!{}@{}'.format(nick, username, server))
+            mask = IrcString('{}!{}@{}'.format(nick, username, host))
             self.active_users[nick] = self.create_user(mask, [channel])
         else:
             self.active_users[nick].join(channel)
