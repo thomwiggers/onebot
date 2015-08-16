@@ -11,6 +11,7 @@ that to an automatically created, in-bot account.
 from __future__ import unicode_literals, print_function
 
 import asyncio
+import re
 from functools import partial
 
 import irc3
@@ -228,14 +229,23 @@ class UsersPlugin(object):
                 if hasattr(user, 'account'):
                     return user.account
                 result = yield from bot.async.whois(mask.nick)
-                print("ACOUNT BECAUSE OF BUG FIXME")
-                if result['success'] and 'acount' in result:
-                    user.account = str(result['acount'])
+                if result['success'] and 'account' in result:
+                    user.account = str(result['account'])
                     return user.account
                 else:
                     return mask.host
 
             return User(mask, channels, partial(get_account, mask, self.bot),
                         self.bot.db)
+        if self.identifying_method == 'whatcd':
+            @asyncio.coroutine
+            def id_func(mask):
+                match = re.match(r'^\d+@(.*)\.\w+\.what\.cd',
+                                 mask.host.lower())
+                if match:
+                    return match.group(1)
+                else:
+                    return mask.host
+            return User(mask, channels, id_func, self.bot.db)
         else:  # pragma: no cover
             raise ValueError("A valid identifying method should be configured")
