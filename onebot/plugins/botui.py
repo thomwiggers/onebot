@@ -41,7 +41,7 @@ class BotUI(object):
                 self.bot.notice(self._admin,
                                 "%s invited me to %s." % (sender, channel))
 
-    @command(permission="operator")
+    @command(permission="operator", show_in_help_list=False)
     def join(self, mask, target, args):
         """
         Join - Command the bot to join a channel.
@@ -55,7 +55,7 @@ class BotUI(object):
 
         self.bot.join(channel)
 
-    @command(permission="operator")
+    @command(permission="operator", show_in_help_list=False)
     def part(self, mask, target, args):
         """
         Part - Command the bot to leave a channel
@@ -67,7 +67,7 @@ class BotUI(object):
 
         self.bot.part(target)
 
-    @command(permission='admin')
+    @command(permission='admin', show_in_help_list=False)
     def quit(self, mask, target, args):
         """
         Quit - Shutdown the bot
@@ -78,7 +78,7 @@ class BotUI(object):
         self.bot.quit(reason + ' -- {}'.format(mask.nick))
         self.bot.loop.stop()
 
-    @command(permission='admin')
+    @command(permission='admin', show_in_help_list=False)
     def nick(self, mask, target, args):
         """
         Nick - Change nickname of the bot
@@ -87,7 +87,7 @@ class BotUI(object):
 
         self.bot.set_nick(args['<nick>'])
 
-    @command(permission='operator')
+    @command(permission='operator', show_in_help_list=False)
     def mode(self, mask, target, args):
         """
         Mode - Set user mode for the bot.
@@ -97,7 +97,7 @@ class BotUI(object):
 
         self.bot.mode(self.bot.nick, args['<mode cmd>'])
 
-    @command(permission='admin')
+    @command(permission='admin', show_in_help_list=False)
     def msg(self, mask, target, args):
         """
         Msg - Send a message
@@ -108,7 +108,7 @@ class BotUI(object):
         msg = ' '.join(args['<message>'] or [])
         self.bot.privmsg(args['<target>'], msg)
 
-    @command(permission='admin')
+    @command(permission='admin', show_in_help_list=False)
     def quote(self, mask, target, args):
         """Send a raw string to the ircd
 
@@ -118,7 +118,7 @@ class BotUI(object):
         self.bot.privmsg(target, "Sending {}".format(cmd))
         self.bot.send(cmd)
 
-    @command(permission='admin')
+    @command(permission='admin', show_in_help_list=False)
     def restart(self, mask, target, args):
         """Quit the IRC bot with an error code to signal restart
 

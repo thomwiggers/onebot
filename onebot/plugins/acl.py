@@ -76,7 +76,7 @@ class ACLPlugin(object):
         if 'superadmin' in self.config:
             self.bot.db[self.config['superadmin']] = ['all_permissions']
 
-    @command(permission='admin')
+    @command(permission='admin', show_in_help_list=False)
     @asyncio.coroutine
     def acl(self, mask, target, args):
         """Administrate the ACL
