@@ -99,7 +99,7 @@ class UsersPluginTest(BotTestCase):
         self.bot.dispatch(':server 352 irc3 #chan ~user host serv bar H@ :hoi')
         user = self.bot.get_user('bar')
         assert user.nick == 'bar'
-        assert user.host == '~user@serv'
+        assert user.host == '~user@host'
         assert user.channels == set(('#chan',))
 
         # Test adding chans to existing users

@@ -363,8 +363,9 @@ class LastfmPluginTest(BotTestCase):
             response = yield from self.lastfm.now_playing_response(
                 IrcString('bar!id@host'),
                 {'<user>': None})
-            assert response == ('bar was just playing '
-                                '“M83 – Kim & Jessie” (♥) (3m00s ago).')
+            assert response == (
+                'bar was just playing “M83 – Kim & Jessie” (♥) (3m00s ago) '
+                '(shoegaze, electronic, indie, dream pop, pop).')
 
         self.bot.loop.run_until_complete(wrap())
 
@@ -380,9 +381,10 @@ class LastfmPluginTest(BotTestCase):
             response = yield from self.lastfm.now_playing_response(
                 IrcString('bar!id@host'),
                 {'<user>': None})
-            assert response == ('bar was just playing '
-                                '“M83 – Kim & Jessie” (♥) '
-                                '(5 plays) (3m00s ago).')
+            assert response == (
+                'bar was just playing “M83 – Kim & Jessie” (♥) (5 plays) '
+                '(3m00s ago) (electronic, indie, electropop, electro, '
+                'catchy).')
         self.bot.loop.run_until_complete(wrap())
 
     @patch('lastfm.lfm.User.get_recent_tracks',
