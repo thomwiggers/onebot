@@ -245,6 +245,8 @@ class UsersPlugin(object):
                 if match:
                     return match.group(1)
                 else:
+                    self.log.debug('Failed to extract what.cd user name'
+                                   'from {mask}'.format(mask=mask))
                     return mask.host
             return User(mask, channels, id_func, self.bot.db)
         else:  # pragma: no cover
