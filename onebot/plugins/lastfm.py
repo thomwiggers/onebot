@@ -183,22 +183,28 @@ class LastfmPlugin(object):
         except (lastfm.exceptions.InvalidParameters,
                 lastfm.exceptions.OperationFailed,
                 lastfm.exceptions.AuthenticationFailed) as e:
-            self.log.exception("Operation failed when fetching recent tracks",
-                               exc_info=e)
             errmsg = str(e)
+            # filter out common failure and show status
             if errmsg == "No user with that name was found":
                 errmsg = "No Last.fm user found for {username}".format(
                     username=user)
-            elif (lastfm_user != user and
+            else:
+                self.log.exception(
+                    "Operation failed when fetching recent tracks",
+                    exc_info=e)
+
+            if (lastfm_user != user and
                     lastfm_user in errmsg):  # pragma: no cover
                 errmsg = "(Error message withheld)"
                 self.log.critical("Error message contained user name!")
             return "{user}: Error: {message}".format(user=user,
                                                      message=errmsg)
-        except:  # pragma: no cover
-            self.log.exception("Fatal exception when calling last.fm")
-            return "{user}: Fatal exception occurred. Aborting.".format(
-                user=user)
+        except Exception as e:  # pragma: no cover
+            self.log.exception("Fatal exception when calling last.fm",
+                               exc_info=e)
+            return ("{user}: Fatal exception occurred. Aborting. "
+                    "Check http://status.last.fm".format(
+                        user=user))
         else:
             response = ["{user}".format(user=user)]
 
@@ -275,7 +281,7 @@ class LastfmPlugin(object):
     def fetch_extra_trackinfo(self, username, info):
         """Updates info with extra trackinfo from the last.fm API"""
         try:
-            if 'mbid' in info:
+            if 'mbid' in info and False:
                 self.log.debug("asking via mbid")
                 api_result = self.app.track.get_info(mbid=info['mbid'],
                                                      username=username)

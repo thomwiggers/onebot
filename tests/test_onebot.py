@@ -8,7 +8,7 @@ test_onebot
 Tests for `onebot` module.
 """
 
-from unittest import TestCase, mock
+from unittest import TestCase
 
 from onebot import OneBot
 
