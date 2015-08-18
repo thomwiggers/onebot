@@ -116,8 +116,7 @@ class LastfmPlugin(object):
         except (lastfm.exceptions.InvalidParameters,
                 lastfm.exceptions.OperationFailed,
                 lastfm.exceptions.AuthenticationFailed) as e:
-            self.log.exception('Operation failed when tasteometering',
-                               exc_info=e)
+            self.log.exception('Operation failed when tasteometering')
             errmsg = str(e)
             if (lastfm_user != mask.nick and
                     lastfm_user in errmsg):  # pragma: no cover
@@ -128,6 +127,11 @@ class LastfmPlugin(object):
         except lastfm.exceptions.InvalidResourceSpecified as e:
             self.bot.privmsg(target, '{user}: Error: Unknown user'.format(
                 user=mask.nick))
+        except:
+            self.log.exception('Other exception while tasteometering')
+            self.bot.privmsg(
+                target,
+                '{user}: Error: unexpected error. http://status.last.fm')
 
     @command
     def setuser(self, mask, target, args):
