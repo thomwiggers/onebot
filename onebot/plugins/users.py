@@ -239,7 +239,7 @@ class UsersPlugin(object):
                         self.bot.db)
         if self.identifying_method == 'whatcd':
             @asyncio.coroutine
-            def id_func(mask):
+            def id_func(user):
                 match = re.match(r'^\d+@(.*)\.\w+\.what\.cd',
                                  mask.host.lower())
                 if match:
