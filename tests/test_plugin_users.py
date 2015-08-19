@@ -18,6 +18,14 @@ from irc3.utils import IrcString
 from onebot.plugins.users import User
 
 
+class MockDb(dict):
+    def set(self, k, **kwargs):
+        if not self.get(k):
+            self[k] = kwargs
+        else:
+            self[k].update(**kwargs)
+
+
 class UsersPluginTest(BotTestCase):
 
     config = {
@@ -28,7 +36,7 @@ class UsersPluginTest(BotTestCase):
     @patch('irc3.plugins.storage.Storage')
     def setUp(self, mock):
         self.callFTU()
-        self.bot.db = dict()
+        self.bot.db = MockDb()
         self.users = self.bot.get_plugin('onebot.plugins.users.UsersPlugin')
 
     def test_join(self):
@@ -140,7 +148,7 @@ class UserObjectTest(unittest.TestCase):
         def id_func(self):
             return mask
 
-        self.user = User(mask, ['#foo'], id_func, dict())
+        self.user = User(mask, ['#foo'], id_func, MockDb())
 
     def test_user_needs_channels(self):
         with self.assertRaises(ValueError):

@@ -12,6 +12,8 @@ import asyncio
 from irc3.testing import BotTestCase, patch
 from irc3.plugins.command import command
 
+from .test_plugin_users import MockDb
+
 
 @command(permission='test')
 def cmd(bot, mask, target, args):
@@ -40,7 +42,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
         self.config['loop'] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config['loop'])
         self.callFTU()
-        self.bot.db = {}
+        self.bot.db = MockDb()
 
     def test_command_allowed(self):
         @asyncio.coroutine
@@ -80,10 +82,10 @@ class ACLTestCase(BotTestCase):
         self.config['loop'] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config['loop'])
         self.callFTU()
-        self.bot.db = {
+        self.bot.db = MockDb({
             'root@localhost': {
                 'privileges': {
-                    'all_permissions'}}}
+                    'all_permissions'}}})
         self.bot.dispatch(':bar!foo@host JOIN #chan')
 
     def assertSent(self, lines):
