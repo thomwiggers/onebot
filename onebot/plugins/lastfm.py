@@ -265,7 +265,7 @@ class LastfmPlugin(object):
                         else:
                             response.append("({}s ago)".format(seconds))
 
-                    if 'tags' in info:
+                    if 'tags' in info and len(info['tags']) > 0:
                         response.append(
                             '({})'.format(', '.join(info['tags'][:5])))
 
