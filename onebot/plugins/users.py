@@ -56,9 +56,7 @@ class User(object):
         @asyncio.coroutine
         def wrapper():
             id_ = yield from self.id()
-            if id_ not in self.database:
-                self.database[id_] = dict()
-            self.database[id_][setting] = value
+            self.database.set(id_, **{setting: value})
         asyncio.async(wrapper())
 
     @asyncio.coroutine
