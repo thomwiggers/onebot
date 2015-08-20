@@ -131,7 +131,8 @@ class LastfmPlugin(object):
             self.log.exception('Other exception while tasteometering')
             self.bot.privmsg(
                 target,
-                '{user}: Error: unexpected error. http://status.last.fm')
+                '{user}: Error: unexpected error. '
+                'http://status.last.fm'.format(user=mask.nick))
 
     @command
     def setuser(self, mask, target, args):
