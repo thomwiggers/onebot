@@ -48,7 +48,10 @@ class UrlInfo(object):
         for url in urls:
             message = ["URL:"]
             o = urlparse(url)
-            if o.hostname in ('localhost', '127.0.0.1', socket.gethostname()):
+            if o.hostname in ('127.0.0.1', '[::1]',
+                              'localhost',
+                              'localhost.localdomain',
+                              socket.gethostname()):
                 continue
             if o.hostname in self.urlmap:
                 url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
