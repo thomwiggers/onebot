@@ -1,3 +1,10 @@
+sites.json
+test.ini
+what.ini
+cookies.jar
+*.json
+*.bak
+
 *.py[cod]
 
 # C extensions
