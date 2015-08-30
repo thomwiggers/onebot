@@ -61,7 +61,7 @@ class UrlInfo(object):
                     index += 1
                 try:
                     response = session.head(
-                        url, allow_redirects=True, timeout=2)
+                        url, allow_redirects=True, timeout=3)
                     content_type = response.headers.get(
                         'Content-Type', 'text/html').split(';')[0]
                     if not response.ok:
@@ -76,7 +76,7 @@ class UrlInfo(object):
                             int(response.headers['Content-Length'])))
                     else:
                         result = session.get(
-                            url, allow_redirects=True, timeout=2)
+                            url, allow_redirects=True, timeout=4)
                         soup = BeautifulSoup(result.content, 'html.parser')
                         if hasattr(soup, 'title'):
                             message.append("title:")
