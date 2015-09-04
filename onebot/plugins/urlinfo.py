@@ -71,7 +71,7 @@ class UrlInfo(object):
                         url, allow_redirects=True, timeout=3)
                     content_type = response.headers.get(
                         'Content-Type', 'text/html').split(';')[0]
-                    size = int(response.headers['Content-Length'])
+                    size = int(response.headers.get('Content-Length', 0))
                     if not response.ok:
                         message.append("error:")
                         message.append(response.reason.lower())
