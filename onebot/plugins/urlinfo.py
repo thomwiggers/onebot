@@ -60,7 +60,8 @@ class UrlInfo(object):
                 url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
                 message.append(url)
             with requests.Session() as session:
-                session.headers.update({'User-Agent': "linux:onebot:1"})
+                session.headers.update({'User-Agent': "linux:onebot:1",
+                                        'Accept': 'en'})
                 session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
                 if len(urls) > 1:
