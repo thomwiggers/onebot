@@ -57,6 +57,7 @@ class UrlInfo(object):
                 url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
                 message.append(url)
             with requests.Session() as session:
+                session.headers.update({'User-Agent': "requests/OneBot"})
                 session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
                 if len(urls) > 1:
@@ -84,7 +85,7 @@ class UrlInfo(object):
                         if hasattr(soup, 'title'):
                             message.append("title:")
                             message.append(
-                                "“{}”".format(soup.title.string))
+                                "“{}”".format(soup.title.string.strip()))
                 except requests.exceptions.Timeout:
                     message.append("error: timeout")
                     self.log.debug("Error while requesting %s", url)
