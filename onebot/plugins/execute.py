@@ -30,7 +30,7 @@ class ExecutePlugin:
         self.delayed_commands = config.get('delayed_commands', [])
 
     @irc3.event(irc3.rfc.CONNECTED)
-    def connection_made(self, **kwargs):
+    def connected(self, **kwargs):
         self.log.info("Sending perform commands")
         for command in self.commands:
             self.log.debug("Sending command %s", command)
