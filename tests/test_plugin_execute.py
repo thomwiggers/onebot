@@ -30,6 +30,6 @@ class ExecutePluginTestCase(BotTestCase):
         self.callFTU()
         self.bot.db = {}
 
-    def test_command_allowed(self):
-        self.bot.notify('connection_made')
+    def test_connection_made(self):
+        self.bot.dispatch(':irc.server 376 foo!nick@bar :something')
         self.assertSent(['command1', 'command2'])
