@@ -3,6 +3,7 @@
 
 """
 
+from contextlib import closing
 import re
 import pickle
 import socket
@@ -68,35 +69,35 @@ class UrlInfo(object):
                     message.append("({})".format(index))
                     index += 1
                 try:
-                    response = session.head(
-                        url, allow_redirects=True, timeout=3)
-                    content_type = response.headers.get(
-                        'Content-Type', 'text/html').split(';')[0]
-                    size = int(response.headers.get('Content-Length', 0))
-                    if not response.ok:
-                        message.append("error:")
-                        message.append(response.reason.lower())
-                    elif (content_type not in (
-                            'text/html', 'application/xhtml+xml')
-                            and size < (1048576 * 5)):
-                        class_, app = content_type.split('/')
-                        if ((class_ in self.ignored_classes
-                                or app in self.ignored_apps)
-                                and size < (1048576 * 5)):
-                            return
-                        message.append("Content-Type:")
-                        message.append(response.headers['Content-Type'])
-                        message.append("Filesize:")
-                        message.append(sizeof_fmt(size))
-                    else:
-                        result = session.get(
-                            url, allow_redirects=True, timeout=4)
-                        soup = BeautifulSoup(result.content, 'html.parser')
-                        if hasattr(soup, 'title'):
-                            message.append(
-                                "“{}”".format(soup.title.string.strip()))
+                    with closing(
+                            session.get(url, allow_redirects=True,
+                                        timeout=4, stream=True)) as response:
+                        content_type = response.headers.get(
+                            'Content-Type', 'text/html').split(';')[0]
+                        size = int(response.headers.get('Content-Length', 0))
+                        if not response.ok:
+                            message.append("error:")
+                            message.append(response.reason.lower())
+                        elif (content_type not in (
+                                'text/html', 'application/xhtml+xml')):
+                            class_, app = content_type.split('/')
+                            if ((class_ in self.ignored_classes
+                                    or app in self.ignored_apps)
+                                    and size < (1048576 * 5)):
+                                continue
+                            message.append("Content-Type:")
+                            message.append(content_type)
+                            message.append("Filesize:")
+                            message.append(sizeof_fmt(size))
+                        else:
+                            soup = BeautifulSoup(response.content,
+                                                 'html.parser')
+                            if hasattr(soup, 'title'):
+                                message.append(
+                                    "“{}”".format(soup.title.string.strip()))
                 except requests.exceptions.Timeout:
                     self.log.debug("Error while requesting %s", url)
+                    message.append('Timeout')
                 except:
                     self.log.exception(
                         "Exception while requesting %s", url)
