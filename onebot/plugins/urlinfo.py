@@ -36,6 +36,7 @@ class UrlInfo(object):
         self.ignored_classes = self.config.get('ignored_classes',
                                                ['image', 'text'])
         self.ignored_apps = self.config.get('ignored_apps', ['pdf'])
+        self.ignored_channels = self.config.get('ignored_channels', [])
         if cookiejar_file:
             with open(cookiejar_file, 'rb') as f:
                 self.cookiejar = pickle.load(f)
@@ -45,7 +46,8 @@ class UrlInfo(object):
     @event('^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) '
            '(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$')
     def on_message(self, mask, event, target, data):
-        if mask.nick == self.bot.nick or event == 'NOTICE':
+        if (mask.nick == self.bot.nick or event == 'NOTICE'
+                or not target.is_channel or target in self.ignored_channels):
             return
         index = 1
         urls = re.findall(r'https?://\S+', data)
