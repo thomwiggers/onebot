@@ -37,6 +37,7 @@ class UrlInfo(object):
                                                ['image', 'text'])
         self.ignored_apps = self.config.get('ignored_apps', ['pdf'])
         self.ignored_channels = self.config.get('ignored_channels', [])
+        self.cookiejar = None
         if cookiejar_file:
             with open(cookiejar_file, 'rb') as f:
                 self.cookiejar = pickle.load(f)
