@@ -39,7 +39,7 @@ class ExecutePlugin:
             self.log.warning("No perform commands!")
 
         self.log.debug("Waiting for delayed commands")
-        time.sleep(3)
+        time.sleep(4)
         self.log.info("Sending delayed commands")
         for command in self.delayed_commands:
             self.log.debug("Sending command %s", command)
