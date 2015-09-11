@@ -62,7 +62,7 @@ class UrlInfo(object):
                 message.append(url)
             with requests.Session() as session:
                 session.headers.update({'User-Agent': "linux:onebot:1",
-                                        'Accept': 'en'})
+                                        'Accept-Language': 'en'})
                 session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
                 if len(urls) > 1:
