@@ -249,3 +249,7 @@ class UsersPlugin(object):
             return User(mask, channels, id_func, self.bot.db)
         else:  # pragma: no cover
             raise ValueError("A valid identifying method should be configured")
+
+    @classmethod
+    def reload(cls, old):
+        return cls(old.bot)

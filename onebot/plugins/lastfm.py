@@ -313,6 +313,10 @@ class LastfmPlugin(object):
         if 'userloved' in api_result and not info['loved']:
             info['loved'] = bool(int(api_result['userloved']))
 
+    @classmethod
+    def reload(cls, old):
+        return cls(old.bot)
+
 
 def _time_ago(time):
     """Represent time past as a friendly string"""

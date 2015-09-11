@@ -123,3 +123,7 @@ class ACLPlugin(object):
             target,
             'Updated permissions for {user}'.format(
                 user=username or args['<id>']))
+
+    @classmethod
+    def reload(cls, old):
+        return cls(old.bot)

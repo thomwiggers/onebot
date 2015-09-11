@@ -107,3 +107,7 @@ class UrlInfo(object):
                     continue
 
             self.bot.privmsg(target, "{}.".format(' '.join(message)))
+
+    @classmethod
+    def reload(cls, old):
+        return cls(old.bot)

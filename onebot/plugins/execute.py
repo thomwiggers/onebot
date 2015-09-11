@@ -44,3 +44,7 @@ class ExecutePlugin:
         for command in self.delayed_commands:
             self.log.debug("Sending command %s", command)
             self.bot.send(command)
+
+    @classmethod
+    def reload(cls, old):
+        return cls(old.bot)

@@ -129,3 +129,7 @@ class BotUI(object):
         self.bot.quit(reason + ' -- {}'.format(mask.nick))
         self.bot.loop.stop()
         sys.exit(2)
+
+    @classmethod
+    def reload(cls, old):
+        return cls(old.bot)
