@@ -89,7 +89,8 @@ class UrlInfo(object):
                             message.append(response.reason.lower())
                         elif (o.hostname.endswith('reddit.com') and
                               content_type == 'application/json'):
-                            data = json.loads(response.content.decode())
+                            data = json.loads(
+                                response.content.decode('utf-8'))
                             title = data[0]['data'][
                                 'children'][0]['data']['title']
                             message.append(title)
@@ -106,8 +107,9 @@ class UrlInfo(object):
                             message.append("Filesize:")
                             message.append(sizeof_fmt(size))
                         else:
-                            soup = BeautifulSoup(response.content,
-                                                 'html5lib')
+                            soup = BeautifulSoup(
+                                response.content.decode('utf-8', 'ignore'),
+                                'html5lib')
                             if hasattr(soup, 'title'):
                                 message.append(
                                     "“{}”".format(soup.title.string.strip()))
