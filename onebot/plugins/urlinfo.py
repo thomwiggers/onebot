@@ -7,6 +7,7 @@ from contextlib import closing
 import re
 import pickle
 import socket
+import json
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
@@ -66,9 +67,14 @@ class UrlInfo(object):
             if o.hostname in self.urlmap:
                 url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
                 message.append(url)
+
+            if o.hostname.endswith('reddit.com'):
+                url = '{}.json'.format(url)
+
             with requests.Session() as session:
-                session.headers.update({'User-Agent': "linux:onebot:1",
-                                        'Accept-Language': 'en'})
+                session.headers.update(
+                    {'User-Agent': "linux:onebot:1 by DutchDudeWCD",
+                     'Accept-Language': 'en'})
                 session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
                 try:
@@ -81,6 +87,13 @@ class UrlInfo(object):
                         if not response.ok:
                             message.append("error:")
                             message.append(response.reason.lower())
+                        elif (o.hostname.endswith('reddit.com') and
+                              content_type == 'application/json'):
+                            data = json.loads(response.content.decode())
+                            title = data[0]['data'][
+                                'children'][0]['data']['title']
+                            message.append(title)
+                            continue
                         elif (content_type not in (
                                 'text/html', 'application/xhtml+xml')):
                             class_, app = content_type.split('/')
