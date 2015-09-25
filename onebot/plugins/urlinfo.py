@@ -52,8 +52,11 @@ class UrlInfo(object):
             return
         index = 1
         urls = re.findall(r'https?://\S+', data)
+        message = []
         for url in urls:
-            message = []
+            if len(urls) > 1:
+                message.append("({})".format(index))
+                index += 1
             o = urlparse(url)
             if o.hostname in ('127.0.0.1', '[::1]',
                               'localhost',
@@ -68,9 +71,6 @@ class UrlInfo(object):
                                         'Accept-Language': 'en'})
                 session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
-                if len(urls) > 1:
-                    message.append("({})".format(index))
-                    index += 1
                 try:
                     with closing(
                             session.get(url, allow_redirects=True,
@@ -94,7 +94,7 @@ class UrlInfo(object):
                             message.append(sizeof_fmt(size))
                         else:
                             soup = BeautifulSoup(response.content,
-                                                 'html.parser')
+                                                 'html5lib')
                             if hasattr(soup, 'title'):
                                 message.append(
                                     "“{}”".format(soup.title.string.strip()))
@@ -105,7 +105,7 @@ class UrlInfo(object):
                     self.log.exception(
                         "Exception while requesting %s", url)
                     continue
-
+        if message:
             self.bot.privmsg(target, "{}.".format(' '.join(message)))
 
     @classmethod

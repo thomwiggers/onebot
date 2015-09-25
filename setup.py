@@ -17,6 +17,7 @@ install_requires = [
     'wheel',
     'lfmh',
     'beautifulsoup4',
+    'html5lib',
     'requests']
 test_requires = ['pytest>=2.6', 'freezegun']
 
