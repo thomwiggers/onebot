@@ -53,8 +53,9 @@ class UrlInfo(object):
             return
         index = 1
         urls = re.findall(r'https?://\S+', data)
-        message = []
+        messages = []
         for url in urls:
+            message = []
             if len(urls) > 1:
                 message.append("({})".format(index))
                 index += 1
@@ -94,7 +95,6 @@ class UrlInfo(object):
                             title = data[0]['data'][
                                 'children'][0]['data']['title']
                             message.append(title)
-                            continue
                         elif (content_type not in (
                                 'text/html', 'application/xhtml+xml')):
                             class_, app = content_type.split('/')
@@ -113,6 +113,7 @@ class UrlInfo(object):
                             if hasattr(soup, 'title'):
                                 message.append(
                                     "“{}”".format(soup.title.string.strip()))
+                    # end with get
                 except requests.exceptions.Timeout:
                     self.log.debug("Error while requesting %s", url)
                     message.append('Timeout')
@@ -120,8 +121,11 @@ class UrlInfo(object):
                     self.log.exception(
                         "Exception while requesting %s", url)
                     continue
-        if message:
-            self.bot.privmsg(target, "{}.".format(' '.join(message)))
+                # end try
+            # end with session
+            messages.append(' '.join(message))
+        if messages:
+            self.bot.privmsg(target, "{}.".format(' '.join(messages)))
 
     @classmethod
     def reload(cls, old):
