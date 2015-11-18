@@ -38,6 +38,7 @@ class UrlInfo(object):
                                                ['image', 'text'])
         self.ignored_apps = self.config.get('ignored_apps', ['pdf'])
         self.ignored_channels = self.config.get('ignored_channels', [])
+        self.ignored_nicks = self.config.get('ignored_nicks', [])
         self.cookiejar = None
         if cookiejar_file:
             with open(cookiejar_file, 'rb') as f:
@@ -49,7 +50,8 @@ class UrlInfo(object):
            '(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$')
     def on_message(self, mask, event, target, data):
         if (mask.nick == self.bot.nick or event == 'NOTICE'
-                or not target.is_channel or target in self.ignored_channels):
+                or not target.is_channel or target in self.ignored_channels
+                or mask.nick in self.ignored_nicks):
             return
         index = 1
         urls = re.findall(r'https?://\S+', data)
