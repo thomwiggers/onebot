@@ -78,7 +78,8 @@ class UrlInfo(object):
                 session.headers.update(
                     {'User-Agent': "linux:onebot:1 by DutchDudeWCD",
                      'Accept-Language': 'en'})
-                session.cookies = self.cookiejar
+                if self.cookiejar:
+                    session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
                 try:
                     with closing(
