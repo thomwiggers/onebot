@@ -7,7 +7,7 @@ from contextlib import closing
 import re
 import pickle
 import socket
-import json
+from io import StringIO
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
@@ -17,11 +17,26 @@ from irc3 import plugin, event
 
 
 def sizeof_fmt(num, suffix='B'):
+    if num == -1:
+        return "large"
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
+def read_body(response):
+    content = StringIO()
+    size = 0
+    for chunk in response.iter_content(2048):
+        if size < 5 * 1048576:
+            content.write(chunk.decode('utf-8', 'ignore'))
+        elif size > 30 * 1048576:
+            return -1, 0
+        size += len(chunk)
+
+    return size, content.getvalue()
 
 
 @plugin
@@ -90,6 +105,11 @@ class UrlInfo(object):
                         size = int(response.headers.get('Content-Length', 0))
                         self.log.debug("File size: {}".format(repr(size)))
 
+                        # handle chunked transfers
+                        content = None
+                        if size == 0:
+                            size, content = read_body(response)
+
                         if not response.ok:
                             message.append("error:")
                             message.append(response.reason.lower())
@@ -99,8 +119,7 @@ class UrlInfo(object):
                             continue
                         elif (o.hostname.endswith('reddit.com') and
                               content_type == 'application/json'):
-                            data = json.loads(
-                                response.content.decode('utf-8'))
+                            data = response.json()
                             title = data[0]['data'][
                                 'children'][0]['data']['title']
                             message.append(title)
@@ -117,11 +136,14 @@ class UrlInfo(object):
                             message.append(sizeof_fmt(size))
                         elif size < (1048576 * 2):
                             soup = BeautifulSoup(
+                                content or
                                 response.content.decode('utf-8', 'ignore'),
                                 'html5lib')
-                            if hasattr(soup, 'title'):
+                            if soup.title is not None:
                                 message.append(
                                     "“{}”".format(soup.title.string.strip()))
+                        else:
+                            continue
                     # end with get
                 except requests.exceptions.Timeout:
                     self.log.debug("Error while requesting %s", url)
