@@ -88,9 +88,15 @@ class UrlInfo(object):
                         content_type = response.headers.get(
                             'Content-Type', 'text/html').split(';')[0]
                         size = int(response.headers.get('Content-Length', 0))
+                        self.log.debug("File size: {}".format(repr(size)))
+
                         if not response.ok:
                             message.append("error:")
                             message.append(response.reason.lower())
+                        elif size == 0:
+                            message.append(
+                                "safety error: unknown size, not reading")
+                            continue
                         elif (o.hostname.endswith('reddit.com') and
                               content_type == 'application/json'):
                             data = json.loads(
