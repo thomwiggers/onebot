@@ -29,10 +29,12 @@ def sizeof_fmt(num, suffix='B'):
 def read_body(response):
     content = StringIO()
     size = 0
-    for chunk in response.iter_content(2048):
+    for chunk in response.iter_content(1048576):
         if size < 5 * 1048576:
             content.write(chunk.decode('utf-8', 'ignore'))
         elif size > 30 * 1048576:
+            response.close()
+            print("returning")
             return -1, 0
         size += len(chunk)
 
@@ -103,13 +105,13 @@ class UrlInfo(object):
                         content_type = response.headers.get(
                             'Content-Type', 'text/html').split(';')[0]
                         size = int(response.headers.get('Content-Length', 0))
-                        self.log.debug("File size: {}".format(repr(size)))
 
                         # handle chunked transfers
                         content = None
                         if size == 0:
                             size, content = read_body(response)
 
+                        self.log.debug("File size: {}".format(repr(size)))
                         if not response.ok:
                             message.append("error:")
                             message.append(response.reason.lower())
@@ -134,7 +136,7 @@ class UrlInfo(object):
                             message.append(content_type)
                             message.append("Filesize:")
                             message.append(sizeof_fmt(size))
-                        elif size < (1048576 * 2):
+                        elif size < (1048576 * 2) and size > 0:
                             soup = BeautifulSoup(
                                 content or
                                 response.content.decode('utf-8', 'ignore'),
