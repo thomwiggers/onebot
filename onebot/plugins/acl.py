@@ -4,7 +4,6 @@ Manage ACL based on the accounts system
 """
 
 import asyncio
-import logging
 
 import irc3
 from irc3.plugins.command import command
@@ -15,7 +14,7 @@ class user_based_policy(object):
     def __init__(self, bot):
         self.bot = bot
         self.bot.include('onebot.plugins.users')
-        self.log = logging.getLogger(__name__)
+        self.log = self.bot.log.getChild(__name__)
 
     def has_permission(self, mask, permission):
         if permission is None:
@@ -30,6 +29,9 @@ class user_based_policy(object):
             perms = yield from user.get_setting('permissions', set())
 
         self.log.debug("Found permissions for %s: %r", mask.nick, perms)
+
+        if 'ignore' in perms and permission is None:
+            return False
 
         if permission in perms or 'all_permissions' in perms:
             return True
@@ -64,16 +66,19 @@ class ACLPlugin(object):
     available_permissions = [
         'operator',
         'admin',
-        'view'
+        'view',
+        'ignore'
     ]
 
     def __init__(self, bot):
         self.bot = bot
         module = self.__class__.__module__
-        self.log = logging.getLogger(module)
+        self.log = bot.log.getChild(module)
         self.config = bot.config.get(module, {})
         self.log.debug('Config: %r', self.config)
         if 'superadmin' in self.config:
+            self.log.info("Giving {} all_permissions".format(
+                self.config['superadmin']))
             self.bot.db.set(self.config['superadmin'],
                             permissions=['all_permissions'])
 
