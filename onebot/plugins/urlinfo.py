@@ -35,7 +35,7 @@ def read_body(response):
         elif size > 30 * 1048576:
             response.close()
             print("returning")
-            return -1, 0
+            return -1, None
         size += len(chunk)
 
     return size, content.getvalue()
