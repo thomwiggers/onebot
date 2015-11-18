@@ -109,7 +109,7 @@ class UrlInfo(object):
                             message.append(content_type)
                             message.append("Filesize:")
                             message.append(sizeof_fmt(size))
-                        else:
+                        elif size < (1048576 * 2):
                             soup = BeautifulSoup(
                                 response.content.decode('utf-8', 'ignore'),
                                 'html5lib')
