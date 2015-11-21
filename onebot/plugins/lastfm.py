@@ -252,7 +252,7 @@ class LastfmPlugin(object):
                         response.append('(♥)')
 
                     if info.get('playcount', 0) > 0:
-                        if info['playcount'] == 1:
+                        if info['playcount'] == 1:  # pragma: no cover
                             response.append('(1 play)')
                         else:
                             response.append(
@@ -264,7 +264,7 @@ class LastfmPlugin(object):
                         if minutes > 0:
                             response.append("({}m{:02}s ago)".format(minutes,
                                                                      seconds))
-                        else:
+                        else:  # pragma: no cover
                             response.append("({}s ago)".format(seconds))
 
                     if 'tags' in info and len(info['tags']) > 0:
@@ -281,7 +281,7 @@ class LastfmPlugin(object):
         if user:
             result = yield from user.get_setting('lastfmuser', nick)
             return result
-        else:
+        else:  # pragma: no cover
             return nick
 
     def fetch_extra_trackinfo(self, username, info):
@@ -306,7 +306,8 @@ class LastfmPlugin(object):
 
         if 'toptags' in api_result and 'tag' in api_result['toptags']:
             taglist = api_result['toptags']['tag']
-            if not isinstance(api_result['toptags']['tag'], list):
+            if not isinstance(api_result['toptags']['tag'],
+                              list):  # pragma: no cover
                 self.log.warning("Tags is not a list: %r", taglist)
             else:
                 info['tags'] = [tag['name'] for tag in taglist]
