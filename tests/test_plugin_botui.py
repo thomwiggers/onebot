@@ -7,7 +7,7 @@ test_onebot_botui
 
 Tests for botui module.
 """
-from irc3.testing import BotTestCase, patch, MagicMock
+from irc3.testing import BotTestCase, patch
 
 from .test_plugin_users import MockDb
 
