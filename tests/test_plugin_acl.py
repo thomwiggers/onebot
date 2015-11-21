@@ -72,15 +72,6 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
         self.assertSent(
             ['PRIVMSG nobody :You are not allowed to use the cmd command'])
 
-    def test_bot_not_allowed(self):
-        """The bot shouldn't be able to send commands to itself"""
-        @asyncio.coroutine
-        def wrap():
-            self.bot.dispatch('{}!bot@host :!cmd'.format(self.bot.nick))
-            yield from asyncio.sleep(0.1)
-        self.bot.loop.run_until_complete(wrap())
-        self.assertSent([])
-
     def test_command_ignored(self):
         @asyncio.coroutine
         def wrap():

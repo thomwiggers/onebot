@@ -17,11 +17,7 @@ class user_based_policy(object):
         self.log = self.bot.log.getChild(__name__)
 
     def has_permission(self, mask, permission):
-        if mask.nick == self.bot.nick:
-            return False
-
         user = self.bot.get_user(mask.nick)
-
         perms = []
         if user:
             perms = yield from user.get_setting('permissions', set())
