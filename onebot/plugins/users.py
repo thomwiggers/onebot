@@ -83,10 +83,6 @@ class User(object):
         """Is the user still in channels?"""
         return len(self.channels) > 0
 
-    def getid(self):
-        """Get the identifier for this user"""
-        return self.id
-
     def __eq__(self, user):
         """Compare users by nick
 
