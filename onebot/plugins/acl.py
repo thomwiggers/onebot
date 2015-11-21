@@ -17,8 +17,6 @@ class user_based_policy(object):
         self.log = self.bot.log.getChild(__name__)
 
     def has_permission(self, mask, permission):
-        if permission is None:
-            return True
         if mask.nick == self.bot.nick:
             return False
 

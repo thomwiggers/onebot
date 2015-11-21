@@ -16,10 +16,19 @@ from .test_plugin_users import MockDb
 
 
 @command(permission='test')
-def cmd(bot, mask, target, args):
+def cmd(bot, mask, target, args, **kwargs):
     """Test Command
 
         %%cmd
+    """
+    bot.privmsg(target, 'Done')
+
+
+@command
+def cmd2(bot, mask, target, args, **kwargs):
+    """Another test command
+
+        %%cmd2
     """
     bot.privmsg(target, 'Done')
 
@@ -62,6 +71,27 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
         self.bot.loop.run_until_complete(wrap())
         self.assertSent(
             ['PRIVMSG nobody :You are not allowed to use the cmd command'])
+
+    def test_bot_not_allowed(self):
+        """The bot shouldn't be able to send commands to itself"""
+        @asyncio.coroutine
+        def wrap():
+            self.bot.dispatch('{}!bot@host :!cmd'.format(self.bot.nick))
+            yield from asyncio.sleep(0.1)
+        self.bot.loop.run_until_complete(wrap())
+        self.assertSent([])
+
+    def test_command_ignored(self):
+        @asyncio.coroutine
+        def wrap():
+            self.bot.dispatch(':Groxxxy!stupid@idiot JOIN #chan')
+            self.bot.db['stupid@idiot'] = {'permissions': {'ignore'}}
+            self.bot.dispatch(':Groxxxy!stupid@idiot PRIVMSG #chan :!cmd2')
+            yield from asyncio.sleep(0.1)
+
+        self.bot.loop.run_until_complete(wrap())
+        self.assertSent(
+            ['PRIVMSG Groxxxy :You are not allowed to use the cmd2 command'])
 
     def assertSent(self, lines):
         """Assert that these lines have been sent"""
