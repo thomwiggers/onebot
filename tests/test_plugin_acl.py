@@ -101,9 +101,10 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
 class ACLTestCase(BotTestCase):
 
     config = {
-        'includes': [
-            'onebot.plugins.acl'],
         'cmd': '!',
+        'onebot.plugins.acl': {
+            'superadmin': 'root@localhost'
+        }
     }
 
     @patch('irc3.plugins.storage.Storage')
@@ -112,10 +113,8 @@ class ACLTestCase(BotTestCase):
         self.config['loop'] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config['loop'])
         self.callFTU()
-        self.bot.db = MockDb({
-            'root@localhost': {
-                'privileges': {
-                    'all_permissions'}}})
+        self.bot.db = MockDb()
+        self.bot.include('onebot.plugins.acl')
         self.bot.dispatch(':bar!foo@host JOIN #chan')
 
     def assertSent(self, lines):
