@@ -65,7 +65,7 @@ class BotUITestCase(BotTestCase):
 
     def test_mode(self):
         self.bot.dispatch(':im!the@boss PRIVMSG #chan :!mode +B')
-        self.assertSent(['MODE irc3 +B'])
+        self.assertSent(['MODE {} +B'.format(self.bot.nick)])
 
     def test_msg(self):
         self.bot.dispatch(':im!the@boss PRIVMSG #chan :!msg #foo best bot')
