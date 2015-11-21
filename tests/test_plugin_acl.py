@@ -142,7 +142,7 @@ class ACLTestCase(BotTestCase):
             set())
         self.assertSent(
             ['PRIVMSG #chan :Invalid permission level. Available permissions: '
-             'operator, admin, view'])
+             'operator, admin, view, ignore'])
 
     def test_remove_acl(self):
         self.bot.db['foo@bar'] = {'permissions': {'admin'}}
