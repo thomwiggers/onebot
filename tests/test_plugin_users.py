@@ -10,6 +10,9 @@ Tests for `onebot` module.
 from __future__ import unicode_literals
 
 import asyncio
+if not hasattr(asyncio, 'ensure_future'):
+    asyncio.ensure_future = asyncio.async
+
 import unittest
 
 from irc3.testing import BotTestCase, patch
@@ -24,6 +27,74 @@ class MockDb(dict):
             self[k] = kwargs
         else:
             self[k].update(**kwargs)
+
+
+class UsersPluginTestWithNickserv(BotTestCase):
+    """Test the NickServ identifying method"""
+    config = {
+        'includes': ['onebot.plugins.users'],
+        'cmd': '!',
+        'onebot.plugins.users': {
+            'identify_by': 'nickserv'
+        }
+    }
+
+    @patch('irc3.plugins.storage.Storage')
+    def setUp(self, mock):
+        self.config['loop'] = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.config['loop'])
+        self.callFTU()
+        self.bot.db = MockDb()
+        self.users = self.bot.get_plugin('onebot.plugins.users.UsersPlugin')
+
+    def test_join(self):
+        self.bot.dispatch(':bar!foo@host JOIN #chan')
+        self.bot.loop.run_until_complete(asyncio.sleep(0.1))
+        user = self.bot.get_user('bar')
+        assert user, "User should exist!"
+        task = asyncio.ensure_future(user.id())
+        self.bot.loop.run_until_complete(asyncio.sleep(0.1))
+
+        self.bot.dispatch(
+            ':localhost 311 me bar foo host * :realname')
+        self.bot.dispatch(':localhost 330 me bar nsaccount :is logged in as')
+        self.bot.dispatch(':localhost 318 me bar :End')
+
+        self.bot.loop.run_until_complete(task)
+        assert task.result() == 'nsaccount'
+
+        # subsequent gets should not need another whois
+        task = asyncio.ensure_future(user.id())
+        self.bot.loop.run_until_complete(task)
+        assert task.result() == 'nsaccount'
+
+
+class UsersPluginTestWithWhatcd(BotTestCase):
+    """Test the What.CD identifying method"""
+    config = {
+        'includes': ['onebot.plugins.users'],
+        'cmd': '!',
+        'onebot.plugins.users': {
+            'identify_by': 'whatcd'
+        }
+    }
+
+    @patch('irc3.plugins.storage.Storage')
+    def setUp(self, mock):
+        self.config['loop'] = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.config['loop'])
+        self.callFTU()
+        self.bot.db = MockDb()
+        self.users = self.bot.get_plugin('onebot.plugins.users.UsersPlugin')
+
+    def test_join(self):
+        self.bot.dispatch(':bar!200779@nankers.member.what.cd JOIN #chan')
+        self.bot.loop.run_until_complete(asyncio.sleep(0.1))
+        user = self.bot.get_user('bar')
+        assert user
+        task = asyncio.ensure_future(user.id())
+        self.bot.loop.run_until_complete(task)
+        assert task.result() == 'nankers'
 
 
 class UsersPluginTest(BotTestCase):
