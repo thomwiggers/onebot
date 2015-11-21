@@ -30,7 +30,7 @@ class BotUI(object):
         self._log.info("%s invited me to %s." % (sender, channel))
 
         if self._autojoin:
-            if target == self.bot.nick:
+            if target.nick == self.bot.nick:
                 self.bot.join(channel)
         else:
             self.bot.privmsg(
@@ -71,11 +71,10 @@ class BotUI(object):
     def quit(self, mask, target, args):
         """
         Quit - Shutdown the bot
-        %%quit [<reason>]
+        %%quit [<reason>...]
         """
-
         reason = ' '.join(args['<reason>'] or [])
-        self.bot.quit(reason + ' -- {}'.format(mask.nick))
+        self.bot.quit('{} -- {}'.format(reason, mask.nick).strip())
         self.bot.loop.stop()
 
     @command(permission='admin', show_in_help_list=False)
@@ -92,10 +91,10 @@ class BotUI(object):
         """
         Mode - Set user mode for the bot.
 
-        %%mode <mode cmd>
+        %%mode <mode-cmd>
         """
 
-        self.bot.mode(self.bot.nick, args['<mode cmd>'])
+        self.bot.mode(self.bot.nick, args['<mode-cmd>'])
 
     @command(permission='admin', show_in_help_list=False)
     def msg(self, mask, target, args):
@@ -126,7 +125,7 @@ class BotUI(object):
         """
         import sys
         reason = ' '.join(args['<reason>'] or [])
-        self.bot.quit(reason + ' -- {}'.format(mask.nick))
+        self.bot.quit('{} -- {} (restart)'.format(reason, mask.nick).strip())
         self.bot.loop.stop()
         sys.exit(2)
 
