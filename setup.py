@@ -13,7 +13,7 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 install_requires = [
-    'irc3>=0.8.0',
+    'irc3>=0.8.2',
     'wheel',
     'lfmh',
     'beautifulsoup4',
