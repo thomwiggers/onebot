@@ -124,5 +124,5 @@ class ACLPlugin(object):
                 user=username or args['<id>']))
 
     @classmethod
-    def reload(cls, old):
+    def reload(cls, old):  # pragma: no cover
         return cls(old.bot)

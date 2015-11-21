@@ -35,7 +35,7 @@ class ExecutePlugin:
         for command in self.commands:
             self.log.debug("Sending command %s", command)
             self.bot.send(command)
-        if not self.commands:
+        if not self.commands:  # pragma: no cover
             self.log.warning("No perform commands!")
 
         self.log.debug("Waiting for delayed commands")
@@ -46,5 +46,5 @@ class ExecutePlugin:
             self.bot.send(command)
 
     @classmethod
-    def reload(cls, old):
+    def reload(cls, old):  # pragma: no cover
         return cls(old.bot)

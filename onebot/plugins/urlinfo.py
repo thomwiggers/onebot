@@ -161,5 +161,5 @@ class UrlInfo(object):
             self.bot.privmsg(target, "{}.".format(' '.join(messages)))
 
     @classmethod
-    def reload(cls, old):
+    def reload(cls, old):  # pragma: no cover
         return cls(old.bot)

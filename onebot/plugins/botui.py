@@ -131,5 +131,5 @@ class BotUI(object):
         sys.exit(2)
 
     @classmethod
-    def reload(cls, old):
+    def reload(cls, old):  # pragma: no cover
         return cls(old.bot)

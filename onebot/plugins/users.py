@@ -247,5 +247,5 @@ class UsersPlugin(object):
             raise ValueError("A valid identifying method should be configured")
 
     @classmethod
-    def reload(cls, old):
+    def reload(cls, old):  # pragma: no cover
         return cls(old.bot)
