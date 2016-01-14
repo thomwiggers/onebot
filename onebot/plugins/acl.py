@@ -24,7 +24,7 @@ class user_based_policy(object):
 
         self.log.debug("Found permissions for %s: %r", mask.nick, perms)
 
-        if 'ignore' in perms and permission is None:
+        if 'ignore' in perms or permission is None:
             return False
 
         if permission in perms or 'all_permissions' in perms:
