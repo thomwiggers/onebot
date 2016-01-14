@@ -10,15 +10,16 @@ Tests for `onebot` module.
 from __future__ import unicode_literals
 
 import asyncio
-if not hasattr(asyncio, 'ensure_future'):
-    asyncio.ensure_future = asyncio.async
-
 import unittest
 
 from irc3.testing import BotTestCase, patch
 from irc3.utils import IrcString
 
 from onebot.plugins.users import User
+
+
+if not hasattr(asyncio, 'ensure_future'):
+    asyncio.ensure_future = asyncio.async
 
 
 class MockDb(dict):

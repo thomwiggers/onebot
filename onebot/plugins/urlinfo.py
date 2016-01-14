@@ -156,9 +156,9 @@ class UrlInfo(object):
                 elif (content_type not in (
                         'text/html', 'application/xhtml+xml')):
                     class_, app = content_type.split('/')
-                    if not ((class_ in self.ignored_classes
-                             or app in self.ignored_apps)
-                            and size < (1048576 * 5)):
+                    if not ((class_ in self.ignored_classes or
+                             app in self.ignored_apps) and
+                            size < (1048576 * 5)):
                         message.append("Content-Type:")
                         message.append(content_type)
                         message.append("Filesize:")
@@ -180,9 +180,9 @@ class UrlInfo(object):
     @event('^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) '
            '(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$')
     def on_message(self, mask, event, target, data):
-        if (mask.nick == self.bot.nick or event == 'NOTICE'
-                or not target.is_channel or target in self.ignored_channels
-                or mask.nick in self.ignored_nicks):
+        if (mask.nick == self.bot.nick or event == 'NOTICE' or
+                not target.is_channel or target in self.ignored_channels or
+                mask.nick in self.ignored_nicks):
             return
         index = 1
         messages = []

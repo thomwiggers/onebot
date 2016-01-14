@@ -219,8 +219,8 @@ class LastfmPlugin(object):
                 response.append('({nick} on Last.FM)'.format(nick=lastfm_user))
 
             # Empty result
-            if 'track' not in result or (isinstance(result['track'], list)
-                                         and len(result['track']) == 0):
+            if 'track' not in result or (isinstance(result['track'], list) and
+                                         len(result['track']) == 0):
                 response.append("is someone who never scrobbled before")
             else:
                 track = result['track']
