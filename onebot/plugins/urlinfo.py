@@ -6,6 +6,7 @@
 from contextlib import closing
 import re
 import pickle
+import ipaddress
 import socket
 from io import StringIO
 from urllib.parse import urlparse
@@ -41,6 +42,27 @@ def read_body(response):
     return size, content.getvalue()
 
 
+URL_PATTERN = re.compile(r'\bhttps?://\S+')
+
+
+def _find_urls(string):
+    """Find all urls in a string"""
+    urls = []
+    for match in URL_PATTERN.finditer(string):
+        url = match.group(0).rstrip('.,\'"')
+        for lbr, rbr in [('(', ')'),
+                         ('[', ']'),
+                         ('{', '}')]:
+            if url.endswith(rbr) and lbr not in url:
+                url = url.rstrip(rbr)
+        urls.append(url)
+    return urls
+
+
+class UrlSkipException(Exception):
+    pass
+
+
 @plugin
 class UrlInfo(object):
     """Bot User Interface plugin"""
@@ -63,6 +85,96 @@ class UrlInfo(object):
 
         self.urlmap = self.bot.config.get(__name__ + '.urlmap', {})
 
+        # URL processors
+        self.url_processors = [
+            self._process_url_urlmap,
+            self._process_url_reddit,
+        ]
+
+    def _process_url(self, session, url, **kwargs):
+        try:
+            # filter out private addresses
+            # May raise exceptions
+            for (f, t, p, c, sockaddr) in socket.getaddrinfo(
+                    urlparse(url).hostname, None):
+                if ipaddress.ip_address(sockaddr[0]).is_private:
+                    return
+        except:
+            return
+
+        for function in self.url_processors:
+            try:
+                result = function(session, url, **kwargs)
+            except UrlSkipException:
+                return
+            if result:
+                return result
+
+        return self._process_url_default(session, url)
+
+    def _process_url_urlmap(self, session, url, already_extended=False):
+        if already_extended:
+            return
+        o = urlparse(url)
+        if o.hostname in self.urlmap:
+            url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
+            return [url].extend(
+                self._process_url(session, url, already_extended=True) or [])
+
+    def _process_url_reddit(self, session, url):
+        """Skip reddit urls for now because they are unreliable
+        FIXME
+        """
+        if urlparse(url).hostname.endswith('reddit.com'):
+            raise UrlSkipException()
+
+    def _process_url_default(self, session, url):
+        """Process an URL"""
+        message = []
+        try:
+            with closing(
+                    session.get(url, allow_redirects=True,
+                                timeout=4, stream=True)) as response:
+                content_type = response.headers.get(
+                    'Content-Type', 'text/html').split(';')[0]
+                size = int(response.headers.get('Content-Length', 0))
+
+                # handle chunked transfers
+                content = None
+                if size == 0:
+                    size, content = read_body(response)
+
+                self.log.debug("File size: {}".format(repr(size)))
+                if not response.ok:
+                    message.append("error:")
+                    message.append(response.reason.lower())
+                elif size == 0:
+                    message.append(
+                        "safety error: unknown size, not reading")
+                elif (content_type not in (
+                        'text/html', 'application/xhtml+xml')):
+                    class_, app = content_type.split('/')
+                    if not ((class_ in self.ignored_classes
+                             or app in self.ignored_apps)
+                            and size < (1048576 * 5)):
+                        message.append("Content-Type:")
+                        message.append(content_type)
+                        message.append("Filesize:")
+                        message.append(sizeof_fmt(size))
+                elif size < (1048576 * 2):
+                    soup = BeautifulSoup(
+                        (content or
+                         response.content.decode('utf-8', 'ignore')),
+                        'html5lib')
+                    if soup.title is not None:
+                        message.append(
+                            "“{}”".format(soup.title.string.strip()))
+            # endwith
+        except requests.exceptions.Timeout:
+            self.log.debug("Error while requesting %s", url)
+            message.append('Timeout')
+        return message
+
     @event('^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) '
            '(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$')
     def on_message(self, mask, event, target, data):
@@ -71,92 +183,34 @@ class UrlInfo(object):
                 or mask.nick in self.ignored_nicks):
             return
         index = 1
-        urls = re.findall(r'https?://\S+', data)
         messages = []
+        urls = _find_urls(data)
         for url in urls:
             message = []
             if len(urls) > 1:
                 message.append("({})".format(index))
                 index += 1
-            o = urlparse(url)
-            if o.hostname in ('127.0.0.1', '[::1]',
-                              'localhost',
-                              'localhost.localdomain',
-                              socket.gethostname()):
-                continue
-            if o.hostname in self.urlmap:
-                url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
-                message.append(url)
-
-            if o.hostname.endswith('reddit.com'):
-                url = '{}.json'.format(url)
-
             with requests.Session() as session:
                 session.headers.update(
                     {'User-Agent': "linux:onebot:1 by DutchDudeWCD",
-                     'Accept-Language': 'en'})
+                     'Accept-Language': 'en-GB, en-US, en, nl-NL, nl'})
                 if self.cookiejar:
                     session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
                 try:
-                    with closing(
-                            session.get(url, allow_redirects=True,
-                                        timeout=4, stream=True)) as response:
-                        content_type = response.headers.get(
-                            'Content-Type', 'text/html').split(';')[0]
-                        size = int(response.headers.get('Content-Length', 0))
-
-                        # handle chunked transfers
-                        content = None
-                        if size == 0:
-                            size, content = read_body(response)
-
-                        self.log.debug("File size: {}".format(repr(size)))
-                        if not response.ok:
-                            message.append("error:")
-                            message.append(response.reason.lower())
-                        elif size == 0:
-                            message.append(
-                                "safety error: unknown size, not reading")
-                            continue
-                        elif (o.hostname.endswith('reddit.com') and
-                              content_type == 'application/json'):
-                            data = response.json()
-                            title = data[0]['data'][
-                                'children'][0]['data']['title']
-                            message.append(title)
-                        elif (content_type not in (
-                                'text/html', 'application/xhtml+xml')):
-                            class_, app = content_type.split('/')
-                            if ((class_ in self.ignored_classes
-                                    or app in self.ignored_apps)
-                                    and size < (1048576 * 5)):
-                                continue
-                            message.append("Content-Type:")
-                            message.append(content_type)
-                            message.append("Filesize:")
-                            message.append(sizeof_fmt(size))
-                        elif size < (1048576 * 2) and size > 0:
-                            soup = BeautifulSoup(
-                                content or
-                                response.content.decode('utf-8', 'ignore'),
-                                'html5lib')
-                            if soup.title is not None:
-                                message.append(
-                                    "“{}”".format(soup.title.string.strip()))
-                        else:
-                            continue
-                    # end with get
-                except requests.exceptions.Timeout:
-                    self.log.debug("Error while requesting %s", url)
-                    message.append('Timeout')
+                    urlmesg = self._process_url(session, url)
+                    if not urlmesg:
+                        continue
+                    else:
+                        message.extend(urlmesg)
                 except:
                     self.log.exception(
                         "Exception while requesting %s", url)
                     continue
                 # end try
             # end with session
-            messages.append(' '.join(message))
+            if message:
+                messages.append(' '.join(message))
         if messages:
             self.bot.privmsg(target, "{}.".format(' '.join(messages)))
 
