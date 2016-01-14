@@ -97,7 +97,9 @@ class UrlInfo(object):
             # May raise exceptions
             for (f, t, p, c, sockaddr) in socket.getaddrinfo(
                     urlparse(url).hostname, None):
-                if ipaddress.ip_address(sockaddr[0]).is_private:
+                ip = ipaddress.ip_address(sockaddr[0])
+                if (ip.is_private or ip.is_loopback or
+                        ip.is_link_local or ip.is_reserved):
                     return
         except:
             return

@@ -34,6 +34,9 @@ class UrlInfoTestCase(BotTestCase):
 
     def test_skip_localhost(self):
         """Assert localhosts are skipped"""
+        def crash(slf, *args, **kwargs):
+            self.fail("Shouldn't reach process_url_default")
+        self.plugin._process_url_default = crash
         self.assertFalse(self.plugin._process_url(None, 'http://localhost'))
         self.assertFalse(
             self.plugin._process_url(None, 'http://localhost/test'))
