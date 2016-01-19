@@ -52,7 +52,8 @@ def _find_urls(string):
         url = match.group(0).rstrip('.,\'"')
         for lbr, rbr in [('(', ')'),
                          ('[', ']'),
-                         ('{', '}')]:
+                         ('{', '}'),
+                         ('<', '>')]:
             if url.endswith(rbr) and lbr not in url:
                 url = url.rstrip(rbr)
         urls.append(url)

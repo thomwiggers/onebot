@@ -63,6 +63,7 @@ class UrlInfoTestCase(BotTestCase):
             ('https://nos.nl/test)', ['https://nos.nl/test']),
             ('http://nos.nl:80/test)', ['http://nos.nl:80/test']),
             ('http://nos.nl:80/(test)', ['http://nos.nl:80/(test)']),
+            ('<http://nos.nl/test>', ['http://nos.nl/test']),
         ]:
             self.assertEqual(expected, _find_urls(message),
                              "String: {}".format(message))
