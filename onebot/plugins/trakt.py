@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 """
 ======================================================
-:mod:`onebot.plugins.trakt` Last.FM plugin for OneBot
+:mod:`onebot.plugins.trakt` Trakt.TV plugin for OneBot
 ======================================================
 
 ..
@@ -67,7 +67,7 @@ class TrakttvPlugin(object):
 
     @command
     def settraktuser(self, mask, target, args):
-        """Sets the lastfm username of the user
+        """Sets the trakttv username of the user
 
             %%settraktuser <trakttvnick>
         """
@@ -128,7 +128,7 @@ class TrakttvPlugin(object):
 
     @asyncio.coroutine
     def get_trakt_nick(self, nick):
-        """Gets the last.fm nick associated with a user from the database
+        """Gets the trakt.tv nick associated with a user from the database
         """
         user = self.bot.get_user(nick)
         if user:
