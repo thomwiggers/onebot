@@ -114,7 +114,7 @@ class TrakttvPlugin(object):
                     response.append(data['episode']['title'])
                 elif data['type'] == 'movie':
                     response.append(data['movie']['title'])
-                    response.append(data['movie']['year'])
+                    response.append('({})'.format(data['movie']['year']))
                 else:
                     response.append("something I don't understand")
             except (ValueError, KeyError):
