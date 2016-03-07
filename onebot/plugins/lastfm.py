@@ -300,6 +300,9 @@ class LastfmPlugin(object):
             self.log.warning("Last.fm returned InvalidParameters "
                              "for trackinfo")
             return
+        except:
+            self.log.exception("Got a random for trackinfo")
+            return
 
         if 'userplaycount' in api_result:
             info['playcount'] = int(api_result['userplaycount'])
