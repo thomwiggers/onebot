@@ -21,11 +21,6 @@ install_requires = [
     'requests']
 test_requires = ['pytest>=2.6', 'freezegun']
 
-if sys.version_info < (3, 4):
-    install_requires.append('trollius')
-if sys.version_info < (3, 3):
-    test_requires.append('mock')
-
 
 class PyTest(TestCommand):
     def finalize_options(self):
