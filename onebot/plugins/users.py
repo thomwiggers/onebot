@@ -12,7 +12,6 @@ from __future__ import unicode_literals, print_function
 
 import asyncio
 import re
-from functools import partial
 
 import irc3
 from irc3.utils import IrcString, BaseString
