@@ -121,7 +121,7 @@ class ACLTestCase(BotTestCase):
             yield from asyncio.sleep(0.1)
         self.bot.loop.run_until_complete(wrap())
         self.assertEquals(self.bot.db['foo@host'].get('permissions'),
-                          {'admin'})
+                          ['admin'])
         self.assertSent(['PRIVMSG #chan :Updated permissions for bar'])
 
     def test_add_unknown_user(self):
@@ -133,8 +133,8 @@ class ACLTestCase(BotTestCase):
             yield from asyncio.sleep(0.1)
         self.bot.loop.run_until_complete(wrap())
         self.assertEquals(
-            self.bot.db.get('bat', {}).get('permissions', set()),
-            set())
+            self.bot.db.get('bat', {}).get('permissions', []),
+            [])
         self.assertSent(
             ["PRIVMSG #chan :I don't know bat. Please use --by-id"])
 
@@ -146,7 +146,7 @@ class ACLTestCase(BotTestCase):
             yield from asyncio.sleep(0.1)
         self.bot.loop.run_until_complete(wrap())
         self.assertEquals(self.bot.db['bak'].get('permissions'),
-                          {'admin'})
+                          ['admin'])
         self.assertSent(['PRIVMSG #chan :Updated permissions for bak'])
 
     def test_invalid_permission(self):
@@ -158,8 +158,8 @@ class ACLTestCase(BotTestCase):
             yield from asyncio.sleep(0.1)
         self.bot.loop.run_until_complete(wrap())
         self.assertEquals(
-            self.bot.db.get('bat', {}).get('permissions', set()),
-            set())
+            self.bot.db.get('bat', {}).get('permissions', []),
+            [])
         self.assertSent(
             ['PRIVMSG #chan :Invalid permission level. Available permissions: '
              'operator, admin, wiki, view, ignore'])
@@ -174,4 +174,4 @@ class ACLTestCase(BotTestCase):
             yield from asyncio.sleep(0.1)
         self.bot.loop.run_until_complete(wrap())
         self.assertEquals(self.bot.db['foo@host'].get('permissions'),
-                          set())
+                          [])
