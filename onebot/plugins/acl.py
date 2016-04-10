@@ -62,6 +62,7 @@ class ACLPlugin(object):
     available_permissions = [
         'operator',
         'admin',
+        'wiki',
         'view',
         'ignore'
     ]
