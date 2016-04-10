@@ -25,7 +25,7 @@ class User(object):
         self.nick = mask.nick
         self.host = mask.host
         self.channels = set()
-        self.id = partial(id_, self)
+        self.id = id_
         self.database = database
         try:
             if isinstance(channels, BaseString):
@@ -214,26 +214,27 @@ class UsersPlugin(object):
         """Return a User object"""
         if self.identifying_method == 'mask':
             @asyncio.coroutine
-            def id_func(user):
+            def id_func():
                 return mask.host
             return User(mask, channels, id_func, self.bot.db)
         if self.identifying_method == 'nickserv':
             @asyncio.coroutine
-            def get_account(mask, bot, user):
+            def get_account():
+                user = self.get_user(mask.nick)
                 if hasattr(user, 'account'):
                     return user.account
-                result = yield from bot.async.whois(mask.nick)
+                result = yield from self.bot.async.whois(mask.nick)
                 if result['success'] and 'account' in result:
                     user.account = str(result['account'])
                     return user.account
                 else:
                     return mask.host
 
-            return User(mask, channels, partial(get_account, mask, self.bot),
+            return User(mask, channels, get_account,
                         self.bot.db)
         if self.identifying_method == 'whatcd':
             @asyncio.coroutine
-            def id_func(user):
+            def id_func():
                 match = re.match(r'^\d+@(.*)\.\w+\.what\.cd',
                                  mask.host.lower())
                 if match:
