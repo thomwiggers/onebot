@@ -39,7 +39,11 @@ class user_based_policy(object):
         permitted = yield from self.has_permission(
             client, predicates.get('permission'))
         if permitted:
-            return meth(client, target, args)
+            if asyncio.iscoroutinefunction(meth):
+                yield from meth(client, target, args)
+                return
+            else:
+                return meth(client, target, args)
         cmd_name = predicates.get('name', meth.__name__)
         self.log.info('Denied access to command %s to user %s',
                       cmd_name, client)
@@ -80,6 +84,7 @@ class ACLPlugin(object):
                             permissions=['all_permissions'])
 
     @command(permission='admin', show_in_help_list=False)
+    @asyncio.coroutine
     def acl(self, mask, target, args):
         """Administrate the ACL
 
@@ -95,36 +100,34 @@ class ACLPlugin(object):
                      permissions=', '.join(self.available_permissions))))
             return
 
-        def wrap():
-            if not args['--by-id']:
-                user = self.bot.get_user(username)
-                if not user:
-                    self.bot.privmsg(
-                        target, ("I don't know {user}. "
-                                 "Please use --by-id".format(user=username)))
-                    return
-                current_permissions = yield from user.get_setting(
-                    'permissions', [])
-            else:
-                current_permissions = self.bot.db.get(args['<id>'], {}).get(
-                    'permissions', [])
+        if not args['--by-id']:
+            user = self.bot.get_user(username)
+            if not user:
+                self.bot.privmsg(
+                    target, ("I don't know {user}. "
+                             "Please use --by-id".format(user=username)))
+                return
+            current_permissions = yield from user.get_setting(
+                'permissions', [])
+        else:
+            current_permissions = self.bot.db.get(args['<id>'], {}).get(
+                'permissions', [])
 
-            if args['add'] and permission not in current_permissions:
-                current_permissions.append(permission)
-            elif args['remove'] and permission in current_permissions:
-                current_permissions.remove(permission)
+        if args['add'] and permission not in current_permissions:
+            current_permissions.append(permission)
+        elif args['remove'] and permission in current_permissions:
+            current_permissions.remove(permission)
 
-            if not args['--by-id']:
-                user.set_setting('permissions', current_permissions)
-            else:
-                if args['<id>'] not in self.bot.db:
-                    self.bot.db[args['<id>']] = {}
-                self.bot.db[args['<id>']]['permissions'] = (
-                    current_permissions)
+        if not args['--by-id']:
+            user.set_setting('permissions', current_permissions)
+        else:
+            if args['<id>'] not in self.bot.db:
+                self.bot.db[args['<id>']] = {}
+            self.bot.db[args['<id>']]['permissions'] = (
+                current_permissions)
 
-            self.bot.privmsg(target, 'Updated permissions for {user}'.format(
-                user=username or args['<id>']))
-        asyncio.async(wrap())
+        self.bot.privmsg(target, 'Updated permissions for {user}'.format(
+            user=username or args['<id>']))
 
     @classmethod
     def reload(cls, old):  # pragma: no cover
