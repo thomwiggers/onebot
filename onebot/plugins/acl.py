@@ -94,6 +94,7 @@ class ACLPlugin(object):
                  '{permissions}'.format(
                      permissions=', '.join(self.available_permissions))))
             return
+
         def wrap():
             if not args['--by-id']:
                 user = self.bot.get_user(username)
@@ -102,7 +103,8 @@ class ACLPlugin(object):
                         target, ("I don't know {user}. "
                                  "Please use --by-id".format(user=username)))
                     return
-                current_permissions = yield from user.get_setting('permissions', [])
+                current_permissions = yield from user.get_setting(
+                    'permissions', [])
             else:
                 current_permissions = self.bot.db.get(args['<id>'], {}).get(
                     'permissions', [])
