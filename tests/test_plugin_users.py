@@ -217,7 +217,7 @@ class UserObjectTest(unittest.TestCase):
         mask = IrcString('nick!user@host')
 
         @asyncio.coroutine
-        def id_func(self):
+        def id_func():
             return mask
 
         self.user = User(mask, ['#foo'], id_func, MockDb())
