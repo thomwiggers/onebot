@@ -248,4 +248,9 @@ class UsersPlugin(object):
 
     @classmethod
     def reload(cls, old):  # pragma: no cover
-        return cls(old.bot)
+        users = old.active_users
+        newinstance = cls(old.bot)
+        for user in users.values():
+            user.database = newinstance.bot.db
+        newinstance.channels = old.channels
+        newinstance.users = users
