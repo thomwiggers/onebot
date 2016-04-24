@@ -33,6 +33,7 @@ class WhatCDPlugin(object):
         wikikey = 'wiki{}'.format(''.join(args['<terms>']))
         if wikikey in self.bot.db:
             yield self.bot.db[wikikey]['response']
+            return
         yield WIKI_SEARCH_URL.format(
             terms=quote_plus(' '.join(args['<terms>'])))
 
