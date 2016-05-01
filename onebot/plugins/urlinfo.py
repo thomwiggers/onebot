@@ -35,7 +35,6 @@ def read_body(response):
             content.write(chunk.decode('utf-8', 'ignore'))
         elif size > 30 * 1048576:
             response.close()
-            print("returning")
             return -1, None
         size += len(chunk)
 
@@ -151,9 +150,9 @@ class UrlInfo(object):
                 if not response.ok:
                     message.append("error:")
                     message.append(response.reason.lower())
-                elif size == 0:
+                elif size < 0:
                     message.append(
-                        "safety error: unknown size, not reading")
+                        "Safety error: unknown size, not reading")
                 elif (content_type not in (
                         'text/html', 'application/xhtml+xml')):
                     class_, app = content_type.split('/')
