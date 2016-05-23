@@ -10,6 +10,7 @@ that to an automatically created, in-bot account.
 """
 from __future__ import unicode_literals, print_function
 
+import ast
 import asyncio
 import re
 
@@ -68,7 +69,15 @@ class User(object):
     def get_setting(self, setting, default=None):
         """Gets a setting for the users"""
         settings = yield from self.get_settings()
-        return settings.get(setting, default)
+        result = settings.get(setting, default)
+        if isinstance(result, str):
+            try:
+                parsed = ast.literal_eval(result)
+                return parsed
+            except ValueError:
+                pass
+
+        return result
 
     def join(self, channel):
         """Register that the user joined a channel"""
