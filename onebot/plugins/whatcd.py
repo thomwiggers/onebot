@@ -30,7 +30,7 @@ class WhatCDPlugin(object):
 
             %%wiki <terms>...
         """
-        wikikey = 'wiki{}'.format(''.join(args['<terms>']))
+        wikikey = 'wiki{}'.format(''.join(args['<terms>'])).lower()
         if wikikey in self.bot.db:
             yield self.bot.db[wikikey]['response']
             return
@@ -46,7 +46,7 @@ class WhatCDPlugin(object):
         terms needs to have no whitespace. For `!wiki', 'a b' == 'ab'.
         response may contain spaces and text.
         """
-        self.bot.db['wiki{}'.format(args['<terms>'])] = {
+        self.bot.db['wiki{}'.format(args['<terms>'].lower())] = {
             'by': str(mask),
             'channel': target,
             'date': str(datetime.utcnow()),
@@ -60,7 +60,7 @@ class WhatCDPlugin(object):
             %%wikidelete <terms>
         """
         try:
-            del self.bot.db['wiki{}'.format(args['<terms>'])]
+            del self.bot.db['wiki{}'.format(args['<terms>'].lower())]
             yield "Deleted"
         except KeyError:
             yield "Key does not exist"
@@ -71,7 +71,7 @@ class WhatCDPlugin(object):
 
             %%wikiinfo <terms>...
         """
-        wikikey = 'wiki{}'.format(''.join(args['<terms>']))
+        wikikey = 'wiki{}'.format(''.join(args['<terms>'])).lower()
         if wikikey in self.bot.db:
             entry = self.bot.db[wikikey]
             yield ('Key {key} registered by {user} in {channel} '
