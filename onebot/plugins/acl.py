@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Manage ACL based on the accounts system
+================================================
+:mod:`onebot.plugins.acl` Access Control plugin
+================================================
+
+This plugin implements advanced access control for the bot.
+It uses the :mod:`onebot.plugins.users` plugin to store access control
+settings with each user.
 """
 
 import asyncio
@@ -10,13 +16,22 @@ from irc3.plugins.command import command
 
 
 class user_based_policy(object):
-    """Only allow users with valid settings"""
+    """Policy to allow access based on permissions stored in users
+
+    Depends on the :mod:`onebot.plugins.users` plugin.
+
+    Needs to be set as the :mod:`irc3.plugins.guard` ``mask`` option.
+    """
+
     def __init__(self, bot):
         self.bot = bot
         self.bot.include('onebot.plugins.users')
         self.log = self.bot.log.getChild(__name__)
 
     def has_permission(self, mask, permission):
+        """
+        Returns if the user identified by ``mask`` has ``permission``
+        """
         user = self.bot.get_user(mask.nick)
         perms = []
         if user:
@@ -55,7 +70,15 @@ class user_based_policy(object):
 
 @irc3.plugin
 class ACLPlugin(object):
-    """Plugin to provide access control moderation"""
+    """Plugin to provide access control moderation
+
+    Depends on the :mod:`irc3.plugins.command`, :mod:`irc3.plugins.storage`
+    and the `onebot.plugins.users` plugins.
+
+    Configuration settings:
+        - ``superadmin``: username to store in the database with
+        ``all_permissions`. username depends on mask chosen.
+    """
 
     requires = [
         'irc3.plugins.command',

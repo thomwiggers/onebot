@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Bot control
+"""
+================================================
+:mod:`onebot.plugins.botui` Bot Control plugin
+================================================
+
+This plugin implements some utility commands.
 
 Based on http://git.io/v3HVL by gawel
 """
@@ -11,7 +16,12 @@ from irc3 import plugin, event
 
 @plugin
 class BotUI(object):
-    """Bot User Interface plugin"""
+    """Bot User Interface plugin
+
+    Configuration settings:
+        - ``joininvite``: Should I join when invited
+        - ``admin``: Who to message when invited
+    """
 
     def __init__(self, bot):
         """Init"""
@@ -45,7 +55,8 @@ class BotUI(object):
     def join(self, mask, target, args):
         """
         Join - Command the bot to join a channel.
-        %%join <channel> [<password>]
+
+            %%join <channel> [<password>]
         """
 
         channel = args['<channel>']
@@ -59,7 +70,8 @@ class BotUI(object):
     def part(self, mask, target, args):
         """
         Part - Command the bot to leave a channel
-        %%part [<channel>]
+
+            %%part [<channel>]
         """
 
         if args['<channel>'] is not None:
@@ -71,7 +83,8 @@ class BotUI(object):
     def quit(self, mask, target, args):
         """
         Quit - Shutdown the bot
-        %%quit [<reason>...]
+
+            %%quit [<reason>...]
         """
         reason = ' '.join(args['<reason>'] or [])
         self.bot.quit('{} -- {}'.format(reason, mask.nick).strip())
@@ -81,7 +94,8 @@ class BotUI(object):
     def nick(self, mask, target, args):
         """
         Nick - Change nickname of the bot
-        %%nick <nick>
+
+            %%nick <nick>
         """
 
         self.bot.set_nick(args['<nick>'])
@@ -91,7 +105,7 @@ class BotUI(object):
         """
         Mode - Set user mode for the bot.
 
-        %%mode <mode-cmd>
+            %%mode <mode-cmd>
         """
 
         self.bot.mode(self.bot.nick, args['<mode-cmd>'])
@@ -101,7 +115,7 @@ class BotUI(object):
         """
         Msg - Send a message
 
-        %%msg <target> <message>...
+            %%msg <target> <message>...
         """
 
         msg = ' '.join(args['<message>'] or [])

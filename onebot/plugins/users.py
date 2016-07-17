@@ -38,6 +38,7 @@ class User(object):
 
     @property
     def mask(self):
+        """Get the mask of this user"""
         return IrcString('{}!{}'.format(self.nick, self.host))
 
     def set_settings(self, settings):
@@ -105,6 +106,14 @@ class UsersPlugin(object):
 
     Doesn't do anything with NAMES because we can't get hosts through
     NAMES
+
+    Configuration settings:
+        - ``identify_by``: the identification method
+
+    Identification methods available:
+        - ``mask``: Use the hostmask
+        - ``whatcd``: Get the what.cd username from the host mask
+        - ``nickserv``: Parse nickserv info from ``WHOIS``.
     """
 
     requires = [

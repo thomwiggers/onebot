@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Some commands for What.CD"""
+"""
+================================================
+:mod:`onebot.plugins.whatcd` WhatCD wiki plugin
+================================================
+
+This plugin allows to easily link the wiki.
+"""
 
 from datetime import datetime
 from urllib.parse import quote_plus

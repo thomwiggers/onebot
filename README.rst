@@ -22,3 +22,10 @@ Features
 
 * Database plugin
 * Last.FM plugin
+* Trakt.TV plugin
+* Advanced user system
+* Advanced ACL
+* URL information
+* Utility commands
+
+These features are available through plugins.

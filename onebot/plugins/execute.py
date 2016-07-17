@@ -1,4 +1,8 @@
 """
+=====================================================
+:mod:`onebot.plugins.execute` Run commands on connect
+=====================================================
+
 Run commands on connect
 
 Config:
@@ -13,6 +17,9 @@ Config:
     commands=
       NS IDENTIFY f00bar
       PRIVMSG SomeBot :LetMeIn
+
+
+irc3 also has a plugin now, might be more useful.
 """
 
 import irc3

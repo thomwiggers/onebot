@@ -36,7 +36,6 @@ class LastfmPlugin(object):
     """Plugin to provide:
 
     * now playing functionality
-    * compare users' lastfm accounts through the tasteometer.
     """
 
     requires = [

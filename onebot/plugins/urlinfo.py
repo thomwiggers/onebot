@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Show info about posted URLs
+"""
+================================================
+:mod:`onebot.plugins.urlinfo` Urlinfo plugin
+================================================
+
+This plugin shows information about urls posted.
+
 
 """
 
@@ -18,6 +24,7 @@ from irc3 import plugin, event
 
 
 def sizeof_fmt(num, suffix='B'):
+    """Format printable versions for bytes"""
     if num == -1:
         return "large"
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
@@ -27,7 +34,8 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
 
-def read_body(response):
+def _read_body(response):
+    """Count the size of the body of files"""
     content = StringIO()
     size = 0
     for chunk in response.iter_content(1048576):
@@ -65,7 +73,22 @@ class UrlSkipException(Exception):
 
 @plugin
 class UrlInfo(object):
-    """Bot User Interface plugin"""
+    """Bot User Interface plugin
+
+    Configuration settings:
+        - ``cookiejar``: Cookies to identify to sites with
+        - ``ignored_classes``: ignored MIME classes
+        - ``ignored_apps``: ignored ``application/` classes
+        - ``ignored_channels``: channels to not post information in
+        - ``ignored_nicks``: whom to ignore
+
+    --------
+    URL Map
+    --------
+    Using the section ``[onebot.plugins.urlinfo.urlmap]`` it's possible
+    to automatically translate urls. Set them as from=to. It's a dumb
+    find-and-replace.
+    """
 
     def __init__(self, bot):
         """Init"""
@@ -115,6 +138,7 @@ class UrlInfo(object):
         return self._process_url_default(session, url)
 
     def _process_url_urlmap(self, session, url, already_extended=False):
+        # FIXME what does this even do
         if already_extended:
             return
         o = urlparse(url)
@@ -144,7 +168,7 @@ class UrlInfo(object):
                 # handle chunked transfers
                 content = None
                 if size == 0:
-                    size, content = read_body(response)
+                    size, content = _read_body(response)
 
                 self.log.debug("File size: {}".format(repr(size)))
                 if not response.ok:
