@@ -5,10 +5,6 @@ OneBot
 .. image:: https://travis-ci.org/thomwiggers/onebot.png?branch=develop
         :target: https://travis-ci.org/thomwiggers/onebot
 
-..
-.. image:: https://pypip.in/d/onebot/badge.png
-        :target: https://pypi.python.org/pypi/onebot
-
 .. image:: https://coveralls.io/repos/thomwiggers/onebot/badge.png?branch=develop
         :target: https://coveralls.io/r/thomwiggers/onebot 
 
