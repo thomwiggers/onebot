@@ -83,6 +83,8 @@ class KarmaTestCase(BotTestCase):
         self.bot.dispatch(':root@localhost PRIVMSG #chan :(foo--)++')
         self.assertEquals(self.bot.db[_format_key('foo--')]['up'], 1)
         with self.assertRaises(KeyError):
+            self.bot.db[_format_key('(foo')]
+        with self.assertRaises(KeyError):
             self.bot.db[_format_key('foo')]
 
     def test_unopened_bracket(self):
