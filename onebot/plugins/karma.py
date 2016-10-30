@@ -50,16 +50,14 @@ class KarmaPlugin(object):
         self.bot.db[karmakey] = karma
 
     @irc3.event((r'''(@(?P<tags>\S+) )?:(?P<mask>\S+) (PRIVMSG)'''
-                 r''' (?P<target>\S+)(\s:(?P<data>.+\+\+)|$)'''))
-    def increment(self, mask, target=None, data=None, **kwargs):
-        karmakey = _find_key(data, '++')
-        self._update_karmadict(karmakey, 'up')
-
-    @irc3.event((r'''(@(?P<tags>\S+) )?:(?P<mask>\S+) (PRIVMSG)'''
-                 r''' (?P<target>\S+)(\s:(?P<data>.+--)|$)'''))
-    def decrement(self, mask, target=None, data=None, **kwargs):
-        karmakey = _find_key(data, '--')
-        self._update_karmadict(karmakey, 'down')
+                 r''' (?P<target>\S+)(\s:(?P<data>.+)|$)'''))
+    def modify(self, mask, target=None, data=None, **kwargs):
+        for mod, token in [('up', '++'), ('down', '--')]:
+            message = data
+            while message.find(token) > -1:
+                karmakey = _find_key(message, token)
+                self._update_karmadict(karmakey, mod)
+                message = message[message.find(token) + len(token):]
 
     @command
     def karma(self, mask, target, args):

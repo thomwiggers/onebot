@@ -46,6 +46,22 @@ class KarmaTestCase(BotTestCase):
         with self.assertRaises(KeyError):
             self.bot.db[_format_key('bar')]
 
+    def test_increment_multiple(self):
+        self.bot.dispatch(':root@localhost PRIVMSG #chan :foo++ foo++ bar++')
+        self.assertEquals(self.bot.db[_format_key('foo')]['up'], 2)
+        self.assertEquals(self.bot.db[_format_key('bar')]['up'], 1)
+
+    def test_decrement_multiple(self):
+        self.bot.dispatch(':root@localhost PRIVMSG #chan :foo++ (foo)++ bar++')
+        self.assertEquals(self.bot.db[_format_key('foo')]['up'], 2)
+        self.assertEquals(self.bot.db[_format_key('bar')]['up'], 1)
+
+    def test_increment_decrement_mix(self):
+        self.bot.dispatch(':root@localhost PRIVMSG #chan :foo++ foo-- bar++')
+        self.assertEquals(self.bot.db[_format_key('foo')]['up'], 1)
+        self.assertEquals(self.bot.db[_format_key('foo')]['down'], 1)
+        self.assertEquals(self.bot.db[_format_key('bar')]['up'], 1)
+
     def test_decrement(self):
         self.bot.dispatch(':root@localhost PRIVMSG #chan :foo bar-- baz')
         self.assertEquals(self.bot.db[_format_key('bar')]['up'], 0)
@@ -57,6 +73,11 @@ class KarmaTestCase(BotTestCase):
         self.assertEquals(self.bot.db[_format_key('foo bar')]['down'], 1)
         with self.assertRaises(KeyError):
             self.bot.db[_format_key('bar')]
+
+    def test_chained(self):
+        self.bot.dispatch(':root@localhost PRIVMSG #chan :foo--++')
+        self.assertEquals(self.bot.db[_format_key('foo')]['down'], 1)
+        self.assertEquals(self.bot.db[_format_key('foo--')]['up'], 1)
 
     def test_unopened_bracket(self):
         self.bot.dispatch(':root@localhost PRIVMSG #chan :foo bar)-- baz')
