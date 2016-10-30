@@ -4,6 +4,11 @@
 History
 =======
 
+Unreleased
+----------
+
+* PSA Plugin (contributed by @joostrijneveld: PR #32)
+
 1.0.0 (2016-07-17)
 ------------------
 
