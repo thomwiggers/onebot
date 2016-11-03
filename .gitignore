@@ -4,7 +4,6 @@ what.ini
 cookies.jar
 *.json
 *.bak
-
 .DS_Store
 
 *.py[cod]
