@@ -34,7 +34,7 @@ class PSATestCase(BotTestCase):
         self.bot.db = MockDb({
             'wat@bro': {'permissions': {'all_permissions'}}
         })
-        plugin = bot.get_plugin('irc3.plugins.userlist.Userlist')
+        plugin = self.bot.get_plugin('irc3.plugins.userlist.Userlist')
 
     def test_more(self):
         self.assertIn('one', plugin.channels['#chan1'])
