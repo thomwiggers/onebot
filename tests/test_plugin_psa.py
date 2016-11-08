@@ -22,8 +22,8 @@ class PSATestCase(BotTestCase):
             irc3.plugins.command
 
         autojoins=
-            ${hash}channel1
-            '${hash}channel2
+            ${hash}chan1
+            ${hash}chan2
         cmd= !
     """)
 
@@ -36,6 +36,6 @@ class PSATestCase(BotTestCase):
         })
 
     def test_psa(self):
-        self.bot.dispatch(':im!the@boss PRIVMSG #chan :!psa best bot')
-        for channels in self.bot.channels:
-            self.assertSent(['PRIVMSG {} :best bot'.format(channels)])
+        self.bot.dispatch(':im!the@boss PRIVMSG #chan1 :!psa best bot')
+        self.assertSent(['PRIVMSG #chan1 :best bot'])
+        self.assertSent(['PRIVMSG #chan2 :best bot'])
