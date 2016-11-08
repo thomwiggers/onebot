@@ -31,7 +31,7 @@ class PSAPlugin(object):
 
             %%psa <message>...
         """
-        self._log.info("{0} annouced PSA: {1}" % (mask.nick,
+        self._log.info("%s annouced PSA: %s " % (mask.nick,
             ' '.join(args['<message>'])))
         for channel in self.bot.channels:
             self.bot.privmsg(channel, ' '.join(args['<message>']))
