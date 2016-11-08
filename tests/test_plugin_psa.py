@@ -17,6 +17,7 @@ class PSATestCase(BotTestCase):
 
     config = {
         'includes': [
+            'onebot.plugins.botui',
             'onebot.plugins.psa',
             'irc3.plugins.command'
         ],
