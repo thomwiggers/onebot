@@ -22,6 +22,8 @@ class PSAPlugin(object):
 
     def __init__(self, bot):
         self.bot = bot
+        self._config = bot.config.get(__name__, {})
+        self._admin = self._config.get('admin', '')
 
     @command(permission='admin', show_in_help_list=False)
     def psa(self, mask, target, args):
