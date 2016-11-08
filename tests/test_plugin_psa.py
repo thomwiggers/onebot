@@ -7,21 +7,25 @@ test_plugin_psa
 
 Tests for PSA module
 """
-from irc3.plugins.userlist import userlist
-from irc3.testing import BotTestCase, patch
+
+from irc3.testing import ini2config, BotTestCase, patch
 
 from .test_plugin_users import MockDb
 
 
 class PSATestCase(BotTestCase):
 
-    config = {
-        'includes': [
-            'onebot.plugins.psa',
-            'irc3.plugins.command',
-        ],
-        'cmd': '!'
-    }
+    config = ini2config("""
+        [bot]
+        includes=
+            onebot.plugins.psa
+            irc3.plugins.command
+
+        autojoins=
+            ${hash}channel1
+            '${hash}channel2
+        cmd= !
+    """)
 
     @patch('irc3.plugins.storage.Storage')
     def setUp(self, mock):
