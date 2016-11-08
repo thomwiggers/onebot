@@ -23,7 +23,7 @@ class PSATestCase(BotTestCase):
         'autojoins': [
             '${hash}chan1',
             '${hash}chan2'
-        ]
+        ],
         'irc3.plugins.command': {
             'guard': 'onebot.plugins.acl.user_based_policy'
         }
