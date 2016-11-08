@@ -7,6 +7,7 @@ test_plugin_psa
 
 Tests for PSA module
 """
+from irc3.plugins.userlist import userlist
 from irc3.testing import BotTestCase, patch
 
 from .test_plugin_users import MockDb
