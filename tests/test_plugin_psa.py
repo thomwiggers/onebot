@@ -15,20 +15,19 @@ from .test_plugin_users import MockDb
 
 class PSATestCase(BotTestCase):
 
-    config = ini2config("""
-        [bot]
-        includes=
-            onebot.plugins.psa
-            irc3.plugins.command
-
-        autojoins=
-            ${hash}chan1
-            ${hash}chan2
-
-        [irc3.plugins.command]
-        cmd= !
-        guard=onebot.plugins.acl.user_based_policy
-        """)
+    config = {
+        'include': [
+            'onebot.lugins.psa',
+            'irc3.plugins.command'
+        ],
+        'autojoins': [
+            '${hash}chan1',
+            '${hash}chan2'
+        ]
+        'irc3.plugins.command': {
+            'guard': 'onebot.plugins.acl.user_based_policy'
+        },
+    }
 
     @patch('irc3.plugins.storage.Storage')
     def setUp(self, mock):
