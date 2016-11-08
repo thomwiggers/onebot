@@ -17,7 +17,7 @@ class PSATestCase(BotTestCase):
 
     config = {
         'includes': [
-            'onebot.lugins.psa',
+            'onebot.plugins.psa',
             'irc3.plugins.command'
         ],
         'autojoins': [
