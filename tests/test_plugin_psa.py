@@ -30,10 +30,15 @@ class PSATestCase(BotTestCase):
     @patch('irc3.plugins.storage.Storage')
     def setUp(self, mock):
         super(PSATestCase, self).setUp()
-        self.callFTU()
+        self.callFTU(nick='one')
         self.bot.db = MockDb({
             'wat@bro': {'permissions': {'all_permissions'}}
         })
+        plugin = bot.get_plugin('irc3.plugins.userlist.Userlist')
+
+    def test_more(self):
+        self.assertIn('one', plugin.channels['#chan1'])
+        self.assertIn('one', plugin.channels['#chan2'])
 
     def test_psa(self):
         self.bot.dispatch(':im!wat@bro PRIVMSG #chan1 :!psa foo')
