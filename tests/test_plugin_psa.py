@@ -32,5 +32,5 @@ class PSATestCase(BotTestCase):
 
     def test_acl(self):
         self.bot.dispatch(':im!the@boss PRIVMSG #chan :!acl best bot')
-        for chan in self.bot.channels:
-            self.assertSent(['PRIVMSG {} :best bot'.format(chan)])
+        for channels in self.bot.channels:
+            self.assertSent(['PRIVMSG {} :best bot'.format(channels)])
