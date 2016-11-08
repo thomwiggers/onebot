@@ -16,7 +16,7 @@ from .test_plugin_users import MockDb
 class PSATestCase(BotTestCase):
 
     config = {
-        'include': [
+        'includes': [
             'onebot.lugins.psa',
             'irc3.plugins.command'
         ],
@@ -24,9 +24,6 @@ class PSATestCase(BotTestCase):
             '${hash}chan1',
             '${hash}chan2'
         ],
-        'irc3.plugins.command': {
-            'guard': 'onebot.plugins.acl.user_based_policy'
-        }
     }
 
     @patch('irc3.plugins.storage.Storage')
