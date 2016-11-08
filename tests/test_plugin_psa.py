@@ -8,7 +8,7 @@ test_plugin_psa
 Tests for PSA module
 """
 
-from irc3.testing import ini2config, BotTestCase, patch
+from irc3.testing import BotTestCase, patch
 
 from .test_plugin_users import MockDb
 
@@ -24,6 +24,7 @@ class PSATestCase(BotTestCase):
             '${hash}chan1',
             '${hash}chan2'
         ],
+        'cmd': '!'
     }
 
     @patch('irc3.plugins.storage.Storage')
