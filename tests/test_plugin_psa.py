@@ -26,7 +26,7 @@ class PSATestCase(BotTestCase):
         ]
         'irc3.plugins.command': {
             'guard': 'onebot.plugins.acl.user_based_policy'
-        },
+        }
     }
 
     @patch('irc3.plugins.storage.Storage')
