@@ -24,18 +24,21 @@ class PSATestCase(BotTestCase):
         autojoins=
             ${hash}chan1
             ${hash}chan2
+
+        [irc3.plugins.command]
         cmd= !
-    """)
+        guard=onebot.plugins.acl.user_based_policy
+        """)
 
     @patch('irc3.plugins.storage.Storage')
     def setUp(self, mock):
         super(PSATestCase, self).setUp()
         self.callFTU()
         self.bot.db = MockDb({
-            'the@boss': {'permissions': {'all_permissions'}}
+            'wat@bro': {'permissions': {'all_permissions'}}
         })
 
     def test_psa(self):
-        self.bot.dispatch(':im!the@boss PRIVMSG #chan1 :!psa best bot')
-        self.assertSent(['PRIVMSG #chan1 :best bot'])
-        self.assertSent(['PRIVMSG #chan2 :best bot'])
+        self.bot.dispatch(':im!wat@bro PRIVMSG #chan1 :!psa foo')
+        self.assertSent(['PRIVMSG #chan1 :foo'])
+        self.assertSent(['PRIVMSG #chan2 :foo'])
