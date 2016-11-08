@@ -71,7 +71,7 @@ class BotUITestCase(BotTestCase):
         self.bot.dispatch(':im!the@boss PRIVMSG #chan :!msg #foo best bot')
         self.assertSent(['PRIVMSG #foo :best bot'])
         self.bot.dispatch(':im!the@boss PRIVMSG #chan :!msg foo best bot')
-        self.assertSent(['PRIVMSG #foo :best bot'])
+        self.assertSent(['PRIVMSG foo :best bot'])
 
     def test_quote(self):
         self.bot.dispatch(':im!the@boss PRIVMSG #chan :!quote OPER foo')
