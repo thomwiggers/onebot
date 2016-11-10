@@ -7,8 +7,8 @@
 This plugin allows admins to send broadcasts
 """
 
-from irc3.plugins.command import command
 from irc3 import plugin
+from irc3.plugins.command import command
 
 
 @plugin
@@ -30,5 +30,6 @@ class PSAPlugin(object):
             %%psa <message>...
         """
         msg = ' '.join(args['<message>'] or [])
+        #FIXME channels are only listed if activity (i.e. join, part) is recorded in them first, not a list of channels the bot is in.
         for channel in self.bot.channels:
             self.bot.privmsg(channel, msg)
