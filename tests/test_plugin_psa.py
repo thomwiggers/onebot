@@ -32,7 +32,7 @@ class PSATestCase(BotTestCase):
         })
 
     def test_psa(self):
-        self.bot.dispatch('JOIN #chan1')
-        self.bot.dispatch('JOIN #chan2')
-        self.bot.dispatch(':im!the@boss PRIVMSG #chan1 :!psa foo bar')
-        self.assertSent([])
+        self.bot.dispatch(':rando!user@host JOIN #chan')
+        self.bot.dispatch(':rando!user@host JOIN #chan2')
+        self.bot.dispatch(':im!the@boss PRIVMSG #chan :!psa foo bar')
+        self.assertSent(['PRIVMSG #chan :best bot','PRIVMSG #chan2 :best bot'])
