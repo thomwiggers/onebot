@@ -34,5 +34,5 @@ class PSATestCase(BotTestCase):
     def test_psa(self):
         self.bot.dispatch(':rando!user@host JOIN #chan')
         self.bot.dispatch(':rando!user@host JOIN #chan2')
-        self.bot.dispatch(':im!the@boss PRIVMSG #chan :!psa foo bar')
+        self.bot.dispatch(':im!the@boss PRIVMSG #chan :!psa best bot')
         self.assertSent(['PRIVMSG #chan2 :best bot','PRIVMSG #chan :best bot'])
