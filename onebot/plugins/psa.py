@@ -22,8 +22,6 @@ class PSAPlugin(object):
 
     def __init__(self, bot):
         self.bot = bot
-        self._config = bot.config.get(__name__, {})
-        self._log = self.bot.log.getChild(__name__)
 
     @command(permission='admin', show_in_help_list=False)
     def psa(self, mask, target, args):
@@ -31,7 +29,6 @@ class PSAPlugin(object):
 
             %%psa <message>...
         """
-        self._log.info("%s annouced PSA: %s " % (mask.nick,
-            ' '.join(args['<message>'])))
+        msg = ' '.join(args['<message>'] or [])
         for channel in self.bot.channels:
-            self.bot.privmsg(channel, ' '.join(args['<message>']))
+            self.bot.privmsg(channel, msg)

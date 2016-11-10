@@ -17,7 +17,6 @@ class PSATestCase(BotTestCase):
 
     config = {
         'includes': [
-            'onebot.plugins.botui',
             'onebot.plugins.psa',
             'irc3.plugins.command'
         ],
@@ -36,4 +35,4 @@ class PSATestCase(BotTestCase):
         self.bot.dispatch('JOIN #chan1')
         self.bot.dispatch('JOIN #chan2')
         self.bot.dispatch(':im!the@boss PRIVMSG #chan1 :!psa foo bar')
-        self.assertSent(['PRIVMSG #chan1 :foo bar','PRIVMSG #chan2 :foo bar'])
+        self.assertSent([])
