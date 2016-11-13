@@ -35,3 +35,6 @@ class PSATestCase(BotTestCase):
         self.bot.dispatch(':rando!user@host JOIN #chan')
         self.bot.dispatch(':im!the@boss PRIVMSG #chan :!psa best bot')
         self.assertSent(['PRIVMSG #chan :best bot'])
+
+        self.bot.dispatch(':im!the@boss PRIVMSG #chan :!psa')
+        self.assertSent(['PRIVMSG im :I need a message to announce'])
