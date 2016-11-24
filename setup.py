@@ -16,6 +16,7 @@ install_requires = [
     'irc3>=0.8.2',
     'wheel',
     'lfmh',
+    'musicbrainzngs',
     'beautifulsoup4',
     'html5lib<=0.9999999',
     'requests']

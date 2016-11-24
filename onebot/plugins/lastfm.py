@@ -23,10 +23,12 @@ Usage::
 
 """
 import asyncio
-import datetime
+from datetime import datetime
 
 import irc3
 import lastfm.exceptions
+import musicbrainzngs
+from operator import itemgetter
 from irc3.plugins.command import command
 from lastfm import lfm
 
@@ -48,6 +50,7 @@ class LastfmPlugin(object):
         self.bot = bot
         self.log = bot.log.getChild(__name__)
         self.config = bot.config.get(__name__, {})
+        musicbrainzngs.set_useragent(__name__, 1.0)
         try:
             self.app = lfm.App(self.config['api_key'],
                                self.config['api_secret'],
@@ -73,6 +76,7 @@ class LastfmPlugin(object):
             self.bot.privmsg(target, response)
         asyncio.async(wrap())
 
+    # XXX Compare is no longer supported by Last.fm API
     @command
     def compare(self, *args):
         """Gets the tasteometer for the user and the target
@@ -229,7 +233,7 @@ class LastfmPlugin(object):
                 info = _parse_trackinfo(track)
 
                 time_ago = datetime.datetime.utcnow() - info['playtime']
-                if time_ago.days > 0 or time_ago.seconds > (20*60):
+                if time_ago.days > 0 or time_ago.seconds > (20 * 60):
                     response.append('is not currently playing anything '
                                     '(last seen {time} ago)'.format(
                                         time=_time_ago(info['playtime'])))
@@ -268,7 +272,7 @@ class LastfmPlugin(object):
 
                     if 'tags' in info and len(info['tags']) > 0:
                         response.append(
-                            '({})'.format(', '.join(info['tags'][:5])))
+                            '({})'.format(', '.join(info['tags'][:4])))
 
             return ' '.join(response) + '.'
 
@@ -284,7 +288,8 @@ class LastfmPlugin(object):
             return nick
 
     def fetch_extra_trackinfo(self, username, info):
-        """Updates info with extra trackinfo from the last.fm API"""
+        """Updates info with extra trackinfo from the last.fm API and
+        MusicBrainz API"""
         try:
             if 'mbid' in info and False:
                 self.log.debug("asking via mbid")
@@ -306,13 +311,24 @@ class LastfmPlugin(object):
         if 'userplaycount' in api_result:
             info['playcount'] = int(api_result['userplaycount'])
 
-        if 'toptags' in api_result and 'tag' in api_result['toptags']:
-            taglist = api_result['toptags']['tag']
-            if not isinstance(api_result['toptags']['tag'],
-                              list):  # pragma: no cover
-                self.log.warning("Tags is not a list: %r", taglist)
-            else:
-                info['tags'] = [tag['name'] for tag in taglist]
+        # if 'toptags' in api_result and 'tag' in api_result['toptags']:
+        #     taglist = api_result['toptags']['tag']
+        #     if not isinstance(api_result['toptags']['tag'],
+        #                       list):  # pragma: no cover
+        #         self.log.warning("Tags is not a list: %r", taglist)
+        #     else:
+        #         info['tags'] = [tag['name'] for tag in taglist]
+
+        # getting tags from musicbrainz(if they have id)
+        if 'mbid' in info:
+            mb = musicbrainzngs.get_artist_by_id(info['mbid'], includes='tags')
+            sorted_tags = sorted(mb['artist']['tag-list'],
+                                 key=itemgetter('count'), reverse=True)
+
+            tags = []
+            for tag in sorted_tags:
+                tags.append(tag['name'])
+            info['tags'] = tags
 
         if 'userloved' in api_result and not info['loved']:
             info['loved'] = bool(int(api_result['userloved']))
@@ -324,7 +340,7 @@ class LastfmPlugin(object):
 
 def _time_ago(time):
     """Represent time past as a friendly string"""
-    time_ago = datetime.datetime.utcnow() - time
+    time_ago = datetime.utcnow() - time
     timestr = []
     if time_ago.days > 1:
         timestr.append("{} days".format(time_ago.days))
@@ -332,14 +348,14 @@ def _time_ago(time):
         timestr.append("1 day")
 
     # hours
-    hours = time_ago.seconds//(60*60)
+    hours = time_ago.seconds // (60 * 60)
     if hours > 1:
         timestr.append("{} hours".format(hours))
     elif hours == 1:
         timestr.append("1 hour")
 
     # minutes
-    minutes = time_ago.seconds % (60*60)//60
+    minutes = time_ago.seconds % (60 * 60) // 60
     if minutes > 1:
         timestr.append("{} minutes".format(minutes))
     elif minutes == 1:
@@ -353,14 +369,13 @@ def _parse_trackinfo(track):
     now_playing = False
     if '@attr' in track and 'nowplaying' in track['@attr']:
         now_playing = bool(track['@attr']['nowplaying'])
-        playtime = datetime.datetime.utcnow()
+        playtime = datetime.utcnow()
     else:
-        playtime = datetime.datetime.utcfromtimestamp(
+        playtime = datetime.utcfromtimestamp(
             int(track['date']['uts']))
 
     loved = False
-    if 'loved' in track:
-        loved = bool(int(track['loved']))
+    loved = bool(int(track['loved'])) if 'loved' in track
 
     result = {
         'title': track['name'],
@@ -368,9 +383,8 @@ def _parse_trackinfo(track):
         'album': track['album']['#text'],
         'now playing': now_playing,
         'loved': loved,
-        'playtime': playtime}
+        'playtime': playtime
+    }
 
-    if 'mbid' in track:
-        result['mbid'] = track['mbid']
-
+    result['mbid'] = track['mbid'] if 'mbid' in track['artist']
     return result
