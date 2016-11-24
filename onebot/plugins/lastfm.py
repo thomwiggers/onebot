@@ -27,6 +27,8 @@ import datetime
 
 import irc3
 import lastfm.exceptions
+import musicbrainzngs
+from operator import itemgetter
 from irc3.plugins.command import command
 from lastfm import lfm
 
@@ -48,6 +50,7 @@ class LastfmPlugin(object):
         self.bot = bot
         self.log = bot.log.getChild(__name__)
         self.config = bot.config.get(__name__, {})
+        musicbrainzngs.set_useragent(__name__, 1.0)
         try:
             self.app = lfm.App(self.config['api_key'],
                                self.config['api_secret'],
@@ -73,6 +76,7 @@ class LastfmPlugin(object):
             self.bot.privmsg(target, response)
         asyncio.async(wrap())
 
+    # NOFIX Compare is no longer supported by Last.fm API
     @command
     def compare(self, *args):
         """Gets the tasteometer for the user and the target
@@ -229,7 +233,7 @@ class LastfmPlugin(object):
                 info = _parse_trackinfo(track)
 
                 time_ago = datetime.datetime.utcnow() - info['playtime']
-                if time_ago.days > 0 or time_ago.seconds > (20*60):
+                if time_ago.days > 0 or time_ago.seconds > (20 * 60):
                     response.append('is not currently playing anything '
                                     '(last seen {time} ago)'.format(
                                         time=_time_ago(info['playtime'])))
@@ -306,13 +310,26 @@ class LastfmPlugin(object):
         if 'userplaycount' in api_result:
             info['playcount'] = int(api_result['userplaycount'])
 
-        if 'toptags' in api_result and 'tag' in api_result['toptags']:
-            taglist = api_result['toptags']['tag']
-            if not isinstance(api_result['toptags']['tag'],
-                              list):  # pragma: no cover
-                self.log.warning("Tags is not a list: %r", taglist)
-            else:
-                info['tags'] = [tag['name'] for tag in taglist]
+        # NOTE tags from Last.fm are poor quality
+        # if 'toptags' in api_result and 'tag' in api_result['toptags']:
+        #     taglist = api_result['toptags']['tag']
+        #     if not isinstance(api_result['toptags']['tag'],
+        #                       list):  # pragma: no cover
+        #         self.log.warning("Tags is not a list: %r", taglist)
+        #     else:
+        #         info['tags'] = [tag['name'] for tag in taglist]
+
+        if 'art_mbid' in info:
+            mb = musicbrainzngs.get_artist_by_id(
+                info['art_mbid'], includes='tags')
+
+            sorted_tags = sorted(
+                mb['artist']['tag-list'], key=itemgetter('count'), reverse=True)
+
+            tags = []
+            for tag in sorted_tags:
+                tags.append(tag['name'])
+            info['tags'] = tags
 
         if 'userloved' in api_result and not info['loved']:
             info['loved'] = bool(int(api_result['userloved']))
@@ -332,14 +349,14 @@ def _time_ago(time):
         timestr.append("1 day")
 
     # hours
-    hours = time_ago.seconds//(60*60)
+    hours = time_ago.seconds // (60 * 60)
     if hours > 1:
         timestr.append("{} hours".format(hours))
     elif hours == 1:
         timestr.append("1 hour")
 
     # minutes
-    minutes = time_ago.seconds % (60*60)//60
+    minutes = time_ago.seconds % (60 * 60) // 60
     if minutes > 1:
         timestr.append("{} minutes".format(minutes))
     elif minutes == 1:
@@ -365,6 +382,7 @@ def _parse_trackinfo(track):
     result = {
         'title': track['name'],
         'artist': track['artist']['name'],
+        'art_mbid': track['artist']['mbid'],
         'album': track['album']['#text'],
         'now playing': now_playing,
         'loved': loved,
