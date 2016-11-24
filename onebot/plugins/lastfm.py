@@ -324,7 +324,9 @@ class LastfmPlugin(object):
                 info['art_mbid'], includes='tags')
 
             sorted_tags = sorted(
-                mb['artist']['tag-list'], key=itemgetter('count'), reverse=True)
+                mb['artist']['tag-list'],
+                key=itemgetter('count'),
+                reverse=True)
 
             tags = []
             for tag in sorted_tags:
