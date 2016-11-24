@@ -319,7 +319,7 @@ class LastfmPlugin(object):
         #     else:
         #         info['tags'] = [tag['name'] for tag in taglist]
 
-        if 'art_mbid' in info:
+        if 'art_mbid' in info and info['art_mbid'] != '':
             mb = musicbrainzngs.get_artist_by_id(
                 info['art_mbid'], includes='tags')
 
