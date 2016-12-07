@@ -1,0 +1,59 @@
+{
+    "image": [{
+        "size": "small",
+        "#text": "https://lastfm-img2.akamaized.net/i/u/34s/fec9b0cbbeeb4e47c1f8457d75da5595.png"
+    }, {
+        "size": "medium",
+        "#text": "https://lastfm-img2.akamaized.net/i/u/64s/fec9b0cbbeeb4e47c1f8457d75da5595.png"
+    }, {
+        "size": "large",
+        "#text": "https://lastfm-img2.akamaized.net/i/u/174s/fec9b0cbbeeb4e47c1f8457d75da5595.png"
+    }, {
+        "size": "extralarge",
+        "#text": "https://lastfm-img2.akamaized.net/i/u/300x300/fec9b0cbbeeb4e47c1f8457d75da5595.png"
+    }],
+    "artist": {
+        "image": [{
+            "size": "small",
+            "#text": "https://lastfm-img2.akamaized.net/i/u/34s/e8c8638a8581e423a1e241eb3955ed47.png"
+        }, {
+            "size": "medium",
+            "#text": "https://lastfm-img2.akamaized.net/i/u/64s/e8c8638a8581e423a1e241eb3955ed47.png"
+        }, {
+            "size": "large",
+            "#text": "https://lastfm-img2.akamaized.net/i/u/174s/e8c8638a8581e423a1e241eb3955ed47.png"
+        }, {
+            "size": "extralarge",
+            "#text": "https://lastfm-img2.akamaized.net/i/u/300x300/e8c8638a8581e423a1e241eb3955ed47.png"
+        }],
+        "name": "Carly Rae Jepsen",
+        "url": "https://www.last.fm/music/Carly+Rae+Jepsen",
+        "mbid": "09887aa7-226e-4ecc-9a0c-02d2ae5777e1"
+    },
+    "loved": "0",
+    "mbid": "",
+    "@attr": {
+        "nowplaying": "true"
+    },
+    "name": "I Really Like You",
+    "url": "https://www.last.fm/music/Carly+Rae+Jepsen/_/I+Really+Like+You",
+    "album": {
+        "#text": "E·MO·TION",
+        "mbid": ""
+    },
+    "streamable": "0"
+}
+
+
+#info
+{   "now playing": True,
+    "album": "E·MO·TION",
+    "artist": "Carly Rae Jepsen",
+    "title": "I Really Like You",
+    "mbid": "09887aa7-226e-4ecc-9a0c-02d2ae5777e1",
+    "playtime": datetime.datetime(2016, 11, 24, 8, 47, 28, 659819),
+    "loved": False
+}
+
+api_key = c7a3b28db29d891afa720eff351e133f
+api_secret = 5d175b92fd3fcc3990739652cc253a4f
