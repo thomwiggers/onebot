@@ -88,28 +88,6 @@ class LastfmPlugin(object):
         self.bot.privmsg(
             target, 'Ok, so you are https://last.fm/user/{username}'.format(username=args['<lastfmnick>']))
 
-    @command
-    def ignoreme(self, mask, target, args):
-        """Sets that the user wants to be excluded from %%compare
-
-            %%ignoreme
-        """
-        self.log.info("Excluding %s from .compare", mask.nick)
-        self.bot.get_user(mask.nick).set_setting('nocompare', True)
-        self.bot.privmsg(
-            target, ("I will leave out {nick} from compare. Re-enable compare by using the unignoreme command").format(nick=mask.nick))
-
-    @command
-    def unignoreme(self, mask, target, args):
-        """Sets that the user wants to be included again in %%compare
-
-            %%unignoreme
-        """
-        self.log.info("Including %s in .compare", mask.nick)
-        self.bot.get_user(mask.nick).set_setting('nocompare', False)
-        self.bot.privmsg(
-            target, "Ok, enabled compare for {user}".format(user=mask.nick))
-
     @asyncio.coroutine
     def now_playing_response(self, mask, args):
         """Return appropriate response to np request"""
@@ -217,7 +195,7 @@ class LastfmPlugin(object):
             return nick
 
     def fetch_extra_trackinfo(self, username, info):
-        """Updates info with extra trackinfo from the last.fm API"""
+        """Updates info with extra trackinfo from the last.fm and MusicBrainz API"""
         try:
             extra_info = self.app.track.get_info(track=info['title'], artist=info[
                                                  'artist'], username=username)
@@ -232,6 +210,7 @@ class LastfmPlugin(object):
         if 'userplaycount' in extra_info:
             info['playcount'] = int(extra_info['userplaycount'])
 
+        # getting tags from musicbrainz(if they have id)
         if 'mbid' in info:
             mb = get_artist_by_id(info['mbid'], includes='tags')
             sorted_tags = sorted(mb['artist']['tag-list'],
@@ -296,7 +275,5 @@ def _parse_trackinfo(track):
         'loved': loved,
         'playtime': playtime
     }
-
     result['mbid'] = track['mbid'] if 'mbid' in track['artist']
-
     return result
