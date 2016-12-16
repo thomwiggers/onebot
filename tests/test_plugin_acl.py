@@ -113,7 +113,6 @@ class ACLTestCase(BotTestCase):
         self.assertEqual(self.bot.sent, lines)
 
     def test_add_acl(self):
-
         @asyncio.coroutine
         def wrap():
             self.bot.dispatch(

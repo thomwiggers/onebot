@@ -75,7 +75,7 @@ class User(object):
             try:
                 parsed = ast.literal_eval(result)
                 return parsed
-            except ValueError:
+            except:
                 pass
 
         return result
