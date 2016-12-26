@@ -265,7 +265,7 @@ def _parse_trackinfo(track):
         playtime = datetime.utcfromtimestamp(int(track['date']['uts']))
 
     loved = False
-    loved = bool(int(track['loved'])) if 'loved' in track:
+    loved = bool(int(track['loved'])) if 'loved' in track
 
     result = {
         'title': track['name'],

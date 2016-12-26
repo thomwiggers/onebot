@@ -148,9 +148,35 @@ class LastfmPluginTest(BotTestCase):
                  '“M83 – Skin of the Night”.'])
         self.bot.loop.run_until_complete(wrap())
 
+    @unittest.skip("disabled because mbid query is less stable")
+    @patch('lastfm.lfm.User.get_recent_tracks',
+           return_value=_get_fixture(
+               'user_get_recent_tracks_now_playing_more_results.json'))
+    @patch('lastfm.lfm.Track.get_info',
+           side_effect=lastfm.exceptions.InvalidParameters)
+    def test_lastfm_result_now_playing(self, mock_a, mock_b):
+        @asyncio.coroutine
+        def wrap():
+            self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
+            yield from asyncio.sleep(0.1)
+            mock_a.assert_called_with(
+                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
+                username='bar')
+            self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
+            yield from asyncio.sleep(0.1)
+            mock_a.assert_called_with(
+                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
+                username='foo')
+            self.assertSent(
+                ['PRIVMSG #chan :bar is now playing '
+                 '“M83 – Skin of the Night”.',
+                 'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
+                 '“M83 – Skin of the Night”.'])
+        self.bot.loop.run_until_complete(wrap())
 
     def test_get_lastfm_nick_from_database(self):
         mock = MagicMock()
+
         # mock get_setting
         @asyncio.coroutine
         def mock_get_setting(setting, default):
@@ -246,7 +272,7 @@ class LastfmPluginTest(BotTestCase):
                                 'anything (last seen 3 days, 1 minute ago).')
             assert not mock.called, "Shouldn't call get_info if not recent"
         self.bot.loop.run_until_complete(wrap())
-#XXX
+
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', days=3, minutes=2))
@@ -335,7 +361,7 @@ class LastfmPluginTest(BotTestCase):
             assert response == ('bar was just playing '
                                 '“M83 – Kim & Jessie” (3m00s ago).')
         self.bot.loop.run_until_complete(wrap())
-#XXX
+
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played_loved.json', minutes=3))
@@ -353,7 +379,7 @@ class LastfmPluginTest(BotTestCase):
                 '(shoegaze, electronic, indie, dream pop, pop).')
 
         self.bot.loop.run_until_complete(wrap())
-#XXX
+
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played_loved.json', minutes=3))
@@ -371,7 +397,7 @@ class LastfmPluginTest(BotTestCase):
                 '(3m00s ago) (electronic, indie, electropop, electro, '
                 'catchy).')
         self.bot.loop.run_until_complete(wrap())
-#XXX
+
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(
                'user_get_recent_tracks_played.json', minutes=3))
