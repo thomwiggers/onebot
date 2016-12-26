@@ -23,7 +23,7 @@ Usage::
 
 """
 import asyncio
-import datetime import datetime
+from datetime import datetime
 
 import irc3
 import lastfm.exceptions
@@ -76,7 +76,7 @@ class LastfmPlugin(object):
             self.bot.privmsg(target, response)
         asyncio.async(wrap())
 
-    #XXX Compare is no longer supported by Last.fm API
+    # XXX Compare is no longer supported by Last.fm API
     @command
     def compare(self, *args):
         """Gets the tasteometer for the user and the target
@@ -233,7 +233,7 @@ class LastfmPlugin(object):
                 info = _parse_trackinfo(track)
 
                 time_ago = datetime.datetime.utcnow() - info['playtime']
-                if time_ago.days > 0 or time_ago.seconds > (20*60):
+                if time_ago.days > 0 or time_ago.seconds > (20 * 60):
                     response.append('is not currently playing anything '
                                     '(last seen {time} ago)'.format(
                                         time=_time_ago(info['playtime'])))
@@ -322,7 +322,8 @@ class LastfmPlugin(object):
         # getting tags from musicbrainz(if they have id)
         if 'mbid' in info:
             mb = musicbrainzngs.get_artist_by_id(info['mbid'], includes='tags')
-            sorted_tags = sorted(mb['artist']['tag-list'], key=itemgetter('count'), reverse=True)
+            sorted_tags = sorted(mb['artist']['tag-list'],
+                                 key=itemgetter('count'), reverse=True)
 
             tags = []
             for tag in sorted_tags:
@@ -347,14 +348,14 @@ def _time_ago(time):
         timestr.append("1 day")
 
     # hours
-    hours = time_ago.seconds//(60*60)
+    hours = time_ago.seconds // (60 * 60)
     if hours > 1:
         timestr.append("{} hours".format(hours))
     elif hours == 1:
         timestr.append("1 hour")
 
     # minutes
-    minutes = time_ago.seconds % (60*60)//60
+    minutes = time_ago.seconds % (60 * 60) // 60
     if minutes > 1:
         timestr.append("{} minutes".format(minutes))
     elif minutes == 1:
@@ -383,7 +384,7 @@ def _parse_trackinfo(track):
         'now playing': now_playing,
         'loved': loved,
         'playtime': playtime
-        }
+    }
 
     result['mbid'] = track['mbid'] if 'mbid' in track['artist']
     return result
