@@ -320,10 +320,12 @@ class LastfmPlugin(object):
         #         info['tags'] = [tag['name'] for tag in taglist]
 
         # getting tags from musicbrainz(if they have id)
-        if 'mbid' in info:
-            mb = musicbrainzngs.get_artist_by_id(info['mbid'], includes='tags')
-            sorted_tags = sorted(mb['artist']['tag-list'],
-                                 key=itemgetter('count'), reverse=True)
+        if 'art_mbid' in info and info['art_mbid'] != '':
+            mb = musicbrainzngs.get_artist_by_id(
+                info['art_mbid'], includes='tags')
+
+            sorted_tags = sorted(
+                mb['artist']['tag-list'], key=itemgetter('count'), reverse=True)
 
             tags = []
             for tag in sorted_tags:
@@ -375,16 +377,19 @@ def _parse_trackinfo(track):
             int(track['date']['uts']))
 
     loved = False
-    loved = bool(int(track['loved'])) if 'loved' in track
+    if 'loved' in track:
+        loved = bool(int(track['loved']))
 
     result = {
         'title': track['name'],
         'artist': track['artist']['name'],
+        'art_mbid': track['artist']['mbid'],
         'album': track['album']['#text'],
         'now playing': now_playing,
         'loved': loved,
         'playtime': playtime
     }
+    if 'mbid' in track:
+            result['mbid'] = track['mbid']
 
-    result['mbid'] = track['mbid'] if 'mbid' in track['artist']
     return result
