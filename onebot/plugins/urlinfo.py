@@ -57,12 +57,29 @@ def _find_urls(string):
     urls = []
     for match in URL_PATTERN.finditer(string):
         url = match.group(0).rstrip('.,\'"')
+        # Find matching pairs, strip others
         for lbr, rbr in [('(', ')'),
                          ('[', ']'),
                          ('{', '}'),
                          ('<', '>')]:
-            if url.endswith(rbr) and lbr not in url:
-                url = url.rstrip(rbr)
+            rest = url
+            count = 0
+            # FIXME this is still really hacky
+            for char in reversed(url):
+                # ends with rb
+                if char == rbr:
+                    # find lbr and what follows
+                    split = rest.split(lbr, maxsplit=1)
+                    if len(split) < 2:
+                        count += 1
+                    else:
+                        rest = split[1]
+                        if rbr in rest.rstrip(rbr):
+                            count += 1
+                else:
+                    break
+            if count > 0:
+                url = url[:-count]
         urls.append(url)
     return urls
 
