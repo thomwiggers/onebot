@@ -27,7 +27,13 @@ class PSAPlugin(object):
     def psa(self, mask, target, args):
         """Broadcast a public service announcement to all channels
 
-            %%psa <message>...
+            %%psa [<message>...]
         """
-        for channel in self.bot.channels:
-            self.bot.privmsg(channel, ' '.join(args['<message>']))
+        msg = ' '.join(args['<message>'] or [])
+        if not msg:
+            self.bot.privmsg(mask.nick, "I need a message to announce")
+        # FIXME channels are only listed if activity (i.e. join, part) is
+        # recorded in them first, not a list of channels the bot is in.
+        else:
+            for channel in self.bot.channels:
+                self.bot.privmsg(channel, msg)
