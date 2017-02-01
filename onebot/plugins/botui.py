@@ -132,6 +132,15 @@ class BotUI(object):
         self.bot.send(cmd)
 
     @command(permission='admin', show_in_help_list=False)
+    def load(self, mask, target, args):
+        """Load - Reloads a plugin and the config file without restarting the IrcBot
+
+          %%load <plugin>...
+        """
+        self.bot.reload(args['<plugin>'])
+        self.bot.privmsg(target, "{} reloaded".format(args['<plugin>']))
+
+    @command(permission='admin', show_in_help_list=False)
     def restart(self, mask, target, args):
         """Quit the IRC bot with an error code to signal restart
 
