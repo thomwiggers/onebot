@@ -135,7 +135,7 @@ class BotUI(object):
     def load(self, mask, target, args):
         """Load - Reloads a plugin and the config file without restarting the IrcBot
 
-          %%load <plugin>
+          %%load <plugin>...
         """
         self.bot.reload(args['<plugin>'])
         self.bot.privmsg(target, "{} reloaded".format(args['<plugin>']))
