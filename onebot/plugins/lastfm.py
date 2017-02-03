@@ -394,6 +394,6 @@ def _parse_trackinfo(track):
         'playtime': playtime
     }
     if 'mbid' in track:
-            result['mbid'] = track['mbid']
+        result['mbid'] = track['mbid']
 
     return result
