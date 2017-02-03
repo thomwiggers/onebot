@@ -1,0 +1,57 @@
+{
+    "artist": {
+        "id": "6d7b7cd4-254b-4c25-83f6-dd20f98ceacd",
+        "type": "Group",
+        "name": "M83",
+        "sort-name": "M83",
+        "country": "FR",
+        "area": {
+            "id": "08310658-51eb-3801-80de-5a0739207115",
+            "name": "France",
+            "sort-name": "France",
+            "iso-3166-1-code-list": ["FR"]
+        },
+        "begin-area": {
+            "id": "d8c8f702-8e5f-4744-8b2c-c4e662ec4ec4",
+            "name": "Antibes",
+            "sort-name": "Antibes"
+        },
+        "life-span": {
+            "begin": "2001"
+        },
+        "tag-list": [{
+            "count": "1",
+            "name": "ambient music"
+        }, {
+            "count": "1",
+            "name": "dance and electronica"
+        }, {
+            "count": "2",
+            "name": "dream pop"
+        }, {
+            "count": "1",
+            "name": "electronic"
+        }, {
+            "count": "1",
+            "name": "electronic music"
+        }, {
+            "count": "1",
+            "name": "french"
+        }, {
+            "count": "1",
+            "name": "score"
+        }, {
+            "count": "1",
+            "name": "shoegaze"
+        }, {
+            "count": "1",
+            "name": "soundtrack"
+        }, {
+            "count": "1",
+            "name": "space rock"
+        }, {
+            "count": "1",
+            "name": "synth pop"
+        }]
+    }
+}
