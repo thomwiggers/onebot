@@ -85,6 +85,7 @@ class LastfmPlugin(object):
         """
         asyncio.async(self.compare_result(*args))
 
+    # XXX Compare is no longer supported by Last.fm API
     @asyncio.coroutine
     def compare_result(self, mask, target, args):
         lastfm_user = yield from self.get_lastfm_nick(mask.nick)
@@ -152,6 +153,7 @@ class LastfmPlugin(object):
             'Ok, so you are https://last.fm/user/{username}'.format(
                 username=args['<lastfmnick>']))
 
+    # XXX Compare is no longer supported by Last.fm API
     @command
     def ignoreme(self, mask, target, args):
         """Sets that the user wants to be excluded from %%compare
@@ -165,6 +167,7 @@ class LastfmPlugin(object):
             ("I will leave out {nick} from compare. Re-enable compare by "
              "using the unignoreme command").format(nick=mask.nick))
 
+    # XXX Compare is no longer supported by Last.fm API
     @command
     def unignoreme(self, mask, target, args):
         """Sets that the user wants to be included again in %%compare
@@ -232,7 +235,7 @@ class LastfmPlugin(object):
                     track = result['track'][0]
                 info = _parse_trackinfo(track)
 
-                time_ago = datetime.datetime.utcnow() - info['playtime']
+                time_ago = datetime.utcnow() - info['playtime']
                 if time_ago.days > 0 or time_ago.seconds > (20 * 60):
                     response.append('is not currently playing anything '
                                     '(last seen {time} ago)'.format(
@@ -324,13 +327,14 @@ class LastfmPlugin(object):
             mb = musicbrainzngs.get_artist_by_id(
                 info['art_mbid'], includes='tags')
 
-            sorted_tags = sorted(
-                mb['artist']['tag-list'], key=itemgetter('count'), reverse=True)
+            if 'tag-list' in mb['artist']:
+                sorted_tags = sorted(
+                    mb['artist']['tag-list'], key=itemgetter('count'), reverse=True)
 
-            tags = []
-            for tag in sorted_tags:
-                tags.append(tag['name'])
-            info['tags'] = tags
+                tags = []
+                for tag in sorted_tags:
+                    tags.append(tag['name'])
+                info['tags'] = tags
 
         if 'userloved' in api_result and not info['loved']:
             info['loved'] = bool(int(api_result['userloved']))
