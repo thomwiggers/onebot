@@ -314,14 +314,6 @@ class LastfmPlugin(object):
         if 'userplaycount' in api_result:
             info['playcount'] = int(api_result['userplaycount'])
 
-        # if 'toptags' in api_result and 'tag' in api_result['toptags']:
-        #     taglist = api_result['toptags']['tag']
-        #     if not isinstance(api_result['toptags']['tag'],
-        #                       list):  # pragma: no cover
-        #         self.log.warning("Tags is not a list: %r", taglist)
-        #     else:
-        #         info['tags'] = [tag['name'] for tag in taglist]
-
         # getting tags from musicbrainz(if they have id)
         if 'art_mbid' in info and info['art_mbid'] != '':
             mb = musicbrainzngs.get_artist_by_id(

@@ -327,8 +327,6 @@ class LastfmPluginTest(BotTestCase):
             assert not mock.called, "Shouldn't call get_info if not recent"
         self.bot.loop.run_until_complete(wrap())
 
-#####
-
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_fixture(
                'user_get_recent_tracks_loved_now_playing.json'))

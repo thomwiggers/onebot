@@ -77,7 +77,7 @@ class ACLPlugin(object):
 
     Configuration settings:
         - ``superadmin``: username to store in the database with
-        - ``all_permissions``: username depends on mask chosen
+        `all_permissions`. username depends on mask chosen
     """
 
     requires = [
