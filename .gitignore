@@ -3,8 +3,7 @@ test.ini
 what.ini
 cookies.jar
 *.json
-!user_*.json
-!track*.json
+!test/fixtures/*.json
 *.bak
 .DS_Store
 
