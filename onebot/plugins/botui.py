@@ -137,8 +137,13 @@ class BotUI(object):
 
           %%load <plugin>...
         """
-        self.bot.reload(args['<plugin>'])
-        self.bot.privmsg(target, "{} reloaded".format(args['<plugin>']))
+        loaded_plugins = self.bot.registry.includes
+
+        if args['<plugin>'] in loaded_plugins:
+            self.bot.reload(args['<plugin>'])
+            self.bot.privmsg(target, "{} reloaded".format(args['<plugin>']))
+        else:
+            self.bot.privmsg(target, "{} not a valid plugin".format(args['<plugin>']))
 
     @command(permission='admin', show_in_help_list=False)
     def restart(self, mask, target, args):
