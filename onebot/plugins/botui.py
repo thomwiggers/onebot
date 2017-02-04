@@ -143,7 +143,8 @@ class BotUI(object):
             self.bot.reload(args['<plugin>'])
             self.bot.privmsg(target, "{} reloaded".format(args['<plugin>']))
         else:
-            self.bot.privmsg(target, "{} not a valid plugin".format(args['<plugin>']))
+            self.bot.privmsg(target, "{} not a valid plugin".format(
+                args['<plugin>']))
 
     @command(permission='admin', show_in_help_list=False)
     def restart(self, mask, target, args):
