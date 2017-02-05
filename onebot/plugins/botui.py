@@ -131,15 +131,15 @@ class BotUI(object):
         self.bot.privmsg(target, "Sending {}".format(cmd))
         self.bot.send(cmd)
 
-    @command(permission='admin', show_in_help_list=False)
-    def load(self, mask, target, args):
-        """Load - Reloads a plugin and the config file without restarting the IrcBot
+    @command(name='reload', permission='admin', show_in_help_list=False)
+    def reload_cmd(self, mask, target, args):
+        """Reload - Reloads a plugin and the config file without restarting the IrcBot
 
-          %%load <plugin>...
+          %%reload <plugin>
         """
-        loaded_plugins = self.bot.registry.includes
+        self.bot.registry.includes
 
-        if args['<plugin>'] in loaded_plugins:
+        if ''.join(args['<plugin>']) in self.bot.registry.includes:
             self.bot.reload(args['<plugin>'])
             self.bot.privmsg(target, "{} reloaded".format(args['<plugin>']))
         else:
