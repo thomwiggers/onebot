@@ -3,7 +3,9 @@ test.ini
 what.ini
 cookies.jar
 *.json
+!test/fixtures/*.json
 *.bak
+.DS_Store
 
 *.py[cod]
 

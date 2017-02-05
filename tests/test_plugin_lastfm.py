@@ -368,7 +368,10 @@ class LastfmPluginTest(BotTestCase):
     @patch('lastfm.lfm.Track.get_info',
            return_value=_get_fixture(
                'track_get_info_m83_graveyard_girl.json'))
-    def test_lastfm_played_loved_3_minutes_ago(self, mock, mockb):
+    @patch('musicbrainzngs.get_artist_by_id',
+           return_value=_get_fixture(
+               'user_get_mbid_tags_M83.json'))
+    def test_lastfm_played_loved_3_minutes_ago(self, mock, mockb, mockc):
         @asyncio.coroutine
         def wrap():
             response = yield from self.lastfm.now_playing_response(
@@ -376,7 +379,8 @@ class LastfmPluginTest(BotTestCase):
                 {'<user>': None})
             assert response == (
                 'bar was just playing “M83 – Kim & Jessie” (♥) (3m00s ago) '
-                '(shoegaze, electronic, indie, dream pop, pop).')
+                '(dream pop, ambient music, dance and electronica, '
+                'electronic).')
 
         self.bot.loop.run_until_complete(wrap())
 
@@ -386,7 +390,10 @@ class LastfmPluginTest(BotTestCase):
     @patch('lastfm.lfm.Track.get_info',
            return_value=_get_fixture(
                'track_get_info_m83_midnight_city_not_loved_5_plays.json'))
-    def test_lastfm_played_loved_count(self, mock, mockb):
+    @patch('musicbrainzngs.get_artist_by_id',
+           return_value=_get_fixture(
+               'user_get_mbid_tags_M83.json'))
+    def test_lastfm_played_loved_count(self, mock, mockb, mockc):
         @asyncio.coroutine
         def wrap():
             response = yield from self.lastfm.now_playing_response(
@@ -394,8 +401,8 @@ class LastfmPluginTest(BotTestCase):
                 {'<user>': None})
             assert response == (
                 'bar was just playing “M83 – Kim & Jessie” (♥) (5 plays) '
-                '(3m00s ago) (electronic, indie, electropop, electro, '
-                'catchy).')
+                '(3m00s ago) (dream pop, ambient music, dance and '
+                'electronica, electronic).')
         self.bot.loop.run_until_complete(wrap())
 
     @patch('lastfm.lfm.User.get_recent_tracks',
@@ -404,8 +411,11 @@ class LastfmPluginTest(BotTestCase):
     @patch('lastfm.lfm.Track.get_info',
            return_value=_get_fixture(
                'track_get_info_etherwood_weightless_no_tags_loved.json'))
+    @patch('musicbrainzngs.get_artist_by_id',
+           return_value=_get_fixture(
+               'user_get_mbid_tags_M83.json'))
     def test_lastfm_played_3_minutes_ago_loved_from_extra_info(
-            self, mock, mockb):
+            self, mock, mockb, mockc):
         @asyncio.coroutine
         def wrap():
             response = yield from self.lastfm.now_playing_response(
@@ -413,7 +423,9 @@ class LastfmPluginTest(BotTestCase):
                 {'<user>': None})
             assert response == ('bar was just playing '
                                 '“M83 – Kim & Jessie” (♥) '
-                                '(9 plays) (3m00s ago).')
+                                '(9 plays) (3m00s ago) '
+                                '(dream pop, ambient music, dance and '
+                                'electronica, electronic).')
 
         self.bot.loop.run_until_complete(wrap())
 
