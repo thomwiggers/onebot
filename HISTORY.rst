@@ -7,7 +7,16 @@ History
 Unreleased
 ----------
 
-* PSA Plugin (contributed by @joostrijneveld: PR #32)
+* PSA Plugin (contributed by @joostrijneveld: `PR #32`_)
+* Various contributions by `@Mattbox`_: `PR #36`_
+  * Use musicbrainz tags instead of last.fm
+  * Tests for PSA plugin
+  * reload command
+
+.. _@joostrijneveld: https://github.com/joostrijneveld/
+.. _@Mattbox: https://github.com/mattbox/
+.. _PR #32: https://github.com/thomwiggers/onebot/pull/36
+.. _PR #36: https://github.com/thomwiggers/onebot/pull/36
 
 1.0.0 (2016-07-17)
 ------------------
