@@ -21,3 +21,10 @@ Contributors
   * `PSA plugin (PR #32)`_
 
 .. _PSA plugin (PR #32): https://github.com/thomwiggers/onebot/pull/32
+
+* `Mathew 'Mattbox'`_
+
+  * `Musicbrainz tags, PSA tests, plugin reload (PR #36)`_
+
+.. _Mathew 'Mattbox': https://github.com/mattbox/
+.. _Musicbrainz tags, PSA tests, plugin reload (PR #36): https://github.com/thomwiggers/onebot/pull/36
