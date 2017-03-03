@@ -95,13 +95,12 @@ class UrlInfo(object):
     Configuration settings:
         - ``cookiejar``: Cookies to identify to sites with
         - ``ignored_classes``: ignored MIME classes
-        - ``ignored_apps``: ignored ``application/` classes
+        - ``ignored_apps``: ignored ``application/`` classes
         - ``ignored_channels``: channels to not post information in
         - ``ignored_nicks``: whom to ignore
 
-    --------
-    URL Map
-    --------
+    **URL Map**
+
     Using the section ``[onebot.plugins.urlinfo.urlmap]`` it's possible
     to automatically translate urls. Set them as from=to. It's a dumb
     find-and-replace.

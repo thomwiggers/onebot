@@ -49,7 +49,7 @@ class WhatCDPlugin(object):
 
             %%wikialias <terms> <response>...
 
-        terms needs to have no whitespace. For `!wiki', 'a b' == 'ab'.
+        terms needs to have no whitespace. For '!wiki', 'a b' == 'ab'.
         response may contain spaces and text.
         """
         self.bot.db['wiki{}'.format(args['<terms>'].lower())] = {

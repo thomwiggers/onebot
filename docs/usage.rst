@@ -25,5 +25,6 @@ You should consult the `irc3 documentation`__ for information about irc3 plugins
 __ irc3_
 
 .. autofunction:: onebot.run
+    :noindex:
 
 .. _irc3: http://irc3.readthedocs.io/
