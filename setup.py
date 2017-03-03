@@ -20,7 +20,12 @@ install_requires = [
     'beautifulsoup4',
     'html5lib<=0.9999999',
     'requests']
-test_requires = ['pytest>=2.7.3', 'freezegun']
+
+test_requires = ['freezegun']
+if sys.version_info > (3, 5):
+    test_requires.append('pytest>=2.7.3')
+else:
+    test_requires.append('pytest>=2.6')
 
 
 class PyTest(TestCommand):
