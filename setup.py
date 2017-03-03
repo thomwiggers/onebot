@@ -20,16 +20,13 @@ install_requires = [
     'beautifulsoup4',
     'html5lib<=0.9999999',
     'requests']
-test_requires = ['pytest>=2.6', 'freezegun']
+test_requires = ['pytest>=2.7.3', 'freezegun']
 
 
 class PyTest(TestCommand):
     def finalize_options(self):
         TestCommand.finalize_options(self)
         self.test_args = []
-        # FIXME remove by requirement on pytest2.7.3 when released
-        if sys.version_info >= (3, 5):
-            self.test_args.append('--assert=plain')
         self.test_suite = True
 
     def run_tests(self):
