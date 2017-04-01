@@ -12,6 +12,8 @@ Unreleased
   * Use musicbrainz tags instead of last.fm
   * Tests for PSA plugin
   * reload command
+* Remove ``compare`` command as it's dead on Last.fm
+* Remove ``mbid`` lookups on Last.fm as they're broken
 
 .. _@joostrijneveld: https://github.com/joostrijneveld/
 .. _@Mattbox: https://github.com/mattbox/

@@ -130,50 +130,6 @@ class LastfmPluginTest(BotTestCase):
             self.assertSent(['PRIVMSG #chan :bar: Error: message'])
         self.bot.loop.run_until_complete(wrap())
 
-    @unittest.skip("FIXME caps don't work")
-    @patch('lastfm.lfm.User.get_recent_tracks',
-           return_value=_get_fixture(
-               'user_get_recent_tracks_now_playing_more_results.json'))
-    @patch('lastfm.lfm.Track.get_info',
-           side_effect=lastfm.exceptions.InvalidParameters)
-    def test_lastfm_np_caps(self, mock_a, mock_b):
-        @asyncio.coroutine
-        def wrap():
-            self.bot.dispatch(':bar!id@host PRIVMSG #chan :!NP')
-            mock_a.assert_called_with(
-                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
-                username='bar')
-            self.assertSent(
-                ['PRIVMSG #chan :bar is now playing '
-                 '“M83 – Skin of the Night”.'])
-        self.bot.loop.run_until_complete(wrap())
-
-    @unittest.skip("disabled because mbid query is less stable")
-    @patch('lastfm.lfm.User.get_recent_tracks',
-           return_value=_get_fixture(
-               'user_get_recent_tracks_now_playing_more_results.json'))
-    @patch('lastfm.lfm.Track.get_info',
-           side_effect=lastfm.exceptions.InvalidParameters)
-    def test_lastfm_result_now_playing(self, mock_a, mock_b):
-        @asyncio.coroutine
-        def wrap():
-            self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np')
-            yield from asyncio.sleep(0.1)
-            mock_a.assert_called_with(
-                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
-                username='bar')
-            self.bot.dispatch(':bar!id@host PRIVMSG #chan :!np foo')
-            yield from asyncio.sleep(0.1)
-            mock_a.assert_called_with(
-                mbid='010109db-e19e-484f-a0c6-f685b42cd9a6',
-                username='foo')
-            self.assertSent(
-                ['PRIVMSG #chan :bar is now playing '
-                 '“M83 – Skin of the Night”.',
-                 'PRIVMSG #chan :bar (foo on Last.FM) is now playing '
-                 '“M83 – Skin of the Night”.'])
-        self.bot.loop.run_until_complete(wrap())
-
     def test_get_lastfm_nick_from_database(self):
         mock = MagicMock()
 
@@ -204,25 +160,6 @@ class LastfmPluginTest(BotTestCase):
         mock().set_setting.assert_called_with('lastfmuser', 'foo')
         self.assertSent(['PRIVMSG #chan :Ok, so you are '
                          'https://last.fm/user/foo'])
-
-    def test_ignoreme(self):
-        mock = MagicMock(name='MockGetUser')
-        del self.config['loop']
-        self.callFTU()
-        self.bot.get_user = mock
-        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!ignoreme')
-        mock().set_setting.assert_called_with('nocompare', True)
-        self.assertSent(['PRIVMSG #chan :I will leave out bar from compare. '
-                         'Re-enable compare by using the unignoreme command'])
-
-    def test_unignoreme(self):
-        mock = MagicMock(name='MockGetUser')
-        del self.config['loop']
-        self.callFTU()
-        self.bot.get_user = mock
-        self.bot.dispatch(':bar!id@host PRIVMSG #chan :!unignoreme')
-        mock().set_setting.assert_called_with('nocompare', False)
-        self.assertSent(['PRIVMSG #chan :Ok, enabled compare for bar'])
 
     @patch('lastfm.lfm.User.get_recent_tracks',
            return_value=_get_patched_time_fixture(

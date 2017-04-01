@@ -76,68 +76,6 @@ class LastfmPlugin(object):
             self.bot.privmsg(target, response)
         asyncio.async(wrap())
 
-    # XXX Compare is no longer supported by Last.fm API
-    @command
-    def compare(self, *args):
-        """Gets the tasteometer for the user and the target
-
-            %%compare <other_user>
-        """
-        asyncio.async(self.compare_result(*args))
-
-    # XXX Compare is no longer supported by Last.fm API
-    @asyncio.coroutine
-    def compare_result(self, mask, target, args):
-        lastfm_user = yield from self.get_lastfm_nick(mask.nick)
-        user = self.bot.get_user(args['<other_user>'])
-        nocompare = False
-        if user:
-            nocompare = yield from user.get_setting('nocompare')
-        lastfm_target = yield from self.get_lastfm_nick(args['<other_user>'])
-
-        if nocompare:
-            self.bot.privmsg(target,
-                             ('{user}: This user has asked to be '
-                              'left out of compare'.format(user=mask.nick)))
-            return
-
-        try:
-            self.log.info("Performing tasteometer on %s and %s",
-                          lastfm_user, lastfm_target)
-            result = self.app.tasteometer.compare(
-                'user', lastfm_user, 'user', lastfm_target)
-            score = round(100.0 * float(result['result']['score']), 2)
-            artists = [artist['name'] for artist
-                       in result['result']['artists'].get('artist', [])[:5]]
-            self.log.debug("Score: %d, artists: %s", score, ', '.join(artists))
-            msg = '{user} and {target} are {score}% compatible!'.format(
-                user=mask.nick, target=args['<other_user>'], score=score)
-            if len(artists) > 0:
-                msg += ' Common artist{}: {}'.format(
-                    's' if len(artists) > 1 else '',
-                    ', '.join(artists))
-            self.bot.privmsg(target, msg)
-        except (lastfm.exceptions.InvalidParameters,
-                lastfm.exceptions.OperationFailed,
-                lastfm.exceptions.AuthenticationFailed) as e:
-            self.log.exception('Operation failed when tasteometering')
-            errmsg = str(e)
-            if (lastfm_user != mask.nick and
-                    lastfm_user in errmsg):  # pragma: no cover
-                errmsg = '(Error message withheld)'
-                self.log.critical('Error message contained user name!')
-            self.bot.privmsg(target, '{user}: Error: {message}'.format(
-                user=mask.nick, message=errmsg))
-        except lastfm.exceptions.InvalidResourceSpecified as e:
-            self.bot.privmsg(target, '{user}: Error: Unknown user'.format(
-                user=mask.nick))
-        except:
-            self.log.exception('Other exception while tasteometering')
-            self.bot.privmsg(
-                target,
-                '{user}: Error: unexpected error. '
-                'http://status.last.fm'.format(user=mask.nick))
-
     @command
     def setuser(self, mask, target, args):
         """Sets the lastfm username of the user
@@ -152,32 +90,6 @@ class LastfmPlugin(object):
             target,
             'Ok, so you are https://last.fm/user/{username}'.format(
                 username=args['<lastfmnick>']))
-
-    # XXX Compare is no longer supported by Last.fm API
-    @command
-    def ignoreme(self, mask, target, args):
-        """Sets that the user wants to be excluded from %%compare
-
-            %%ignoreme
-        """
-        self.log.info("Excluding %s from .compare", mask.nick)
-        self.bot.get_user(mask.nick).set_setting('nocompare', True)
-        self.bot.privmsg(
-            target,
-            ("I will leave out {nick} from compare. Re-enable compare by "
-             "using the unignoreme command").format(nick=mask.nick))
-
-    # XXX Compare is no longer supported by Last.fm API
-    @command
-    def unignoreme(self, mask, target, args):
-        """Sets that the user wants to be included again in %%compare
-
-            %%unignoreme
-        """
-        self.log.info("Including %s in .compare", mask.nick)
-        self.bot.get_user(mask.nick).set_setting('nocompare', False)
-        self.bot.privmsg(target, "Ok, enabled compare for {user}".format(
-            user=mask.nick))
 
     @asyncio.coroutine
     def now_playing_response(self, mask, args):
@@ -294,15 +206,10 @@ class LastfmPlugin(object):
         """Updates info with extra trackinfo from the last.fm API and
         MusicBrainz API"""
         try:
-            if 'mbid' in info and False:
-                self.log.debug("asking via mbid")
-                api_result = self.app.track.get_info(mbid=info['mbid'],
-                                                     username=username)
-            else:
-                self.log.debug("Asking via track")
-                api_result = self.app.track.get_info(track=info['title'],
-                                                     artist=info['artist'],
-                                                     username=username)
+            self.log.debug("Asking via track")
+            api_result = self.app.track.get_info(track=info['title'],
+                                                 artist=info['artist'],
+                                                 username=username)
         except lastfm.exceptions.InvalidParameters:
             self.log.warning("Last.fm returned InvalidParameters "
                              "for trackinfo")
