@@ -89,11 +89,11 @@ class TrakttvPlugin(object):
         user = mask.nick
 
         request = requests.get(
-            'https://api-v2launch.trakt.tv/users/{}/watching'.format(
+            'https://api.trakt.tv/users/{}/watching'.format(
                 trakt_user),
             headers={
                 'Content-Type': 'application/json',
-                'trakt-api-version': 2,
+                'trakt-api-version': '2',
                 'trakt-api-key': self.client_id})
         response = [user]
         if args['<user>']:
