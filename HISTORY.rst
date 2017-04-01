@@ -4,8 +4,8 @@
 History
 =======
 
-Unreleased
-----------
+1.1.0 (2017-04-01)
+------------------
 
 * PSA Plugin (contributed by @joostrijneveld: `PR #32`_)
 * Various contributions by `@Mattbox`_: `PR #36`_
