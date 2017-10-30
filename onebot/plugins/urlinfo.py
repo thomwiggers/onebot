@@ -140,7 +140,7 @@ class UrlInfo(object):
                 if (ip.is_private or ip.is_loopback or
                         ip.is_link_local or ip.is_reserved):
                     return
-        except:
+        except Exception:
             return
 
         for function in self.url_processors:
@@ -245,7 +245,7 @@ class UrlInfo(object):
                         continue
                     else:
                         message.extend(urlmesg)
-                except:
+                except Exception:
                     self.log.exception(
                         "Exception while requesting %s", url)
                     continue

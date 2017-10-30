@@ -214,7 +214,7 @@ class LastfmPlugin(object):
             self.log.warning("Last.fm returned InvalidParameters "
                              "for trackinfo")
             return
-        except:
+        except Exception:
             self.log.exception("Got a random for trackinfo")
             return
 
