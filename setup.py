@@ -18,7 +18,7 @@ install_requires = [
     'lfmh',
     'musicbrainzngs',
     'beautifulsoup4',
-    'html5lib<=0.9999999',
+    'html5lib!=0.99999999',
     'requests']
 
 test_requires = ['freezegun']
@@ -62,7 +62,6 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
