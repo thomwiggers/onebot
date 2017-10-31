@@ -4,6 +4,12 @@
 History
 =======
 
+1.1.1 (2017-10-31)
+------------------
+
+* Truncate too long ``<title>`` tags in urlinfo output.
+* Drop Python 3.3 support
+
 1.1.0 (2017-04-01)
 ------------------
 
