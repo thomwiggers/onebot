@@ -4,7 +4,7 @@
 History
 =======
 
-1.1.1 (2017-10-31)
+1.2.0 (2017-10-31)
 ------------------
 
 * Truncate too long ``<title>`` tags in urlinfo output.
