@@ -8,13 +8,40 @@ test_onebot_urlinfo
 Tests for urlinfo module.
 """
 
+import os.path
+from unittest.mock import MagicMock
+from pathlib import Path
+
 from irc3.testing import BotTestCase
 from onebot.plugins.urlinfo import UrlSkipException, _find_urls
 
 from .test_plugin_users import MockDb
 
 
+def mock_requests_get(*args, **kwargs):
+    """Mock a response object"""
+    class MockResponse:
+        """Mocked response object"""
+        def __init__(self, *args, **kwargs):
+            self.ok = True
+            self._file_name = Path(os.path.dirname(__file__)
+                                   ).joinpath('fixtures/fb-example.html')
+            self._file_size = self._file_name.stat().st_size
+            self.headers = {
+                'Content-Type': 'text/html',
+                'Content-Length': '{}'.format(self._file_size),
+            }
+            self.content = self._file_name.read_bytes()
+            self._filehandle = self._file_name.open()
+
+        def close(self, *args, **kwargs):
+            self._filehandle.close()
+
+    return MockResponse()
+
+
 class UrlInfoTestCase(BotTestCase):
+    """Test the URLInfo module"""
 
     config = {
         'includes': [
@@ -25,6 +52,7 @@ class UrlInfoTestCase(BotTestCase):
     }
 
     def setUp(self):
+        """Set up the test class"""
         super(UrlInfoTestCase, self).setUp()
         self.callFTU()
         self.bot.db = MockDb({
@@ -69,3 +97,11 @@ class UrlInfoTestCase(BotTestCase):
         ]:
             self.assertEqual(expected, _find_urls(message),
                              "String: {}".format(message))
+
+    def test_too_long_title_text(self):
+        """Don't show very long title texts"""
+        session = MagicMock()
+        session.get.side_effect = mock_requests_get
+        result = self.plugin._process_url(session, 'http://facebooktest.com')
+        self.assertLess(100, len(' '.join(result)), "text too short")
+        self.assertGreater(120, len(' '.join(result)), "text too long")

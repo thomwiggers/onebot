@@ -209,8 +209,11 @@ class UrlInfo(object):
                          response.content.decode('utf-8', 'ignore')),
                         'html5lib')
                     if soup.title is not None:
+                        title = soup.title.string.strip()
+                        if len(title) > 120:
+                            title = "{}…".format(title[:110])
                         message.append(
-                            "“{}”".format(soup.title.string.strip()))
+                            "“{}”".format(title))
             # endwith
         except requests.exceptions.Timeout:
             self.log.debug("Error while requesting %s", url)
