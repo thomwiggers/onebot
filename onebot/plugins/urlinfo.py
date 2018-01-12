@@ -210,8 +210,8 @@ class UrlInfo(object):
                         'html5lib')
                     if soup.title is not None:
                         title = soup.title.string.strip()
-                        if len(title) > 120:
-                            title = "{}…".format(title[:110])
+                        if len(title) > 320:
+                            title = "{}…".format(title[:310])
                         message.append(
                             "“{}”".format(title))
             # endwith
