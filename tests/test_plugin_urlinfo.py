@@ -104,4 +104,4 @@ class UrlInfoTestCase(BotTestCase):
         session.get.side_effect = mock_requests_get
         result = self.plugin._process_url(session, 'http://facebooktest.com')
         self.assertLess(100, len(' '.join(result)), "text too short")
-        self.assertGreater(120, len(' '.join(result)), "text too long")
+        self.assertGreater(320, len(' '.join(result)), "text too long")
