@@ -3,6 +3,13 @@
 =======
 History
 =======
+NEXT (2018-xx-xx)
+-----------------
+
+* Change urlinfo character limit to 320, helps twitter urls (contributed by `@mrngm`_ `PR #38`_)
+
+.. _@mrngm: https://github.com/mrngm/
+.. _PR #38: https://github.com/thomwiggers/onebot/pull/38
 
 1.2.0 (2017-10-31)
 ------------------
@@ -13,7 +20,7 @@ History
 1.1.0 (2017-04-01)
 ------------------
 
-* PSA Plugin (contributed by @joostrijneveld: `PR #32`_)
+* PSA Plugin (contributed by `@joostrijneveld`: `PR #32`_)
 * Various contributions by `@Mattbox`_: `PR #36`_
   * Use musicbrainz tags instead of last.fm
   * Tests for PSA plugin
