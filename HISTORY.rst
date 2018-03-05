@@ -3,7 +3,8 @@
 =======
 History
 =======
-NEXT (2018-xx-xx)
+
+1.2.1 (2018-03-05)
 -----------------
 
 * Change urlinfo character limit to 320, helps twitter urls (contributed by `@mrngm`_ `PR #38`_)
