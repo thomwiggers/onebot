@@ -48,7 +48,7 @@ class User(object):
         def wrapper():
             id_ = yield from self.id()
             self.database[id_] = settings
-        asyncio.async(wrapper())
+        asyncio.ensure_future(wrapper())
 
     def set_setting(self, setting, value):
         """Set a specified setting to a value"""
@@ -58,7 +58,7 @@ class User(object):
         def wrapper():
             id_ = yield from self.id()
             self.database.set(id_, **{setting: value})
-        asyncio.async(wrapper())
+        asyncio.ensure_future(wrapper())
 
     @asyncio.coroutine
     def get_settings(self):
@@ -240,7 +240,7 @@ class UsersPlugin(object):
                 user = self.get_user(mask.nick)
                 if hasattr(user, 'account'):
                     return user.account
-                result = yield from self.bot.async.whois(mask.nick)
+                result = yield from self.bot.async_cmds.whois(mask.nick)
                 if result['success'] and 'account' in result:
                     user.account = str(result['account'])
                     return user.account

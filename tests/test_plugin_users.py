@@ -18,10 +18,6 @@ from irc3.utils import IrcString
 from onebot.plugins.users import User
 
 
-if not hasattr(asyncio, 'ensure_future'):
-    asyncio.ensure_future = asyncio.async
-
-
 class MockDb(dict):
     def set(self, k, **kwargs):
         if not self.get(k):

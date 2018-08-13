@@ -13,7 +13,7 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 install_requires = [
-    'irc3>=0.9',
+    'irc3>=1.1',
     'wheel',
     'lfmh',
     'musicbrainzngs',
@@ -42,7 +42,7 @@ class PyTest(TestCommand):
 
 setup(
     name='onebot',
-    version='1.2.1',
+    version='1.3.0',
     description='OneBot is an ircbot based on irc3',
     long_description=readme + '\n\n' + history,
     author='Thom Wiggers',

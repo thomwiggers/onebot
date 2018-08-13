@@ -63,7 +63,7 @@ class TrakttvPlugin(object):
             response = yield from self.now_watching_response(mask, args)
             self.log.debug(response)
             self.bot.privmsg(target, response)
-        asyncio.async(wrap())
+        asyncio.ensure_future(wrap())
 
     @command
     def settraktuser(self, mask, target, args):

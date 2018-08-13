@@ -220,8 +220,8 @@ class UrlInfo(object):
             message.append('Timeout')
         return message
 
-    @event('^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) '
-           '(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$')
+    @event(r'^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) '
+           r'(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$')
     def on_message(self, mask, event, target, data):
         if (mask.nick == self.bot.nick or event == 'NOTICE' or
                 not target.is_channel or target in self.ignored_channels or
