@@ -4,6 +4,13 @@
 History
 =======
 
+1.3.1 (2018-08-23)
+------------------
+
+* Add `Compatible: curl` to `User-Agent` for `urlinfo.py` (contributed by `@mrngm`_ `PR #39`)
+
+.. _PR #39: https://github.com/thomwiggers/onebot/pull/39
+
 1.3.0 (2018-08-13)
 ------------------
 
