@@ -237,7 +237,7 @@ class UrlInfo(object):
                 index += 1
             with requests.Session() as session:
                 session.headers.update(
-                    {'User-Agent': "linux:onebot:1 by DutchDudeWCD",
+                    {'User-Agent': "linux:onebot:1 by DutchDudeWCD (Compatible: curl/7.61)",
                      'Accept-Language': 'en-GB, en-US, en, nl-NL, nl'})
                 if self.cookiejar:
                     session.cookies = self.cookiejar
