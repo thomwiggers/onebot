@@ -42,7 +42,7 @@ class PyTest(TestCommand):
 
 setup(
     name='onebot',
-    version='1.3.1',
+    version='1.3.2',
     description='OneBot is an ircbot based on irc3',
     long_description=readme + '\n\n' + history,
     author='Thom Wiggers',
