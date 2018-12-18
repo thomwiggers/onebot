@@ -14,6 +14,7 @@ import re
 import pickle
 import ipaddress
 import socket
+import time
 from io import StringIO
 from urllib.parse import urlparse
 
@@ -38,10 +39,14 @@ def _read_body(response):
     """Count the size of the body of files"""
     content = StringIO()
     size = 0
-    for chunk in response.iter_content(1048576):
+    start_time = time.time()
+    for chunk in response.iter_content(102400):
         if size < 5 * 1048576:
             content.write(chunk.decode('utf-8', 'ignore'))
         elif size > 30 * 1048576:
+            response.close()
+            return -1, None
+        if time.time() - start_time > 10:
             response.close()
             return -1, None
         size += len(chunk)
