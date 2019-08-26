@@ -29,7 +29,7 @@ History
 * Support Python 3.7 (Requires `irc3>=1.1`)
 
 1.2.1 (2018-03-05)
------------------
+------------------
 
 * Change urlinfo character limit to 320, helps twitter urls (contributed by `@mrngm`_ `PR #38`_)
 
