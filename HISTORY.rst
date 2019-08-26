@@ -7,7 +7,7 @@ History
 1.3.3 (2019-08-26)
 ------------------
 
-* `irc3`'s `async` plugin got renamed to `asynchronious`.
+* ``irc3``'s ``async`` plugin got renamed to ``asynchronious``.
     This means we now require `irc3>=1.1.3`
 * In the URL plugin: read the response in 100KiB chunks and timeout
 
@@ -19,7 +19,7 @@ History
 1.3.1 (2018-08-23)
 ------------------
 
-* Add `Compatible: curl` to `User-Agent` for `urlinfo.py` (contributed by `@mrngm`_ `PR #39`)
+* Add ``Compatible: curl`` to ``User-Agent`` for ``urlinfo.py`` (contributed by `@mrngm`_ `PR #39`)
 
 .. _PR #39: https://github.com/thomwiggers/onebot/pull/39
 
