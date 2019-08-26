@@ -118,7 +118,7 @@ class UsersPlugin(object):
 
     requires = [
         'irc3.plugins.storage',
-        'irc3.plugins.async'
+        'irc3.plugins.asynchronious'
     ]
 
     def __init__(self, bot):

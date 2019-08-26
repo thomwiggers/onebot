@@ -13,7 +13,7 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 install_requires = [
-    'irc3>=1.1',
+    'irc3>=1.1.3',
     'wheel',
     'lfmh',
     'musicbrainzngs',
