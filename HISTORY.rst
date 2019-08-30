@@ -4,6 +4,11 @@
 History
 =======
 
+1.3.4 (UNRELEASED)
+------------------
+
+* Use Github actions instead of Travis
+
 1.3.3 (2019-08-26)
 ------------------
 
