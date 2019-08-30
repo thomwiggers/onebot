@@ -19,14 +19,13 @@ install_requires = [
     'musicbrainzngs',
     'beautifulsoup4',
     'html5lib!=0.99999999',
-    'requests']
+    'requests'
+]
 
-test_requires = ['freezegun']
-if sys.version_info > (3, 5):
-    test_requires.append('pytest>=2.7.3')
-else:
-    test_requires.append('pytest>=2.6')
-
+test_requires = [
+    'freezegun',
+    'pytest>=2.7.3'
+]
 
 class PyTest(TestCommand):
     def finalize_options(self):
