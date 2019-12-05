@@ -8,6 +8,7 @@ History
 ------------------
 
 * Use Github actions instead of Travis
+* Add Python plugin
 
 1.3.3 (2019-08-26)
 ------------------
