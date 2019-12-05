@@ -34,10 +34,10 @@ class UserProcess(multiprocessing.Process):
                     print(repr(e), file=sys.stderr)
         out = out.getvalue().strip()
         if out:
-            print(f"Stdout: {out!r}")
+            print(f"Stdout: {out!r}"[:100])
         err = err.getvalue().strip()
         if err:
-            print(f"Stderr: {err!r}")
+            print(f"Stderr: {err!r}"[:100])
 
 
 if __name__ == "__main__":
