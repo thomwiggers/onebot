@@ -50,7 +50,7 @@ class PythonPlugin:
             self.log.info("Output: %r", lines)
             return "Too many lines returned?"
         for line in lines:
-            yield line
+            yield line[:200]
 
     @classmethod
     def reload(cls, old):  # pragma: no cover
