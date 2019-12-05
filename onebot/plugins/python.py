@@ -36,7 +36,7 @@ class PythonPlugin:
         cmd = ' '.join(args['<command>'])
         print("Command: ", cmd)
         proc = subprocess.run(
-            ["docker", "run", "--net", "none",
+            ["docker", "run", "--rm", "--net", "none",
              "twiggers/python-sandbox", cmd],
             capture_output=True, text=True)
         if proc.returncode != 0:
