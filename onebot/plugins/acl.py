@@ -103,8 +103,8 @@ class ACLPlugin(object):
         if 'superadmin' in self.config:
             self.log.info("Giving {} all_permissions".format(
                 self.config['superadmin']))
-            self.bot.db.set(self.config['superadmin'],
-                            permissions=['all_permissions'])
+            self.bot.db.setdefault(self.config['superadmin'],
+                                   permissions=['all_permissions'])
 
     @command(permission='admin', show_in_help_list=False)
     @asyncio.coroutine
