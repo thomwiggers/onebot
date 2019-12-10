@@ -16,6 +16,8 @@ Usage::
     >>> bot.include('onebot.plugins.trakt')
 
 """
+import urllib.parse
+
 import irc3
 from irc3.plugins.command import command
 
@@ -49,21 +51,34 @@ class WolframAlphaPlugin(object):
 
             %%wa <query>...
         """
+        question = ' '.join(args['<query>'])
+        self.log.info("Got Wolfram|Alpha question '%s'", question)
         try:
             response = requests.get(
                 WOLFRAM_API_URL,
                 params={
                     'appid': self.appid,
-                    'i': ' '.join(args['<query>'])
+                    'i': question,
+                    'units': 'metric',
                 })
             response.raise_for_status()
             return f"{mask.nick}: {response.text}"
-        except requests.exceptions.HTTPError as exception:
-            return f"HTTP error: '{exception}'"
+        except requests.exceptions.HTTPError:
+            if response.status_code == 501:
+                self.log.info("no short answer for '%s'", question)
+                return (
+                    "No short answer available. See "
+                    "https://www.wolframalpha.com/input/?i="
+                    f"{urllib.parse.quote(question)}")
+
+            self.log.exception("HTTP error for question: '%s'", question)
+            return f"HTTP error {response.status_code}"
         except requests.exceptions.Timeout:
+            self.log.error("Request timed out")
             return "Request timed out"
-        except requests.exceptions.RequestException as exception:
-            return f"Request failed: '{exception}'"
+        except requests.exceptions.RequestException:
+            self.log.error(f"Request '{question}' failed")
+            return f"Request failed"
 
     @classmethod
     def reload(cls, old):  # pragma: no cover
