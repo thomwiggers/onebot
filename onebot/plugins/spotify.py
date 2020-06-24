@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 """
 ======================================================
-:mod:`onebot.plugins.lastfm` Last.FM plugin for OneBot
+:mod:`onebot.plugins.spotify` Spotify now playing plugin for OneBot
 ======================================================
 
 ..
@@ -20,7 +20,7 @@ Usage::
     ...     'cmd': '!',
     ...     'storage': 'json://%(json_file)s' % {'json_file' : json_file}
     ... })
-    >>> bot.include('onebot.plugins.lastfm')
+    >>> bot.include('onebot.plugins.spotify')
 
 """
 import asyncio
