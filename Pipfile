@@ -7,6 +7,8 @@ verify_ssl = true
 
 [packages]
 onebot = {editable = true,path = "."}
+tekore = "*"
+cryptography = "*"
 
 [requires]
 python_version = "3.8"

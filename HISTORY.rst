@@ -4,12 +4,13 @@
 History
 =======
 
-1.3.4 (UNRELEASED)
+1.4.0 (UNRELEASED)
 ------------------
 
 * Use Github actions instead of Travis
 * Add Python plugin
 * Add wolfram alpha plugin
+* Add Spotify plugin
 
 1.3.3 (2019-08-26)
 ------------------

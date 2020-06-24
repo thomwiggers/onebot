@@ -191,13 +191,12 @@ class LastfmPlugin(object):
 
             return ' '.join(response) + '.'
 
-    @asyncio.coroutine
-    def get_lastfm_nick(self, nick):
+    async def get_lastfm_nick(self, nick):
         """Gets the last.fm nick associated with a user from the database
         """
         user = self.bot.get_user(nick)
         if user:
-            result = yield from user.get_setting('lastfmuser', nick)
+            result = await user.get_setting('lastfmuser', nick)
             return result
         else:  # pragma: no cover
             return nick

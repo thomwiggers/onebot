@@ -55,8 +55,7 @@ class user_based_policy(object):
             client, predicates.get('permission'))
         if permitted:
             if asyncio.iscoroutinefunction(meth):
-                yield from meth(client, target, args)
-                return
+                return (yield from meth(client, target, args))
             else:
                 return meth(client, target, args)
         cmd_name = predicates.get('name', meth.__name__)
