@@ -56,7 +56,8 @@ class LastfmPlugin(object):
         client_id = self.config.get('client_id')
         redirect_url = self.config.get('redirect_url')
         self.key = Fernet.generate_key()
-        server_address = ('127.0.0.1', 9123)
+        server_address = (self.config.get('http_host', 'localhost'),
+                          int(self.config.get('http_port', 9123)))
         server = SpotifyResponseServer
         server.key = self.key
         server.bot = bot
