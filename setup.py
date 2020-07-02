@@ -19,7 +19,8 @@ install_requires = [
     'musicbrainzngs',
     'beautifulsoup4',
     'html5lib!=0.99999999',
-    'requests'
+    'requests',
+    'isodate',
 ]
 
 test_requires = [
@@ -41,7 +42,7 @@ class PyTest(TestCommand):
 
 setup(
     name='onebot',
-    version='1.3.3',
+    version='1.4.0',
     description='OneBot is an ircbot based on irc3',
     long_description=readme + '\n\n' + history,
     author='Thom Wiggers',

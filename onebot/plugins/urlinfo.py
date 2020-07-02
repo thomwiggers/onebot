@@ -15,13 +15,22 @@ import pickle
 import ipaddress
 import socket
 import time
+import datetime
 from io import StringIO
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode, parse_qs
 
 from bs4 import BeautifulSoup
 import requests
 import requests.exceptions
 from irc3 import plugin, event
+from isodate import parse_duration
+
+YOUTUBE_URLS = [
+    "www.youtube.com",
+    "youtube.com",
+    "youtube-nocookie.com",
+    "www.youtube-nocookie.com",
+]
 
 
 def sizeof_fmt(num, suffix='B'):
@@ -33,6 +42,19 @@ def sizeof_fmt(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
+def timedelta_format(duration: datetime.timedelta):
+    seconds = int(duration.total_seconds())
+    days, seconds = divmod(seconds, 86400)
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    if days > 0:
+        return '%dd%dh%dm%ds' % (days, hours, minutes, seconds)
+    elif hours > 0:
+        return '%dh%dm%ds' % (hours, minutes, seconds)
+    else:
+        return '%dm%ds' % (minutes, seconds)
 
 
 def _read_body(response):
@@ -122,6 +144,7 @@ class UrlInfo(object):
         self.ignored_apps = self.config.get('ignored_apps', ['pdf'])
         self.ignored_channels = self.config.get('ignored_channels', [])
         self.ignored_nicks = self.config.get('ignored_nicks', [])
+        self.youtube_api_key = self.config.get('youtube_api_key', None)
         self.cookiejar = None
         if cookiejar_file:
             with open(cookiejar_file, 'rb') as f:
@@ -133,6 +156,7 @@ class UrlInfo(object):
         self.url_processors = [
             self._process_url_urlmap,
             self._process_url_reddit,
+            self._process_url_youtube,
         ]
 
     def _process_url(self, session, url, **kwargs):
@@ -168,14 +192,51 @@ class UrlInfo(object):
             return [url].extend(
                 self._process_url(session, url, already_extended=True) or [])
 
-    def _process_url_reddit(self, session, url):
+    def _process_url_reddit(self, session, url, **kwargs):
         """Skip reddit urls for now because they are unreliable
         FIXME
         """
         if urlparse(url).hostname.endswith('reddit.com'):
             raise UrlSkipException()
 
-    def _process_url_default(self, session, url):
+    def _process_url_youtube(self, session, url, **kwargs):
+        """YouTube URLs don't contain a <title>"""
+        self.log.debug("Checking if this is a YouTube URL")
+        parsed_host = urlparse(url)
+        if parsed_host.hostname == "youtu.be":
+            self.log.debug("Short YouTube URL")
+            video_id = parsed_host.path.lstrip("/")
+        elif parsed_host.hostname in YOUTUBE_URLS:
+            args = parse_qs(parsed_host.query)
+            self.log.debug("Parsed args: '%r'", args)
+            video_id = args.get('v', [])[0]
+            if not video_id:
+                return
+        else:
+            return
+        url = "https://www.googleapis.com/youtube/v3/videos"
+        self.log.debug("Video ID = '%s'", video_id)
+        params = {
+            'id': video_id,
+            'hl': 'en',
+            'key': self.youtube_api_key,
+            'part': ['snippet', 'contentDetails'],
+        }
+        with closing(session.get(url, params=params, timeout=4)) as response:
+            try:
+                data = response.json()
+                self.log.debug("Response: %r", data)
+                if response.status_code != 200:
+                    return [f"Got response code {response.status_code}"]
+            except ValueError:
+                return ["Invalid JSON response from YouTube API"]
+            title = data['items'][0]['snippet']['title']
+            duration = timedelta_format(
+                parse_duration(data['items'][0]['contentDetails']['duration']))
+            return [f"“{title}” ({duration})"]
+
+
+    def _process_url_default(self, session, url, **kwargs):
         """Process an URL"""
         message = []
         try:

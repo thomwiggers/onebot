@@ -11,6 +11,7 @@ History
 * Add Python plugin
 * Add wolfram alpha plugin
 * Add Spotify plugin
+* Add YouTube API support to urlinfo
 
 1.3.3 (2019-08-26)
 ------------------
