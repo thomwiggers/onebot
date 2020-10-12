@@ -38,6 +38,8 @@ class UserProcess(multiprocessing.Process):
         err = err.getvalue().strip()
         if err:
             print(f"Stderr: {err!r}")
+        if not (out or err):
+            print("No output.")
 
 
 if __name__ == "__main__":

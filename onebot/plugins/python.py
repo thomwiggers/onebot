@@ -37,9 +37,15 @@ class PythonPlugin:
         cmd = ' '.join(args['<command>'])
         self.log.debug("Command: '%s'", cmd)
         proc = subprocess.run(
-            ["docker", "run", "--rm", "--net", "none",
-             "--pids-limit", "5", "--memory", "100M",
-             "--cpus", "1", "twiggers/python-sandbox", cmd],
+            ["docker", "run",
+             "--rm",
+             "--net", "none",
+             "--cap-drop", "ALL"
+             "--pids-limit", "5",
+             "--memory", "100M",
+             "--cpus", "1",
+             "twiggers/python-sandbox",
+             cmd],
             capture_output=True, text=True)
         if proc.returncode != 0:
             return "Error code {} when calling Docker".format(proc.returncode)
