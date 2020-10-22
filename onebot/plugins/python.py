@@ -46,7 +46,8 @@ class PythonPlugin:
              "--cpus", "1",
              "twiggers/python-sandbox",
              cmd],
-            capture_output=True, text=True)
+            capture_output=True, text=True,
+            timout=20)
         if proc.returncode != 0:
             self.log.warn("Error when calling docker: '%s'", proc.stderr)
             yield "Error code {} when calling Docker".format(proc.returncode)
