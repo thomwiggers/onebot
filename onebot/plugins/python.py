@@ -40,7 +40,7 @@ class PythonPlugin:
             ["docker", "run",
              "--rm",
              "--net", "none",
-             "--cap-drop", "ALL"
+             "--cap-drop", "ALL",
              "--pids-limit", "5",
              "--memory", "100M",
              "--cpus", "1",
@@ -48,13 +48,16 @@ class PythonPlugin:
              cmd],
             capture_output=True, text=True)
         if proc.returncode != 0:
-            return "Error code {} when calling Docker".format(proc.returncode)
+            self.log.warn("Error when calling docker: '%s'", proc.stderr)
+            yield "Error code {} when calling Docker".format(proc.returncode)
+            return
         lines = proc.stdout.split("\n")
         self.log.debug("Received: %s", proc.stdout)
         if len(lines) > 2:
             self.log.warning("Too many lines for '%s'", cmd)
             self.log.info("Output: %r", lines)
-            return "Too many lines returned?"
+            yield "Too many lines returned?"
+            return
         for line in lines:
             yield line[:200]
 
