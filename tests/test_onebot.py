@@ -14,9 +14,8 @@ from onebot import OneBot
 
 
 class TestOnebot(TestCase):
-
     def setUp(self):
-        self.bot = OneBot(testing=True, locale='en_US.UTF-8')
+        self.bot = OneBot(testing=True, locale="en_US.UTF-8")
 
     def test_init(self):
         pass
@@ -25,6 +24,7 @@ class TestOnebot(TestCase):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import unittest
+
     unittest.main()

@@ -33,8 +33,8 @@ class ExecutePlugin:
         self.bot = bot
         self.log = bot.log.getChild(__name__)
         config = bot.config.get(__name__, {})
-        self.commands = config.get('commands', [])
-        self.delayed_commands = config.get('delayed_commands', [])
+        self.commands = config.get("commands", [])
+        self.delayed_commands = config.get("delayed_commands", [])
 
     @irc3.event(irc3.rfc.CONNECTED)
     def connected(self, **kwargs):

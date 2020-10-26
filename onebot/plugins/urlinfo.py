@@ -33,15 +33,15 @@ YOUTUBE_URLS = [
 ]
 
 
-def sizeof_fmt(num, suffix='B'):
+def sizeof_fmt(num, suffix="B"):
     """Format printable versions for bytes"""
     if num == -1:
         return "large"
-    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+    return "%.1f%s%s" % (num, "Yi", suffix)
 
 
 def timedelta_format(duration: datetime.timedelta):
@@ -50,11 +50,11 @@ def timedelta_format(duration: datetime.timedelta):
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
     if days > 0:
-        return '%dd%dh%dm%ds' % (days, hours, minutes, seconds)
+        return "%dd%dh%dm%ds" % (days, hours, minutes, seconds)
     elif hours > 0:
-        return '%dh%dm%ds' % (hours, minutes, seconds)
+        return "%dh%dm%ds" % (hours, minutes, seconds)
     else:
-        return '%dm%ds' % (minutes, seconds)
+        return "%dm%ds" % (minutes, seconds)
 
 
 def _read_body(response):
@@ -64,7 +64,7 @@ def _read_body(response):
     start_time = time.time()
     for chunk in response.iter_content(102400):
         if size < 5 * 1048576:
-            content.write(chunk.decode('utf-8', 'ignore'))
+            content.write(chunk.decode("utf-8", "ignore"))
         elif size > 30 * 1048576:
             response.close()
             return -1, None
@@ -76,19 +76,16 @@ def _read_body(response):
     return size, content.getvalue()
 
 
-URL_PATTERN = re.compile(r'\bhttps?://\S+')
+URL_PATTERN = re.compile(r"\bhttps?://\S+")
 
 
 def _find_urls(string):
     """Find all urls in a string"""
     urls = []
     for match in URL_PATTERN.finditer(string):
-        url = match.group(0).rstrip('.,\'"')
+        url = match.group(0).rstrip(".,'\"")
         # Find matching pairs, strip others
-        for lbr, rbr in [('(', ')'),
-                         ('[', ']'),
-                         ('{', '}'),
-                         ('<', '>')]:
+        for lbr, rbr in [("(", ")"), ("[", "]"), ("{", "}"), ("<", ">")]:
             rest = url
             count = 0
             # FIXME this is still really hacky
@@ -138,19 +135,18 @@ class UrlInfo(object):
         self.bot = bot
         self.config = bot.config.get(__name__, {})
         self.log = self.bot.log.getChild(__name__)
-        cookiejar_file = self.config.get('cookiejar')
-        self.ignored_classes = self.config.get('ignored_classes',
-                                               ['image', 'text'])
-        self.ignored_apps = self.config.get('ignored_apps', ['pdf'])
-        self.ignored_channels = self.config.get('ignored_channels', [])
-        self.ignored_nicks = self.config.get('ignored_nicks', [])
-        self.youtube_api_key = self.config.get('youtube_api_key', None)
+        cookiejar_file = self.config.get("cookiejar")
+        self.ignored_classes = self.config.get("ignored_classes", ["image", "text"])
+        self.ignored_apps = self.config.get("ignored_apps", ["pdf"])
+        self.ignored_channels = self.config.get("ignored_channels", [])
+        self.ignored_nicks = self.config.get("ignored_nicks", [])
+        self.youtube_api_key = self.config.get("youtube_api_key", None)
         self.cookiejar = None
         if cookiejar_file:
-            with open(cookiejar_file, 'rb') as f:
+            with open(cookiejar_file, "rb") as f:
                 self.cookiejar = pickle.load(f)
 
-        self.urlmap = self.bot.config.get(__name__ + '.urlmap', {})
+        self.urlmap = self.bot.config.get(__name__ + ".urlmap", {})
 
         # URL processors
         self.url_processors = [
@@ -164,10 +160,15 @@ class UrlInfo(object):
             # filter out private addresses
             # May raise exceptions
             for (f, t, p, c, sockaddr) in socket.getaddrinfo(
-                    urlparse(url).hostname, None):
+                urlparse(url).hostname, None
+            ):
                 ip = ipaddress.ip_address(sockaddr[0])
-                if (ip.is_private or ip.is_loopback or
-                        ip.is_link_local or ip.is_reserved):
+                if (
+                    ip.is_private
+                    or ip.is_loopback
+                    or ip.is_link_local
+                    or ip.is_reserved
+                ):
                     return
         except Exception:
             return
@@ -190,13 +191,14 @@ class UrlInfo(object):
         if o.hostname in self.urlmap:
             url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
             return [url].extend(
-                self._process_url(session, url, already_extended=True) or [])
+                self._process_url(session, url, already_extended=True) or []
+            )
 
     def _process_url_reddit(self, session, url, **kwargs):
         """Skip reddit urls for now because they are unreliable
         FIXME
         """
-        if urlparse(url).hostname.endswith('reddit.com'):
+        if urlparse(url).hostname.endswith("reddit.com"):
             raise UrlSkipException()
 
     def _process_url_youtube(self, session, url, **kwargs):
@@ -209,7 +211,7 @@ class UrlInfo(object):
         elif parsed_host.hostname in YOUTUBE_URLS:
             args = parse_qs(parsed_host.query)
             self.log.debug("Parsed args: '%r'", args)
-            video_id = args.get('v', [])[0]
+            video_id = args.get("v", [])[0]
             if not video_id:
                 return
         else:
@@ -217,10 +219,10 @@ class UrlInfo(object):
         url = "https://www.googleapis.com/youtube/v3/videos"
         self.log.debug("Video ID = '%s'", video_id)
         params = {
-            'id': video_id,
-            'hl': 'en',
-            'key': self.youtube_api_key,
-            'part': ['snippet', 'contentDetails'],
+            "id": video_id,
+            "hl": "en",
+            "key": self.youtube_api_key,
+            "part": ["snippet", "contentDetails"],
         }
         with closing(session.get(url, params=params, timeout=4)) as response:
             try:
@@ -230,22 +232,23 @@ class UrlInfo(object):
                     return [f"Got response code {response.status_code}"]
             except ValueError:
                 return ["Invalid JSON response from YouTube API"]
-            title = data['items'][0]['snippet']['title']
+            title = data["items"][0]["snippet"]["title"]
             duration = timedelta_format(
-                parse_duration(data['items'][0]['contentDetails']['duration']))
+                parse_duration(data["items"][0]["contentDetails"]["duration"])
+            )
             return [f"“{title}” ({duration})"]
-
 
     def _process_url_default(self, session, url, **kwargs):
         """Process an URL"""
         message = []
         try:
             with closing(
-                    session.get(url, allow_redirects=True,
-                                timeout=4, stream=True)) as response:
-                content_type = response.headers.get(
-                    'Content-Type', 'text/html').split(';')[0]
-                size = int(response.headers.get('Content-Length', 0))
+                session.get(url, allow_redirects=True, timeout=4, stream=True)
+            ) as response:
+                content_type = response.headers.get("Content-Type", "text/html").split(
+                    ";"
+                )[0]
+                size = int(response.headers.get("Content-Length", 0))
 
                 # handle chunked transfers
                 content = None
@@ -257,41 +260,45 @@ class UrlInfo(object):
                     message.append("error:")
                     message.append(response.reason.lower())
                 elif size < 0:
-                    message.append(
-                        "Safety error: unknown size, not reading")
-                elif (content_type not in (
-                        'text/html', 'application/xhtml+xml')):
-                    class_, app = content_type.split('/')
-                    if not ((class_ in self.ignored_classes or
-                             app in self.ignored_apps) and
-                            size < (1048576 * 5)):
+                    message.append("Safety error: unknown size, not reading")
+                elif content_type not in ("text/html", "application/xhtml+xml"):
+                    class_, app = content_type.split("/")
+                    if not (
+                        (class_ in self.ignored_classes or app in self.ignored_apps)
+                        and size < (1048576 * 5)
+                    ):
                         message.append("Content-Type:")
                         message.append(content_type)
                         message.append("Filesize:")
                         message.append(sizeof_fmt(size))
                 elif size < (1048576 * 2):
                     soup = BeautifulSoup(
-                        (content or
-                         response.content.decode('utf-8', 'ignore')),
-                        'html5lib')
+                        (content or response.content.decode("utf-8", "ignore")),
+                        "html5lib",
+                    )
                     if soup.title is not None:
                         title = soup.title.string.strip()
                         if len(title) > 320:
                             title = "{}…".format(title[:310])
-                        message.append(
-                            "“{}”".format(title))
+                        message.append("“{}”".format(title))
             # endwith
         except requests.exceptions.Timeout:
             self.log.debug("Error while requesting %s", url)
-            message.append('Timeout')
+            message.append("Timeout")
         return message
 
-    @event(r'^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) '
-           r'(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$')
+    @event(
+        r"^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) "
+        r"(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$"
+    )
     def on_message(self, mask, event, target, data):
-        if (mask.nick == self.bot.nick or event == 'NOTICE' or
-                not target.is_channel or target in self.ignored_channels or
-                mask.nick in self.ignored_nicks):
+        if (
+            mask.nick == self.bot.nick
+            or event == "NOTICE"
+            or not target.is_channel
+            or target in self.ignored_channels
+            or mask.nick in self.ignored_nicks
+        ):
             return
         index = 1
         messages = []
@@ -304,12 +311,12 @@ class UrlInfo(object):
             with requests.Session() as session:
                 session.headers.update(
                     {
-                        'User-Agent': (
-                            "linux:onebot:1 by DutchDudeWCD "
-                            "(Compatible: curl/7.61)"
+                        "User-Agent": (
+                            "linux:onebot:1 by DutchDudeWCD " "(Compatible: curl/7.61)"
                         ),
-                        'Accept-Language': 'en-GB, en-US, en, nl-NL, nl'
-                    })
+                        "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
+                    }
+                )
                 if self.cookiejar:
                     session.cookies = self.cookiejar
                 self.log.debug("processing %s", url)
@@ -320,15 +327,14 @@ class UrlInfo(object):
                     else:
                         message.extend(urlmesg)
                 except Exception:
-                    self.log.exception(
-                        "Exception while requesting %s", url)
+                    self.log.exception("Exception while requesting %s", url)
                     continue
                 # end try
             # end with session
             if message:
-                messages.append(' '.join(message))
+                messages.append(" ".join(message))
         if messages:
-            self.bot.privmsg(target, "{}.".format(' '.join(messages)))
+            self.bot.privmsg(target, "{}.".format(" ".join(messages)))
 
     @classmethod
     def reload(cls, old):  # pragma: no cover

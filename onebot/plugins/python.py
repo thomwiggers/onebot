@@ -32,22 +32,32 @@ class PythonPlugin:
     def py(self, _mask, _target, args):
         """Execute a command in a Python 3 interpreter
 
-            %%py <command>...
+        %%py <command>...
         """
-        cmd = ' '.join(args['<command>'])
+        cmd = " ".join(args["<command>"])
         self.log.debug("Command: '%s'", cmd)
         proc = subprocess.run(
-            ["docker", "run",
-             "--rm",
-             "--net", "none",
-             "--cap-drop", "ALL",
-             "--pids-limit", "5",
-             "--memory", "100M",
-             "--cpus", "1",
-             "twiggers/python-sandbox",
-             cmd],
-            capture_output=True, text=True,
-            timout=20)
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--net",
+                "none",
+                "--cap-drop",
+                "ALL",
+                "--pids-limit",
+                "5",
+                "--memory",
+                "100M",
+                "--cpus",
+                "1",
+                "twiggers/python-sandbox",
+                cmd,
+            ],
+            capture_output=True,
+            text=True,
+            timout=20,
+        )
         if proc.returncode != 0:
             self.log.warn("Error when calling docker: '%s'", proc.stderr)
             yield "Error code {} when calling Docker".format(proc.returncode)

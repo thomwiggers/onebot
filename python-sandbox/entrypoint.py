@@ -44,6 +44,7 @@ class UserProcess(multiprocessing.Process):
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) != 2:
         print(f"Usage: {sys.argv[0]} <cmdline>", file=sys.stderr)
         sys.exit(1)
@@ -53,4 +54,3 @@ if __name__ == "__main__":
     if process.is_alive():
         process.terminate()
         print(f"Terminated after {TIMEOUT} seconds.")
-
