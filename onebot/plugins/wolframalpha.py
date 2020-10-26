@@ -13,7 +13,7 @@ Usage::
     ...     },
     ...     'cmd': '!',
     ... })
-    >>> bot.include('onebot.plugins.trakt')
+    >>> bot.include('onebot.plugins.wolframalpha')
 
 """
 import urllib.parse
@@ -24,7 +24,7 @@ from irc3.plugins.command import command
 import requests
 
 
-WOLFRAM_API_URL = 'https://api.wolframalpha.com/v1/result'
+WOLFRAM_API_URL = "https://api.wolframalpha.com/v1/result"
 
 
 @irc3.plugin
@@ -35,7 +35,7 @@ class WolframAlphaPlugin(object):
     """
 
     requires = [
-        'irc3.plugins.command',
+        "irc3.plugins.command",
     ]
 
     def __init__(self, bot):
@@ -43,24 +43,25 @@ class WolframAlphaPlugin(object):
         self.bot = bot
         self.log = bot.log.getChild(__name__)
         self.config = bot.config.get(__name__, {})
-        self.appid = self.config['appid']
+        self.appid = self.config["appid"]
 
     @command
     def wa(self, mask, target, args):
         """Queries the Wolfram|Alpha engine
 
-            %%wa <query>...
+        %%wa <query>...
         """
-        question = ' '.join(args['<query>'])
+        question = " ".join(args["<query>"])
         self.log.info("Got Wolfram|Alpha question '%s'", question)
         try:
             response = requests.get(
                 WOLFRAM_API_URL,
                 params={
-                    'appid': self.appid,
-                    'i': question,
-                    'units': 'metric',
-                })
+                    "appid": self.appid,
+                    "i": question,
+                    "units": "metric",
+                },
+            )
             response.raise_for_status()
             return f"{mask.nick}: {response.text}"
         except requests.exceptions.HTTPError:
@@ -69,7 +70,8 @@ class WolframAlphaPlugin(object):
                 return (
                     "No short answer available. See "
                     "https://www.wolframalpha.com/input/?i="
-                    f"{urllib.parse.quote(question)}")
+                    f"{urllib.parse.quote(question)}"
+                )
 
             self.log.exception("HTTP error for question: '%s'", question)
             return f"HTTP error {response.status_code}"

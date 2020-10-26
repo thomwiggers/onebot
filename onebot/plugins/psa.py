@@ -16,20 +16,20 @@ class PSAPlugin(object):
     """PSA Plugin"""
 
     requires = [
-        'irc3.plugins.command',
-        'irc3.plugins.userlist',
+        "irc3.plugins.command",
+        "irc3.plugins.userlist",
     ]
 
     def __init__(self, bot):
         self.bot = bot
 
-    @command(permission='admin', show_in_help_list=False)
+    @command(permission="admin", show_in_help_list=False)
     def psa(self, mask, target, args):
         """Broadcast a public service announcement to all channels
 
-            %%psa [<message>...]
+        %%psa [<message>...]
         """
-        msg = ' '.join(args['<message>'] or [])
+        msg = " ".join(args["<message>"] or [])
         if not msg:
             self.bot.privmsg(mask.nick, "I need a message to announce")
         # FIXME channels are only listed if activity (i.e. join, part) is

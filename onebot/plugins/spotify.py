@@ -43,8 +43,8 @@ class LastfmPlugin(object):
     """
 
     requires = [
-        'irc3.plugins.command',
-        'onebot.plugins.users',
+        "irc3.plugins.command",
+        "onebot.plugins.users",
     ]
 
     def __init__(self, bot):
@@ -52,16 +52,20 @@ class LastfmPlugin(object):
         self.bot = bot
         self.log = bot.log.getChild(__name__)
         self.config = bot.config.get(__name__, {})
-        client_secret = self.config.get('client_secret')
-        client_id = self.config.get('client_id')
-        redirect_url = self.config.get('redirect_url')
+        client_secret = self.config.get("client_secret")
+        client_id = self.config.get("client_id")
+        redirect_url = self.config.get("redirect_url")
         self.key = Fernet.generate_key()
-        server_address = (self.config.get('http_host', 'localhost'),
-                          int(self.config.get('http_port', 9123)))
+        server_address = (
+            self.config.get("http_host", "localhost"),
+            int(self.config.get("http_port", 9123)),
+        )
         server = SpotifyResponseServer
         server.key = self.key
         server.bot = bot
-        self.tk_cred = server.tk_cred = tk.RefreshingCredentials(client_id, client_secret, redirect_url)
+        self.tk_cred = server.tk_cred = tk.RefreshingCredentials(
+            client_id, client_secret, redirect_url
+        )
         http_server = ThreadingHTTPServer(server_address, server)
         self.server_thread = threading.Thread(target=http_server.serve_forever)
         self.server_thread.daemon = True
@@ -86,7 +90,7 @@ class LastfmPlugin(object):
         playing_type = currently_playing.currently_playing_type
         if playing_type == tk.model.CurrentlyPlayingType.track:
             track = currently_playing.item
-            artists = ', '.join(artist.name for artist in track.artists)
+            artists = ", ".join(artist.name for artist in track.artists)
             album = track.album
             response = f"{mask.nick} is playing {artists} - “{track.name}”"
             if album.name != track.name:
@@ -103,18 +107,16 @@ class LastfmPlugin(object):
         else:
             return f"{mask.nick} is listening to something, but I don't know what (type: {playing_type})"
 
-
     async def get_spotify_token(self, nick):
         user = self.bot.get_user(nick)
         if not user:
             return None
-        result = await user.get_setting('spotify_refresh_token')
+        result = await user.get_setting("spotify_refresh_token")
         if not result:
             return None
         new_token = self.tk_cred.refresh_user_token(result)
-        user.set_setting('spotify_refresh_token', new_token.refresh_token)
+        user.set_setting("spotify_refresh_token", new_token.refresh_token)
         return new_token
-
 
     @command
     def setspotifyuser(self, mask, target, args):
@@ -133,7 +135,6 @@ class LastfmPlugin(object):
 
         self.bot.privmsg(mask.nick, f"Authorize me here: {auth_url}")
         return "I've sent you a PRIVMSG with instructions"
-
 
     @classmethod
     def reload(cls, old):  # pragma: no cover
@@ -169,15 +170,17 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
             return
         self.seen.add(code)
         try:
-            qs = self.path[len("/callback?"):]
+            qs = self.path[len("/callback?") :]
             params = parse_qs(qs)
-            state = fernet.decrypt(params['state'][0].encode(), ttl=120).decode()
+            state = fernet.decrypt(params["state"][0].encode(), ttl=120).decode()
             user = self.bot.get_user(state)
             user_token = self.tk_cred.request_user_token(code)
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"Stored your token")
-            self.bot.loop.call_soon_threadsafe(user.set_setting, 'spotify_refresh_token', user_token.refresh_token)
+            self.bot.loop.call_soon_threadsafe(
+                user.set_setting, "spotify_refresh_token", user_token.refresh_token
+            )
         except InvalidToken:
             self.send_error(403, message="Token expired, try again")
         except tk.BadRequest as e:

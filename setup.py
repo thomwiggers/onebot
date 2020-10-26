@@ -9,24 +9,22 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 
-readme = open('README.rst').read()
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+readme = open("README.rst").read()
+history = open("HISTORY.rst").read().replace(".. :changelog:", "")
 
 install_requires = [
-    'irc3>=1.1.3',
-    'wheel',
-    'lfmh',
-    'musicbrainzngs',
-    'beautifulsoup4',
-    'html5lib!=0.99999999',
-    'requests',
-    'isodate',
+    "irc3>=1.1.3",
+    "wheel",
+    "lfmh",
+    "musicbrainzngs",
+    "beautifulsoup4",
+    "html5lib!=0.99999999",
+    "requests",
+    "isodate",
 ]
 
-test_requires = [
-    'freezegun',
-    'pytest>=2.7.3'
-]
+test_requires = ["freezegun", "pytest>=2.7.3"]
+
 
 class PyTest(TestCommand):
     def finalize_options(self):
@@ -36,42 +34,41 @@ class PyTest(TestCommand):
 
     def run_tests(self):
         import pytest
+
         errcode = pytest.main(self.test_args)
         sys.exit(errcode)
 
 
 setup(
-    name='onebot',
-    version='1.4.0',
-    description='OneBot is an ircbot based on irc3',
-    long_description=readme + '\n\n' + history,
-    author='Thom Wiggers',
-    author_email='thom@thomwiggers.nl',
-    url='https://github.com/thomwiggers/onebot',
-    packages=find_packages(
-        exclude=['*.tests', 'tests', 'tests.*', '*.tests.*']
-    ),
+    name="onebot",
+    version="1.4.0",
+    description="OneBot is an ircbot based on irc3",
+    long_description=readme + "\n\n" + history,
+    author="Thom Wiggers",
+    author_email="thom@thomwiggers.nl",
+    url="https://github.com/thomwiggers/onebot",
+    packages=find_packages(exclude=["*.tests", "tests", "tests.*", "*.tests.*"]),
     include_package_data=False,
     install_requires=install_requires,
-    license='BSD',
+    license="BSD",
     zip_safe=True,
-    keywords='onebot irc',
+    keywords="onebot irc",
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: Implementation :: CPython',
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: BSD License",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: Implementation :: CPython",
     ],
     tests_require=test_requires,
-    cmdclass={'test': PyTest},
+    cmdclass={"test": PyTest},
     entry_points={
-        'console_scripts': [
-            'onebot = onebot:run',
+        "console_scripts": [
+            "onebot = onebot:run",
         ]
-    }
+    },
 )
