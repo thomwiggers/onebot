@@ -55,9 +55,8 @@ class TrakttvPlugin(object):
         if target == self.bot.nick:
             target = mask.nick
 
-        @asyncio.coroutine
-        def wrap():
-            response = yield from self.now_watching_response(mask, args)
+        async def wrap():
+            response = await self.now_watching_response(mask, args)
             self.log.debug(response)
             self.bot.privmsg(target, response)
 
@@ -78,12 +77,11 @@ class TrakttvPlugin(object):
             ),
         )
 
-    @asyncio.coroutine
-    def now_watching_response(self, mask, args):
+    async def now_watching_response(self, mask, args):
         """Return appropriate response to np request"""
         trakt_user = args["<user>"]
         if not trakt_user:
-            trakt_user = yield from self.get_trakt_nick(mask.nick)
+            trakt_user = await self.get_trakt_nick(mask.nick)
         user = mask.nick
 
         request = requests.get(
@@ -128,12 +126,11 @@ class TrakttvPlugin(object):
             )
         return " ".join(response)
 
-    @asyncio.coroutine
-    def get_trakt_nick(self, nick):
+    async def get_trakt_nick(self, nick):
         """Gets the trakt.tv nick associated with a user from the database"""
         user = self.bot.get_user(nick)
         if user:
-            result = yield from user.get_setting("trakttvnick", nick)
+            result = await user.get_setting("trakttvnick", nick)
             return result
         else:  # pragma: no cover
             return nick

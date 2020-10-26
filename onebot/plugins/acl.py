@@ -28,14 +28,14 @@ class user_based_policy(object):
         self.bot.include("onebot.plugins.users")
         self.log = self.bot.log.getChild(__name__)
 
-    def has_permission(self, mask, permission):
+    async def has_permission(self, mask, permission):
         """
         Returns if the user identified by ``mask`` has ``permission``
         """
         user = self.bot.get_user(mask.nick)
         perms = []
         if user:
-            perms = yield from user.get_setting("permissions", set())
+            perms = await user.get_setting("permissions", set())
 
         self.log.debug("Found permissions for %s: %r", mask.nick, perms)
 
@@ -47,12 +47,11 @@ class user_based_policy(object):
 
         return False
 
-    @asyncio.coroutine
-    def __call__(self, predicates, meth, client, target, args, **kwargs):
-        permitted = yield from self.has_permission(client, predicates.get("permission"))
+    async def __call__(self, predicates, meth, client, target, args, **kwargs):
+        permitted = await self.has_permission(client, predicates.get("permission"))
         if permitted:
             if asyncio.iscoroutinefunction(meth):
-                return (yield from meth(client, target, args))
+                return await meth(client, target, args)
             else:
                 return meth(client, target, args)
         cmd_name = predicates.get("name", meth.__name__)
@@ -94,8 +93,7 @@ class ACLPlugin(object):
             self.bot.db.set(self.config["superadmin"], permissions=["all_permissions"])
 
     @command(permission="admin", show_in_help_list=False)
-    @asyncio.coroutine
-    def acl(self, mask, target, args):
+    async def acl(self, mask, target, args):
         """Administrate the ACL
 
         %%acl (add | remove) <user> <permission>
@@ -125,7 +123,7 @@ class ACLPlugin(object):
                     ),
                 )
                 return
-            current_permissions = yield from user.get_setting("permissions", [])
+            current_permissions = await user.get_setting("permissions", [])
         else:
             current_permissions = self.bot.db.get(args["<id>"], {}).get(
                 "permissions", []

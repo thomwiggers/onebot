@@ -208,8 +208,7 @@ class UserObjectTest(unittest.TestCase):
     def setUp(self):
         mask = IrcString("nick!user@host")
 
-        @asyncio.coroutine
-        def id_func():
+        async def id_func():
             return mask
 
         self.user = User(mask, ["#foo"], id_func, MockDb())
@@ -246,19 +245,18 @@ class UserObjectTest(unittest.TestCase):
         assert self.user.channels == set()
 
     def test_get_settings(self):
-        @asyncio.coroutine
-        def wrap():
+        async def wrap():
             self.user.set_settings({"setting": "hi"})
-            yield from asyncio.sleep(0.01)
-            assert (yield from self.user.get_settings()) == {"setting": "hi"}
-            assert (yield from self.user.get_setting("foo")) is None
-            assert (yield from self.user.get_setting("foo", "default")) == "default"
-            assert (yield from self.user.get_setting("setting")) == "hi"
-            assert (yield from self.user.get_setting("setting", "default")) == "hi"
-            assert (yield from self.user.get_setting("foo", "default")) == "default"
+            await asyncio.sleep(0.01)
+            assert (await self.user.get_settings()) == {"setting": "hi"}
+            assert (await self.user.get_setting("foo")) is None
+            assert (await self.user.get_setting("foo", "default")) == "default"
+            assert (await self.user.get_setting("setting")) == "hi"
+            assert (await self.user.get_setting("setting", "default")) == "hi"
+            assert (await self.user.get_setting("foo", "default")) == "default"
             self.user.set_setting("setting", "bar")
-            yield from asyncio.sleep(0.01)
-            assert (yield from self.user.get_setting("setting")) == "bar"
+            await asyncio.sleep(0.01)
+            assert (await self.user.get_setting("setting")) == "bar"
 
         asyncio.get_event_loop().run_until_complete(wrap())
 
