@@ -43,13 +43,17 @@ class UsersPluginTestWithNickserv(BotTestCase):
         self.bot.db = MockDb()
         self.users = self.bot.get_plugin("onebot.plugins.users.UsersPlugin")
 
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
+
     def test_join(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
-        self.bot.loop.run_until_complete(asyncio.sleep(0.1))
+        self.bot.loop.run_until_complete(asyncio.sleep(0.001))
         user = self.bot.get_user("bar")
         assert user, "User should exist!"
         task = asyncio.ensure_future(user.id())
-        self.bot.loop.run_until_complete(asyncio.sleep(0.1))
+        self.bot.loop.run_until_complete(asyncio.sleep(0.001))
 
         self.bot.dispatch(":localhost 311 me bar foo host * :realname")
         self.bot.dispatch(":localhost 330 me bar nsaccount :is logged in as")
@@ -81,9 +85,13 @@ class UsersPluginTestWithWhatcd(BotTestCase):
         self.bot.db = MockDb()
         self.users = self.bot.get_plugin("onebot.plugins.users.UsersPlugin")
 
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
+
     def test_join(self):
         self.bot.dispatch(":bar!200779@nankers.member.what.cd JOIN #chan")
-        self.bot.loop.run_until_complete(asyncio.sleep(0.1))
+        self.bot.loop.run_until_complete(asyncio.sleep(0.001))
         user = self.bot.get_user("bar")
         assert user
         task = asyncio.ensure_future(user.id())
@@ -206,12 +214,19 @@ class UsersPluginTest(BotTestCase):
 
 class UserObjectTest(unittest.TestCase):
     def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
         mask = IrcString("nick!user@host")
 
         async def id_func():
             return mask
 
         self.user = User(mask, ["#foo"], id_func, MockDb())
+
+    def tearDown(self):
+        super().tearDown()
+        self.loop.close()
 
     def test_user_needs_channels(self):
         with self.assertRaises(ValueError):
@@ -247,7 +262,7 @@ class UserObjectTest(unittest.TestCase):
     def test_get_settings(self):
         async def wrap():
             self.user.set_settings({"setting": "hi"})
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
             assert (await self.user.get_settings()) == {"setting": "hi"}
             assert (await self.user.get_setting("foo")) is None
             assert (await self.user.get_setting("foo", "default")) == "default"
@@ -255,10 +270,10 @@ class UserObjectTest(unittest.TestCase):
             assert (await self.user.get_setting("setting", "default")) == "hi"
             assert (await self.user.get_setting("foo", "default")) == "default"
             self.user.set_setting("setting", "bar")
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
             assert (await self.user.get_setting("setting")) == "bar"
 
-        asyncio.get_event_loop().run_until_complete(wrap())
+        self.loop.run_until_complete(wrap())
 
 
 if __name__ == "__main__":

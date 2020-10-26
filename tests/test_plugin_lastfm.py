@@ -47,7 +47,7 @@ def _get_patched_time_fixture(fixture_name, **kwargs):
 
 
 async def get_lastfm_nick_mock(nick):
-    await asyncio.sleep(0.001)
+    await asyncio.sleep(0.0001)
     return nick
 
 
@@ -74,6 +74,10 @@ class LastfmPluginTest(BotTestCase):
         self.lastfm = self.bot.get_plugin("onebot.plugins.lastfm.LastfmPlugin")
         self.lastfm.get_lastfm_nick = get_lastfm_nick_mock
 
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
+
     def assertSent(self, lines):
         """Assert that these lines have been sent"""
         self.assertEqual(self.bot.sent, lines)
@@ -85,7 +89,7 @@ class LastfmPluginTest(BotTestCase):
     def test_no_user_found(self, mock):
         async def wrap():
             self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
-            await asyncio.sleep(0.11)
+            await asyncio.sleep(0.01)
             mock.assert_called_with("bar", extended=True, limit=1)
             self.assertSent(
                 ["PRIVMSG #chan :bar is someone who never " "scrobbled before."]
@@ -100,7 +104,7 @@ class LastfmPluginTest(BotTestCase):
     def test_dm_works(self, mock):
         async def wrap():
             self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             self.assertSent(
                 ["PRIVMSG bar :bar is someone who never " "scrobbled before."]
             )
@@ -114,7 +118,7 @@ class LastfmPluginTest(BotTestCase):
 
         async def wrap():
             self.bot.dispatch(":bar!id@host PRIVMSG #chan :!np")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             self.assertSent(["PRIVMSG #chan :bar: Error: message_frommock"])
 
         self.bot.loop.run_until_complete(wrap())
@@ -126,7 +130,7 @@ class LastfmPluginTest(BotTestCase):
     def test_lastfm_error(self, mock):
         async def wrap():
             self.bot.dispatch(":bar!id@host PRIVMSG #chan :!np")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             self.assertSent(["PRIVMSG #chan :bar: Error: message"])
 
         self.bot.loop.run_until_complete(wrap())
@@ -214,7 +218,7 @@ class LastfmPluginTest(BotTestCase):
             response = await self.lastfm.now_playing_response(
                 IrcString("bar!id@host"), {"<user>": None}
             )
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             assert response == (
                 "bar is not currently playing "
                 "anything (last seen 3 days, 1 minute ago)."
@@ -236,7 +240,7 @@ class LastfmPluginTest(BotTestCase):
     def test_lastfm_played_3_days_2_minutes_ago(self, mock, mockb):
         async def wrap():
             self.bot.dispatch(":bar!id@foo PRIVMSG #chan :!np")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             self.assertSent(
                 [
                     "PRIVMSG #chan :bar is not currently playing "
@@ -301,7 +305,7 @@ class LastfmPluginTest(BotTestCase):
     def test_lastfm_playing_loved(self, mocka, mockb):
         async def wrap():
             self.bot.dispatch(":bar!id@host PRIVMSG #chan :!np")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
             self.bot.dispatch(":bar!id@host PRIVMSG #chan :!np foo")
             await asyncio.sleep(0.01)
             self.assertSent(

@@ -42,18 +42,22 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):
-        super(UserBasedGuardPolicyTestCase, self).setUp()
+        super().setUp()
         self.config["loop"] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config["loop"])
         self.callFTU()
         self.bot.db = MockDb()
+
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
 
     def test_command_allowed(self):
         async def wrap():
             self.bot.dispatch(":im!the@boss JOIN #chan")
             self.bot.db["the@boss"] = {"permissions": {"test"}}
             self.bot.dispatch(":im!the@boss PRIVMSG #chan :!cmd")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
         self.assertSent(["PRIVMSG #chan :Done"])
@@ -61,7 +65,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
     def test_command_not_allowed(self):
         async def wrap():
             self.bot.dispatch(":nobody!idont@knowu PRIVMSG #chan :!cmd")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
         self.assertSent(["PRIVMSG nobody :You are not allowed to use the cmd command"])
@@ -71,7 +75,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
             self.bot.dispatch(":Groxxxy!stupid@idiot JOIN #chan")
             self.bot.db["stupid@idiot"] = {"permissions": {"ignore"}}
             self.bot.dispatch(":Groxxxy!stupid@idiot PRIVMSG #chan :!cmd2")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
         self.assertSent(
@@ -89,13 +93,17 @@ class ACLTestCase(BotTestCase):
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):
-        super(ACLTestCase, self).setUp()
+        super().setUp()
         self.config["loop"] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config["loop"])
         self.callFTU()
         self.bot.db = MockDb()
         self.bot.include("onebot.plugins.acl")
         self.bot.dispatch(":bar!foo@host JOIN #chan")
+
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
 
     def assertSent(self, lines):
         """Assert that these lines have been sent"""
@@ -104,19 +112,19 @@ class ACLTestCase(BotTestCase):
     def test_add_acl(self):
         async def wrap():
             self.bot.dispatch(":root@localhost PRIVMSG #chan :!acl add bar admin")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEquals(self.bot.db["foo@host"].get("permissions"), ["admin"])
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), ["admin"])
         self.assertSent(["PRIVMSG #chan :Updated permissions for bar"])
 
     def test_add_unknown_user(self):
         async def wrap():
             self.bot.dispatch(":root@localhost PRIVMSG #chan :!acl add bat admin")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEquals(self.bot.db.get("bat", {}).get("permissions", []), [])
+        self.assertEqual(self.bot.db.get("bat", {}).get("permissions", []), [])
         self.assertSent(["PRIVMSG #chan :I don't know bat. Please use --by-id"])
 
     def test_add_acl_id(self):
@@ -124,19 +132,19 @@ class ACLTestCase(BotTestCase):
             self.bot.dispatch(
                 ":root@localhost PRIVMSG #chan :!acl add --by-id bak admin"
             )
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEquals(self.bot.db["bak"].get("permissions"), ["admin"])
+        self.assertEqual(self.bot.db["bak"].get("permissions"), ["admin"])
         self.assertSent(["PRIVMSG #chan :Updated permissions for bak"])
 
     def test_invalid_permission(self):
         async def wrap():
             self.bot.dispatch(":root@localhost PRIVMSG #chan :!acl add bat fietsen")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEquals(self.bot.db.get("bat", {}).get("permissions", []), [])
+        self.assertEqual(self.bot.db.get("bat", {}).get("permissions", []), [])
         self.assertSent(
             [
                 "PRIVMSG #chan :Invalid permission level. Available permissions: "
@@ -149,7 +157,7 @@ class ACLTestCase(BotTestCase):
 
         async def wrap():
             self.bot.dispatch(":root@localhost PRIVMSG #chan :!acl remove bar admin")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEquals(self.bot.db["foo@host"].get("permissions"), [])
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), [])
