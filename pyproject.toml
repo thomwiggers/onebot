@@ -1,0 +1,68 @@
+[tool.poetry]
+name = "onebot"
+version = "1.4.0"
+description = "OneBot is an irc bot based on irc3"
+authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
+readme = "README.rst"
+license = "BSD-3-Clause"
+repository = "https://github.com/thomwiggers/onebot"
+keywords= ["onebot", "irc"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Communications :: Chat :: Internet Relay Chat",
+]
+packages = [
+    { include = "onebot" },
+]
+
+[tool.poetry.scripts]
+onebot = "onebot:run"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+irc3 = "^1.1.6"
+lfmh = "^1.1.1"
+musicbrainzngs = "^0.7.1"
+beautifulsoup4 = "^4.9.3"
+html5lib = "^1.1"
+requests = "^2.24.0"
+isodate = "^0.6.0"
+cryptography = "^3.2"
+tekore = "^3.3.0"
+
+[tool.poetry.dev-dependencies]
+freezegun = "^1.0.0"
+pytest = "^6.1.1"
+twine = "^3.2.0"
+black = "^20.8b1"
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = true
+envlist = py38,py39,package
+
+[testenv]
+whitelist_externals = poetry
+commands =
+    poetry install --no-root -v
+    poetry run pytest
+
+[testenv:package]
+skip_install = True
+deps =
+    twine
+commands =
+    poetry build
+    twine check dist/*
+"""
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--doctest-modules --ignore=docs/"

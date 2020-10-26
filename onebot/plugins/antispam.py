@@ -29,16 +29,13 @@ def _hash(string):
 class PSAPlugin(object):
     """PSA Plugin"""
 
-    requires = [
-        'irc3.plugins.userlist',
-        'onebot.plugins.users'
-    ]
+    requires = ["irc3.plugins.userlist", "onebot.plugins.users"]
 
     def __init__(self, bot):
         self.bot = bot
         self.config = bot.config.get(self.__class__.__module__, {})
-        self.max_highlights = self.config.get('max_highlights', 5)
-        self.max_repeats = self.config.get('max_repeats', 5)
+        self.max_highlights = self.config.get("max_highlights", 5)
+        self.max_repeats = self.config.get("max_repeats", 5)
         self.log = self.bot.log.getChild(__name__)
         self.lastlines = defaultdict(dict)
 
@@ -53,8 +50,9 @@ class PSAPlugin(object):
                     highlights += 1
                 if highlights >= self.max_highlights:
                     self.log.info("Kicking {} for highlightspam", mask.nick)
-                    self.bot.kick(target, mask.nick,
-                                  "Don't excessively highlight people.")
+                    self.bot.kick(
+                        target, mask.nick, "Don't excessively highlight people."
+                    )
                     return
 
     @asyncio.coroutine
@@ -62,19 +60,22 @@ class PSAPlugin(object):
     def repeatingspam(self, mask, target, data, **kwargs):
         user = self.bot.get_user(mask.nick)
         data = _hash(target + data.strip())
-        last_line = yield from user.get_setting('last_line')
-        num = yield from user.get_setting('last_line_num')
+        last_line = yield from user.get_setting("last_line")
+        num = yield from user.get_setting("last_line_num")
         if data == last_line:
             num += 1
             if num >= self.max_repeats:
                 self.log.info("Kicking {} for spamming", mask.nick)
-                self.bot.kick(target, mask.nick,
-                              "Try to come up with something more creative. "
-                              "({} repeating lines)".format(num))
+                self.bot.kick(
+                    target,
+                    mask.nick,
+                    "Try to come up with something more creative. "
+                    "({} repeating lines)".format(num),
+                )
         else:
-            user.set_setting('last_line', data)
+            user.set_setting("last_line", data)
             num = 1
-        user.set_setting('last_line_num', num)
+        user.set_setting("last_line_num", num)
 
     @classmethod
     def reload(cls, old):

@@ -29,11 +29,13 @@ class BotUI(object):
         self._config = bot.config.get(__name__, {})
         self._log = self.bot.log.getChild(__name__)
 
-        self._autojoin = self._config.get('joininvite', False)
-        self._admin = self._config.get('admin', '')
+        self._autojoin = self._config.get("joininvite", False)
+        self._admin = self._config.get("admin", "")
 
-    @event(r'^:(?P<sender>\S+?)!\S+ INVITE (?P<target>\S+) '
-           r'(?P<channel>#\S+)', iotype="in")
+    @event(
+        r"^:(?P<sender>\S+?)!\S+ INVITE (?P<target>\S+) " r"(?P<channel>#\S+)",
+        iotype="in",
+    )
     def onInvite(self, sender=None, target=None, channel=None):
         """Will send a message to the admin or automatically join a channel
         when it gets invited."""
@@ -46,10 +48,10 @@ class BotUI(object):
             self.bot.privmsg(
                 sender,
                 "Never accept an invitation from a stranger unless he gives "
-                "you candy. -- Linda Festa")
+                "you candy. -- Linda Festa",
+            )
             if self._admin:
-                self.bot.notice(self._admin,
-                                "%s invited me to %s." % (sender, channel))
+                self.bot.notice(self._admin, "%s invited me to %s." % (sender, channel))
 
     @command(permission="operator", show_in_help_list=False)
     def join(self, mask, target, args):
@@ -59,10 +61,10 @@ class BotUI(object):
             %%join <channel> [<password>]
         """
 
-        channel = args['<channel>']
+        channel = args["<channel>"]
 
-        if args['<password>'] is not None:
-            channel += " %s" % args['<password>']
+        if args["<password>"] is not None:
+            channel += " %s" % args["<password>"]
 
         self.bot.join(channel)
 
@@ -74,23 +76,23 @@ class BotUI(object):
             %%part [<channel>]
         """
 
-        if args['<channel>'] is not None:
-            target = args['<channel>']
+        if args["<channel>"] is not None:
+            target = args["<channel>"]
 
         self.bot.part(target)
 
-    @command(permission='admin', show_in_help_list=False)
+    @command(permission="admin", show_in_help_list=False)
     def quit(self, mask, target, args):
         """
         Quit - Shutdown the bot
 
             %%quit [<reason>...]
         """
-        reason = ' '.join(args['<reason>'] or [])
-        self.bot.quit('{} -- {}'.format(reason, mask.nick).strip())
+        reason = " ".join(args["<reason>"] or [])
+        self.bot.quit("{} -- {}".format(reason, mask.nick).strip())
         self.bot.loop.stop()
 
-    @command(permission='admin', show_in_help_list=False)
+    @command(permission="admin", show_in_help_list=False)
     def nick(self, mask, target, args):
         """
         Nick - Change nickname of the bot
@@ -98,9 +100,9 @@ class BotUI(object):
             %%nick <nick>
         """
 
-        self.bot.set_nick(args['<nick>'])
+        self.bot.set_nick(args["<nick>"])
 
-    @command(permission='operator', show_in_help_list=False)
+    @command(permission="operator", show_in_help_list=False)
     def mode(self, mask, target, args):
         """
         Mode - Set user mode for the bot.
@@ -108,9 +110,9 @@ class BotUI(object):
             %%mode <mode-cmd>
         """
 
-        self.bot.mode(self.bot.nick, args['<mode-cmd>'])
+        self.bot.mode(self.bot.nick, args["<mode-cmd>"])
 
-    @command(permission='admin', show_in_help_list=False)
+    @command(permission="admin", show_in_help_list=False)
     def msg(self, mask, target, args):
         """
         Msg - Send a message
@@ -118,43 +120,43 @@ class BotUI(object):
             %%msg <target> <message>...
         """
 
-        msg = ' '.join(args['<message>'] or [])
-        self.bot.privmsg(args['<target>'], msg)
+        msg = " ".join(args["<message>"] or [])
+        self.bot.privmsg(args["<target>"], msg)
 
-    @command(permission='admin', show_in_help_list=False)
+    @command(permission="admin", show_in_help_list=False)
     def quote(self, mask, target, args):
         """Send a raw string to the ircd
 
-           %%quote <string>...
+        %%quote <string>...
         """
-        cmd = ' '.join(args['<string>'] or [])
+        cmd = " ".join(args["<string>"] or [])
         self.bot.privmsg(target, "Sending {}".format(cmd))
         self.bot.send(cmd)
 
-    @command(name='reload', permission='admin', show_in_help_list=False)
+    @command(name="reload", permission="admin", show_in_help_list=False)
     def reload_cmd(self, mask, target, args):
         """Reload - Reloads a plugin and the config file without restarting the IrcBot
 
-          %%reload <plugin>
+        %%reload <plugin>
         """
         self.bot.registry.includes
 
-        if ''.join(args['<plugin>']) in self.bot.registry.includes:
-            self.bot.reload(args['<plugin>'])
-            self.bot.privmsg(target, "{} reloaded".format(args['<plugin>']))
+        if "".join(args["<plugin>"]) in self.bot.registry.includes:
+            self.bot.reload(args["<plugin>"])
+            self.bot.privmsg(target, "{} reloaded".format(args["<plugin>"]))
         else:
-            self.bot.privmsg(target, "{} not a valid plugin".format(
-                args['<plugin>']))
+            self.bot.privmsg(target, "{} not a valid plugin".format(args["<plugin>"]))
 
-    @command(permission='admin', show_in_help_list=False)
+    @command(permission="admin", show_in_help_list=False)
     def restart(self, mask, target, args):
         """Quit the IRC bot with an error code to signal restart
 
-          %%restart [<reason>...]
+        %%restart [<reason>...]
         """
         import sys
-        reason = ' '.join(args['<reason>'] or [])
-        self.bot.quit('{} -- {} (restart)'.format(reason, mask.nick).strip())
+
+        reason = " ".join(args["<reason>"] or [])
+        self.bot.quit("{} -- {} (restart)".format(reason, mask.nick).strip())
         self.bot.loop.stop()
         sys.exit(2)
 
