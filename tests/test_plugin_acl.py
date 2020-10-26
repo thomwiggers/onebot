@@ -25,7 +25,7 @@ def cmd(bot, mask, target, args, **kwargs):
 
 
 @command
-def cmd2(bot, mask, target, args, **kwargs):
+async def cmd2(bot, mask, target, args, **kwargs):
     """Another test command
 
     %%cmd2
@@ -153,11 +153,13 @@ class ACLTestCase(BotTestCase):
         )
 
     def test_remove_acl(self):
-        self.bot.db["foo@bar"] = {"permissions": {"admin"}}
+        self.bot.db["foo@host"] = {"permissions": {"admin"}}
 
+        # sanity check
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), {"admin"})
         async def wrap():
             self.bot.dispatch(":root@localhost PRIVMSG #chan :!acl remove bar admin")
             await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEqual(self.bot.db["foo@host"].get("permissions"), [])
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), set())
