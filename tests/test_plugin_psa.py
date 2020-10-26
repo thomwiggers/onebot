@@ -8,7 +8,8 @@ test_plugin_psa
 Tests for PSA module
 """
 
-from irc3.testing import BotTestCase, patch
+from irc3.testing import patch
+from onebot.testing import BotTestCase
 
 from .test_plugin_users import MockDb
 

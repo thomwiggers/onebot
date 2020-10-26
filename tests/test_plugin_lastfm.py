@@ -10,7 +10,8 @@ import unittest
 
 import lastfm.exceptions
 from freezegun import freeze_time
-from irc3.testing import BotTestCase, patch, MagicMock
+from irc3.testing import patch, MagicMock
+from onebot.testing import BotTestCase
 from irc3.utils import IrcString
 
 

@@ -12,7 +12,7 @@
 
 Usage::
 
-    >>> from irc3.testing import IrcBot, patch
+    >>> from onebot.testing import IrcBot, patch
     >>> bot = IrcBot(**{
     ...     'onebot.plugins.spotify': {'client_id': 'foo',
     ...                                'client_secret': 'bar',

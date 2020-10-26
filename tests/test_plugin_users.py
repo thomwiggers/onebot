@@ -12,8 +12,9 @@ from __future__ import unicode_literals
 import asyncio
 import unittest
 
-from irc3.testing import BotTestCase, patch
+from irc3.testing import patch
 from irc3.utils import IrcString
+from onebot.testing import BotTestCase
 
 from onebot.plugins.users import User
 

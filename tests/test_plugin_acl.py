@@ -9,8 +9,10 @@ Tests for ACL module.
 """
 import asyncio
 
-from irc3.testing import BotTestCase, patch
+from irc3.testing import patch
 from irc3.plugins.command import command
+
+from onebot.testing import BotTestCase
 
 from .test_plugin_users import MockDb
 
@@ -157,6 +159,7 @@ class ACLTestCase(BotTestCase):
 
         # sanity check
         self.assertEqual(self.bot.db["foo@host"].get("permissions"), {"admin"})
+
         async def wrap():
             self.bot.dispatch(":root@localhost PRIVMSG #chan :!acl remove bar admin")
             await asyncio.sleep(0.001)
