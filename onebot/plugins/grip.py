@@ -20,13 +20,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-GRIP_URL: str = ("https://gripnijmegen.dewi-online.nl/iframe/"
-                 "reservations/156/opening-hours/1570/1015016")
+GRIP_URL: str = (
+    "https://gripnijmegen.dewi-online.nl/iframe/"
+    "reservations/156/opening-hours/1570/1015016"
+)
 
 
 def parse_date(datestr: str) -> date:
-    datum = dateparser.parse(datestr, languages=['en', 'nl'],
-                             settings={"PREFER_DATES_FROM": "future"})
+    datum = dateparser.parse(
+        datestr, languages=["en", "nl"], settings={"PREFER_DATES_FROM": "future"}
+    )
     if datum:
         return datum.date()
     raise ValueError("Invalid date")
@@ -34,25 +37,28 @@ def parse_date(datestr: str) -> date:
 
 def grip_availability(day: date):
     """Get the availability for date"""
-    response = requests.get(GRIP_URL, params={
-        'date': day.isoformat(),
-        'areas': [803],
-        'show_all': 0,
-    })
+    response = requests.get(
+        GRIP_URL,
+        params={
+            "date": day.isoformat(),
+            "areas": [803],
+            "show_all": 0,
+        },
+    )
     try:
         data = response.json()
-        max_left = data['max_left']
+        max_left = data["max_left"]
         slots = []
-        for block in data['blocks']:
+        for block in data["blocks"]:
             slot = {}
-            slot['start'] = block['start']
-            slot['end'] = block['end']
-            if block['status'] == 'free':
-                slot['status'] = "quiet"
-            elif block['status'] == "partial":
-                slot['status'] = "busy"
+            slot["start"] = block["start"]
+            slot["end"] = block["end"]
+            if block["status"] == "free":
+                slot["status"] = "quiet"
+            elif block["status"] == "partial":
+                slot["status"] = "busy"
             else:
-                slot['status'] = block['status']
+                slot["status"] = block["status"]
             slots.append(slot)
         return (slots, max_left)
     except ValueError:
@@ -79,7 +85,7 @@ class GRIPPlugin(object):
 
         %%grip [<day>...]
         """
-        days = args['<day>'] or ['today']
+        days = args["<day>"] or ["today"]
 
         for day in days:
             try:
@@ -88,12 +94,12 @@ class GRIPPlugin(object):
                 yield f"Didn't understand {day}: {exc}"
                 continue
             (slots, max_left) = grip_availability(day_date)
-            if slots is None or all(slot['status'] == 'full' for slot in slots):
+            if slots is None or all(slot["status"] == "full" for slot in slots):
                 yield f"{day}: no slots free"
                 continue
             response = []
             for slot in slots:
-                if slot['status'] == 'full':
+                if slot["status"] == "full":
                     continue
                 response.append(f"{slot['start']}—{slot['end']}: {slot['status']}")
 
