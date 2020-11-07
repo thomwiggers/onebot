@@ -6,7 +6,7 @@
 
 Usage::
 
-    >>> from irc3.testing import IrcBot, patch
+    >>> from onebot.testing import IrcBot, patch
     >>> bot = IrcBot(**{
     ...     'onebot.plugins.wolframalpha': {
     ...         'appid': '12AB34-12345689XA'

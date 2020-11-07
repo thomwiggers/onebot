@@ -12,7 +12,7 @@
 
 Usage::
 
-    >>> from irc3.testing import IrcBot, patch
+    >>> from onebot.testing import IrcBot, patch
     >>> bot = IrcBot(**{
     ...     'onebot.plugins.lastfm': {'api_key': 'foo',
     ...                               'api_secret': 'bar'},
@@ -69,9 +69,8 @@ class LastfmPlugin(object):
         if target == self.bot.nick:
             target = mask.nick
 
-        @asyncio.coroutine
-        def wrap():
-            response = yield from self.now_playing_response(mask, args)
+        async def wrap():
+            response = await self.now_playing_response(mask, args)
             self.log.debug(response)
             self.bot.privmsg(target, response)
 
@@ -92,12 +91,11 @@ class LastfmPlugin(object):
             ),
         )
 
-    @asyncio.coroutine
-    def now_playing_response(self, mask, args):
+    async def now_playing_response(self, mask, args):
         """Return appropriate response to np request"""
         lastfm_user = args["<user>"]
         if not lastfm_user:
-            lastfm_user = yield from self.get_lastfm_nick(mask.nick)
+            lastfm_user = await self.get_lastfm_nick(mask.nick)
         user = mask.nick
         try:
             result = self.app.user.get_recent_tracks(

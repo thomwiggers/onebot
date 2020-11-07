@@ -7,16 +7,16 @@ test_onebot_antispam
 
 Tests for antispam module.
 """
-from irc3.testing import BotTestCase, patch
+from irc3.testing import patch
+from onebot.testing import BotTestCase
 
 import asyncio
 
 from .test_plugin_users import MockDb
 
 
-@asyncio.coroutine
-def empty():
-    yield from asyncio.sleep(0.1)
+async def empty():
+    await asyncio.sleep(0.001)
 
 
 class AntispamTestCase(BotTestCase):
@@ -44,6 +44,10 @@ class AntispamTestCase(BotTestCase):
         self.bot.dispatch(":e!the@boss JOIN #chan")
         self.bot.dispatch(":f!the@boss JOIN #chan")
 
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
+
     def test_spam_nicks(self):
         self.bot.dispatch(":a!the@boss PRIVMSG #chan :hi everyone")
         self.bot.dispatch(":a!the@boss PRIVMSG #chan :hi abcdef")
@@ -52,10 +56,9 @@ class AntispamTestCase(BotTestCase):
         self.assertSent(["KICK #chan a :Don't excessively highlight people."])
 
     def test_repeat_spam(self):
-        @asyncio.coroutine
-        def wrap():
+        async def wrap():
             self.bot.dispatch(":a!the@boss PRIVMSG #chan :blurp")
-            yield from asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
         self.bot.loop.run_until_complete(wrap())

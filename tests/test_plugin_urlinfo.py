@@ -12,7 +12,7 @@ import os.path
 from unittest.mock import MagicMock
 from pathlib import Path
 
-from irc3.testing import BotTestCase
+from onebot.testing import BotTestCase
 from onebot.plugins.urlinfo import UrlSkipException, _find_urls
 
 from .test_plugin_users import MockDb

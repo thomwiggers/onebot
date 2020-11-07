@@ -43,9 +43,8 @@ class User(object):
     def set_settings(self, settings):
         """Replaces the settings with the provided dictionary"""
 
-        @asyncio.coroutine
-        def wrapper():
-            id_ = yield from self.id()
+        async def wrapper():
+            id_ = await self.id()
             self.database[id_] = settings
 
         asyncio.ensure_future(wrapper())
@@ -54,23 +53,20 @@ class User(object):
         """Set a specified setting to a value"""
         print("Trying to set %s to %s" % (setting, value))
 
-        @asyncio.coroutine
-        def wrapper():
-            id_ = yield from self.id()
+        async def wrapper():
+            id_ = await self.id()
             self.database.set(id_, **{setting: value})
 
         asyncio.ensure_future(wrapper())
 
-    @asyncio.coroutine
-    def get_settings(self):
+    async def get_settings(self):
         """Get this users settings"""
-        id_ = yield from self.id()
+        id_ = await self.id()
         return self.database.get(id_, dict())
 
-    @asyncio.coroutine
-    def get_setting(self, setting, default=None):
+    async def get_setting(self, setting, default=None):
         """Gets a setting for the users"""
-        settings = yield from self.get_settings()
+        settings = await self.get_settings()
         result = settings.get(setting, default)
         if isinstance(result, str):
             try:
@@ -231,19 +227,17 @@ class UsersPlugin(object):
         """Return a User object"""
         if self.identifying_method == "mask":
 
-            @asyncio.coroutine
-            def id_func():
+            async def id_func():
                 return mask.host
 
             return User(mask, channels, id_func, self.bot.db)
         if self.identifying_method == "nickserv":
 
-            @asyncio.coroutine
-            def get_account():
+            async def get_account():
                 user = self.get_user(mask.nick)
                 if hasattr(user, "account"):
                     return user.account
-                result = yield from self.bot.async_cmds.whois(mask.nick)
+                result = await self.bot.async_cmds.whois(mask.nick)
                 if result["success"] and "account" in result:
                     user.account = str(result["account"])
                     return user.account
@@ -253,8 +247,7 @@ class UsersPlugin(object):
             return User(mask, channels, get_account, self.bot.db)
         if self.identifying_method == "whatcd":
 
-            @asyncio.coroutine
-            def id_func():
+            async def id_func():
                 match = re.match(r"^\d+@(.*)\.\w+\.what\.cd", mask.host.lower())
                 if match:
                     return match.group(1)

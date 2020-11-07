@@ -8,7 +8,7 @@ test_onebot_execute
 Tests for Execute plugin
 """
 
-from irc3.testing import BotTestCase
+from onebot.testing import BotTestCase
 
 
 class ExecutePluginTestCase(BotTestCase):

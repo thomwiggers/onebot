@@ -30,10 +30,10 @@ jobs:
         poetry run pip install coveralls coverage pytest-cov
     - name: Run pytest
       run: |
-        poetry run pytest --cov=onebot
+        poetry run pytest --cov=onebot -nauto
     - name: Run black
       run: |
-        poetry run black .
+        poetry run black --check .
     - name: Upload coverage
       run: |
         poetry run coveralls

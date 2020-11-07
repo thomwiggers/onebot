@@ -55,13 +55,12 @@ class PSAPlugin(object):
                     )
                     return
 
-    @asyncio.coroutine
     @event(rfc.PRIVMSG)
-    def repeatingspam(self, mask, target, data, **kwargs):
+    async def repeatingspam(self, mask, target, data, **kwargs):
         user = self.bot.get_user(mask.nick)
         data = _hash(target + data.strip())
-        last_line = yield from user.get_setting("last_line")
-        num = yield from user.get_setting("last_line_num")
+        last_line = await user.get_setting("last_line")
+        num = await user.get_setting("last_line_num")
         if data == last_line:
             num += 1
             if num >= self.max_repeats:
