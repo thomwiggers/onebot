@@ -56,7 +56,7 @@ class PythonPlugin:
             ],
             capture_output=True,
             text=True,
-            timout=20,
+            timeout=20,
         )
         if proc.returncode != 0:
             self.log.warning("Error when calling docker: '%s'", proc.stderr)
