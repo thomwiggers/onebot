@@ -204,7 +204,8 @@ class UrlInfo(object):
 
     def _process_url_twitter(self, _session, url, **kwargs):
         """Skip twitter urls because they're no longer useful"""
-        if urlparse(url).hostname.endswith("twitter.com"):
+        hostname = urlparse(url).hostname
+        if hostname.endswith("twitter.com") or hostname == "t.co":
             raise UrlSkipException()
 
     def _process_url_youtube(self, session, url, **kwargs):
