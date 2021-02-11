@@ -36,7 +36,7 @@ import tekore as tk
 
 
 @irc3.plugin
-class LastfmPlugin(object):
+class SpotifyPlugin(object):
     """Plugin to provide:
 
     * now playing functionality
@@ -71,6 +71,9 @@ class LastfmPlugin(object):
         self.server_thread.daemon = True
         self.server_thread.start()
 
+        # Tekore sender
+        self.sender = tk.AsyncSender()
+
     @command
     async def sp(self, mask, target, args):
         """
@@ -81,7 +84,7 @@ class LastfmPlugin(object):
         token = await self.get_spotify_token(mask.nick)
         if not token:
             return "Log in with spotify first via setspotifyuser"
-        spotify = tk.Spotify(token, asynchronous=True)
+        spotify = tk.Spotify(token, sender=self.sender, asynchronous=True)
         currently_playing = await spotify.playback_currently_playing()
 
         if currently_playing is None or currently_playing.item is None:
@@ -142,6 +145,10 @@ class LastfmPlugin(object):
         newinstance = cls(old.bot)
         newinstance.key = old.key
         return newinstance
+
+    def __del__(self):  # pragma: no cover
+        self.server_thread.shutdown()
+        super().__del__()
 
 
 class SpotifyResponseServer(BaseHTTPRequestHandler):
