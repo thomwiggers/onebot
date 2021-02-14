@@ -152,7 +152,6 @@ class UrlInfo(object):
         self.url_processors = [
             self._process_url_urlmap,
             self._process_url_twitter,
-            self._process_url_reddit,
             self._process_url_youtube,
         ]
 
@@ -194,13 +193,6 @@ class UrlInfo(object):
             return [url].extend(
                 self._process_url(session, url, already_extended=True) or []
             )
-
-    def _process_url_reddit(self, session, url, **kwargs):
-        """Skip reddit urls for now because they are unreliable
-        FIXME
-        """
-        if urlparse(url).hostname.endswith("reddit.com"):
-            raise UrlSkipException()
 
     def _process_url_twitter(self, _session, url, **kwargs):
         """Skip twitter urls because they're no longer useful"""
