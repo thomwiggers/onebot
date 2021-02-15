@@ -147,8 +147,8 @@ class UsersPlugin(object):
         if nick.nick in self.active_users:
             user = self.active_users[nick.nick]
             user.nick = new_nick
-            self.active_users[new_nick] = user
             del self.active_users[nick.nick]
+            self.active_users[new_nick] = user
 
     @irc3.event(irc3.rfc.PRIVMSG)
     def on_privmsg(self, mask=None, event=None, target=None, data=None):
@@ -176,7 +176,7 @@ class UsersPlugin(object):
 
         self.active_users[nick].join(channel)
 
-    def quit(self, nick, mask, **kwargs):
+    def quit(self, nick, _mask, **kwargs):
         if nick == self.bot.nick:
             self.connection_lost()
 
