@@ -54,11 +54,12 @@ def grip_availability(day: date) -> Optional[List[Dict[str, str]]]:
             slot = {}
             slot["start"] = block["start"]
             slot["end"] = block["end"]
-            if block["status"] == "free":
-                slot["status"] = "free"
+            if block["status"] in ("free", "partial"):
+                slot["status"] = block["status"]
                 slot["capacity"] = f"{block['capacity']}"
             else:
                 slot["status"] = block["status"]
+                slot["capacity"] = block["status"]
             slots.append(slot)
         return (slots)
     except ValueError:
@@ -97,7 +98,7 @@ class GRIPPlugin(object):
             if slots is None:
                 yield f"{day} ({day_date.isoformat()}): possibly an error?"
                 continue
-            if not any(slot["status"] == "free" for slot in slots):
+            if all(slot["status"] == "full" for slot in slots):
                 yield f"{day} ({day_date.isoformat()}): no slots free"
                 continue
             response = []
