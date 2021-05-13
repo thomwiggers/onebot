@@ -8,6 +8,7 @@ This plugin allows to query the availability at GRIP Nijmegen
 """
 
 from datetime import date
+from typing import Dict, List, Optional
 
 from irc3 import plugin
 from irc3.plugins.command import command
@@ -30,12 +31,12 @@ def parse_date(datestr: str) -> date:
     datum = dateparser.parse(
         datestr, languages=["en", "nl"], settings={"PREFER_DATES_FROM": "future"}
     )
-    if datum:
+    if datum is not None:
         return datum.date()
     raise ValueError("Invalid date")
 
 
-def grip_availability(day: date):
+def grip_availability(day: date) -> Optional[List[Dict[str, str]]]:
     """Get the availability for date"""
     response = requests.get(
         GRIP_URL,
@@ -47,25 +48,24 @@ def grip_availability(day: date):
     )
     try:
         data = response.json()
-        max_left = data["max_left"]
+        logger.debug(data)
         slots = []
         for block in data["blocks"]:
             slot = {}
             slot["start"] = block["start"]
             slot["end"] = block["end"]
             if block["status"] == "free":
-                slot["status"] = "quiet"
-            elif block["status"] == "partial":
-                slot["status"] = "busy"
+                slot["status"] = "free"
+                slot["capacity"] = f"{block['capacity']}"
             else:
                 slot["status"] = block["status"]
             slots.append(slot)
-        return (slots, max_left)
+        return (slots)
     except ValueError:
         logger.exception("Failed to decode response")
     except KeyError:
         logger.exception("No blocks in data?")
-    return (None, 0)
+    return None
 
 
 @plugin
@@ -93,14 +93,17 @@ class GRIPPlugin(object):
             except ValueError as exc:
                 yield f"Didn't understand {day}: {exc}"
                 continue
-            (slots, max_left) = grip_availability(day_date)
-            if slots is None or all(slot["status"] == "full" for slot in slots):
-                yield f"{day}: no slots free"
+            slots = grip_availability(day_date)
+            if slots is None:
+                yield f"{day} ({day_date.isoformat()}): possibly an error?"
+                continue
+            if not any(slot["status"] == "free" for slot in slots):
+                yield f"{day} ({day_date.isoformat()}): no slots free"
                 continue
             response = []
             for slot in slots:
                 if slot["status"] == "full":
                     continue
-                response.append(f"{slot['start']}—{slot['end']}: {slot['status']}")
+                response.append(f"{slot['start']}—{slot['end']}: {slot['capacity']}")
 
-            yield f"{day} (max spots free: {max_left}): {'; '.join(response)}."
+            yield f"{day} ({day_date.isoformat()}): {'; '.join(response)}."
