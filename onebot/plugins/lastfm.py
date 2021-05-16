@@ -61,7 +61,7 @@ class LastfmPlugin(object):
             )
 
     @command
-    def np(self, mask, target, args):
+    async def np(self, mask, target, args):
         """Show currently playing track
 
         %%np [<user>]
@@ -69,12 +69,8 @@ class LastfmPlugin(object):
         if target == self.bot.nick:
             target = mask.nick
 
-        async def wrap():
-            response = await self.now_playing_response(mask, args)
-            self.log.debug(response)
-            self.bot.privmsg(target, response)
-
-        asyncio.ensure_future(wrap())
+        response = await self.now_playing_response(mask, args)
+        return response
 
     @command
     def setuser(self, mask, target, args):
@@ -209,10 +205,12 @@ class LastfmPlugin(object):
                 track=info["title"], artist=info["artist"], username=username
             )
         except lastfm.exceptions.InvalidParameters:
-            self.log.warning("Last.fm returned InvalidParameters " "for trackinfo")
+            self.log.warning("Last.fm returned InvalidParameters for trackinfo")
+            return
+        except KeyError:
             return
         except Exception:
-            self.log.exception("Got a random for trackinfo")
+            self.log.exception("Got a random exception for trackinfo")
             return
 
         if "userplaycount" in api_result:
