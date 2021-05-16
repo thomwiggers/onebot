@@ -91,13 +91,21 @@ class GRIPPlugin(object):
     def __init__(self, bot):
         self.bot = bot
 
-    @command
+    @command(aliases=["boulderhal"])
     def grip(self, _mask, _target, args):
         """Check the availability at GRIP Boulderhal.
 
         %%grip [<day>...]
         """
         return self._process_command(args)
+    
+    @command
+    def klimhal(self, _mask, _target, args):
+        """Check the availability at GRIP Klimcentrum.
+
+        %%klimhal [<day>...]
+        """
+        return self._process_command(args, area=804)
 
     def _process_command(self, args, area: int = 803):
         days = args["<day>"] or ["today"]
