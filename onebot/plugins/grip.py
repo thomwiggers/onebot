@@ -28,6 +28,17 @@ GRIP_URL: str = (
 
 
 def parse_date(datestr: str) -> date:
+    """
+    Get a date based on a fungible string.
+
+    Examples::
+        >>> parse_date("monday")   # doctest: +ELLIPSIS
+        datetime.date(...)
+        >>> parse_date("maandag")  # doctest: +ELLIPSIS
+        datetime.date(...)
+        >>> parse_date("21-05")    # doctest: +ELLIPSIS
+        datetime.date(..., 5, 21)
+    """
     datum = dateparser.parse(
         datestr, languages=["en", "nl"], settings={"PREFER_DATES_FROM": "future"}
     )
@@ -36,13 +47,13 @@ def parse_date(datestr: str) -> date:
     raise ValueError("Invalid date")
 
 
-def grip_availability(day: date) -> Optional[List[Dict[str, str]]]:
+def grip_availability(day: date, area: int = 803) -> Optional[List[Dict[str, str]]]:
     """Get the availability for date"""
     response = requests.get(
         GRIP_URL,
         params={
             "date": day.isoformat(),
-            "areas": [803],
+            "areas": [area],
             "show_all": 0,
         },
     )
@@ -61,7 +72,7 @@ def grip_availability(day: date) -> Optional[List[Dict[str, str]]]:
                 slot["status"] = block["status"]
                 slot["capacity"] = block["status"]
             slots.append(slot)
-        return (slots)
+        return slots
     except ValueError:
         logger.exception("Failed to decode response")
     except KeyError:
@@ -82,10 +93,13 @@ class GRIPPlugin(object):
 
     @command
     def grip(self, _mask, _target, args):
-        """Check the availability at GRIP
+        """Check the availability at GRIP Boulderhal.
 
         %%grip [<day>...]
         """
+        return self._process_command(args)
+
+    def _process_command(self, args, area: int = 803):
         days = args["<day>"] or ["today"]
 
         for day in days:
@@ -94,7 +108,7 @@ class GRIPPlugin(object):
             except ValueError as exc:
                 yield f"Didn't understand {day}: {exc}"
                 continue
-            slots = grip_availability(day_date)
+            slots = grip_availability(day_date, area=area)
             if slots is None:
                 yield f"{day} ({day_date.isoformat()}): possibly an error?"
                 continue
