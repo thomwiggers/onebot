@@ -26,7 +26,7 @@ def _get_fixture(fixture_name):
 
 
 async def one_moment():
-    await asyncio.sleep(0.001)
+    await asyncio.sleep(0.01)
     return
 
 
