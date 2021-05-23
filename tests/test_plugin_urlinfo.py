@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 from pathlib import Path
 
 from onebot.testing import BotTestCase
-from onebot.plugins.urlinfo import UrlSkipException, _find_urls
+from onebot.plugins.urlinfo import _find_urls
 
 import requests
 
@@ -80,12 +80,6 @@ class UrlInfoTestCase(BotTestCase):
         self.assertFalse(self.plugin._process_url(None, "http://localhost.localdomain"))
         self.assertFalse(self.plugin._process_url(None, "http://[::1]/"))
         self.assertFalse(self.plugin._process_url(None, "http://10.0.0.1/"))
-
-    def test_skip_reddit(self):
-        with self.assertRaises(UrlSkipException):
-            self.plugin._process_url_reddit(None, "https://reddit.com")
-        with self.assertRaises(UrlSkipException):
-            self.plugin._process_url_reddit(None, "https://np.reddit.com")
 
     def test_url_finder(self):
         for message, expected in [
@@ -152,6 +146,31 @@ class UrlInfoTestCase(BotTestCase):
                     "Twitter (@Twitter ✅): @Twitter 📍 New York City 🗣️ @Afrikkana95 https://t.co/tEfs27p7xu",
                 ),
                 ("https://twitter.com/Twitter/status/13", "Tweet not found."),
+            ]:
+                with self.subTest(url=url):
+                    result = self.plugin._process_url(session, url)
+                    self.assertEqual(" ".join(result), expected)
+
+    def test_reddit(self):
+        with requests.Session() as session:
+            session.headers.update(
+                {
+                    "User-Agent": (
+                        "linux:onebot:1 by DutchDudeWCD " "(Compatible: curl/7.61)"
+                    ),
+                    "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
+                }
+            )
+            for (url, expected) in [
+                ("https://reddit.com/u/DutchDudeWCD", "/u/DutchDudeWCD on Reddit"),
+                (
+                    "https://www.reddit.com/r/crypto/comments/7jrba2/crypto_is_not_cryptocurrency/",
+                    "/r/crypto: Crypto is not cryptocurrency",
+                ),
+                (
+                    "https://www.reddit.com/r/crypto/comments/5vqe47/announcing_the_first_sha1_collision/de3ywos/?context=3",
+                    "/r/crypto comment by Natanael_L on “Announcing the first SHA1 collision”",
+                ),
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)

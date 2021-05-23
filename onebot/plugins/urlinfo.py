@@ -18,7 +18,7 @@ import time
 import datetime
 from io import StringIO
 from typing import List, Optional, Tuple
-from urllib.parse import urlparse, urlencode, parse_qs
+from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
 import requests
@@ -119,6 +119,15 @@ class UrlRedirectException(Exception):
         self.next = next
 
 
+REDDIT_THREAD_PATTERN = re.compile(
+    r"^/r/(?P<subreddit>[^/]+)/comments/(?P<thread>[^/]+)(?:/[^/]+/?)?$"
+)
+REDDIT_COMMENT_PATTERN = re.compile(
+    r"^/r/(?P<subreddit>[^/]+)/comments/(?P<thread>[^/]+)/[^/]+/(?P<comment>\w+)/?$"
+)
+REDDIT_USER_PATTERN = re.compile(r"^/u(?:ser)?/(?P<user>[^/]+)/?$")
+
+
 @plugin
 class UrlInfo(object):
     """Bot User Interface plugin
@@ -216,11 +225,56 @@ class UrlInfo(object):
             raise UrlRedirectException(url)
 
     def _process_url_reddit(self, session, url, **kwargs):
-        """Skip reddit urls for now because they are unreliable
-        FIXME
+        """Get reddit information through the api.
+
+        Partially based on https://github.com/butterscotchstallion/limnoria-plugins/blob/master/SpiffyTitles/plugin.py#L960
         """
-        if urlparse(url).hostname.endswith("reddit.com"):
-            raise UrlSkipException()
+        urlinfo = urlparse(url)
+        if not (
+            urlinfo.hostname == "reddit.com" or urlinfo.hostname.endswith(".reddit.com")
+        ):
+            return
+
+        # Thread information
+        if match := REDDIT_THREAD_PATTERN.match(urlinfo.path):
+            apiurl = f"https://reddit.com/r/{match.group('subreddit')}/comments/{match.group('thread')}.json"
+
+            def formatter(response):
+                data = response[0]["data"]["children"][0]["data"]
+                return [f"/r/{match.group('subreddit')}:", data.get("title")]
+
+        elif match := REDDIT_COMMENT_PATTERN.match(urlinfo.path):
+            apiurl = f"https://reddit.com/r/{match.group('subreddit')}/comments/{match.group('thread')}/x/{match.group('comment')}.json"
+
+            def formatter(response):
+                data = response[1]["data"]["children"][0]["data"]
+                title = response[0]["data"]["children"][0]["data"]["title"]
+                return [
+                    f"/r/{match.group('subreddit')} comment by {data.get('author')} on “{title}”"
+                ]
+
+        elif match := REDDIT_USER_PATTERN.match(urlinfo.path):
+            apiurl = f"https://reddit.com/user/{match.group('user')}/about.json"
+
+            def formatter(response):
+                data = response["data"]
+                return [f"/u/{data['name']} on Reddit"]
+
+        else:
+            self.log.warning("Unsupported reddit url: '%s'", urlinfo.path)
+            return ["Reddit"]
+
+        with closing(session.get(apiurl, timeout=4)) as response:
+            try:
+                data = response.json()
+                self.log.debug("Response: %r", data)
+                if response.status_code != 200:
+                    return [f"Got response code {response.status_code}"]
+
+                return formatter(data)
+
+            except ValueError:
+                return ["Invalid JSON response from Reddit API"]
 
     def _process_url_twitter(self, session: requests.Session, url, **kwargs):
         """Skip twitter urls because they're no longer useful"""
