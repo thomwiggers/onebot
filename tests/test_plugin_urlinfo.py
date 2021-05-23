@@ -27,7 +27,7 @@ def mock_requests_get(*args, **kwargs):
 
     class MockResponse:
         """Mocked response object"""
-        
+
         status_code = 200
 
         def __init__(self, *args, **kwargs):
@@ -55,7 +55,7 @@ class UrlInfoTestCase(BotTestCase):
     config = {
         "includes": ["onebot.plugins.urlinfo", "irc3.plugins.command"],
         "cmd": "!",
-        "onebot.plugins.urlinfo": {"twitter_bearer_token": "foo"}
+        "onebot.plugins.urlinfo": {"twitter_bearer_token": "foo"},
     }
 
     def setUp(self):
@@ -116,25 +116,43 @@ class UrlInfoTestCase(BotTestCase):
         self.assertLess(100, len(" ".join(result)), "text too short")
         self.assertGreater(320, len(" ".join(result)), "text too long")
 
-
     def test_twitter(self):
         self.assertEqual(self.plugin.twitter_bearer_token, "foo")
         if "TWITTER_BEARER_TOKEN" not in os.environ:
             raise unittest.SkipTest("no twitter api key")
-        self.plugin.twitter_bearer_token = os.environ['TWITTER_BEARER_TOKEN']
+        self.plugin.twitter_bearer_token = os.environ["TWITTER_BEARER_TOKEN"]
         with requests.Session() as session:
             for (url, expected) in [
-                ("https://twitter.com/jack/status/20", "jack (@jack ✅): just setting up my twttr"),
-                ("https://mobile.twitter.com/jack/status/20", "jack (@jack ✅): just setting up my twttr"),
-                ("https://twitter.com/Hyves", "Hyves Games (@Hyves) — Stel hier je vragen aan de Support afdeling van Hyves Games en volg ons voor updates! Volg @hyves voor nieuws over de website."),
-                ("https://twitter.com/realdonaldtrump/", "Error: User has been suspended: [realdonaldtrump]."),
-                ("https://twitter.com/thomwigggers", "Error: Could not find user with username: [thomwigggers]."),
-
-                ("https://twitter.com/Twitter/status/1278763679421431809", "Twitter (@Twitter ✅): You can have an edit button when everyone wears a mask"),
-                ("https://twitter.com/Twitter/status/1274087694105075714", "Twitter (@Twitter ✅): @Twitter 📍 New York City 🗣️ @Afrikkana95 https://t.co/tEfs27p7xu"),
+                (
+                    "https://twitter.com/jack/status/20",
+                    "jack (@jack ✅): just setting up my twttr",
+                ),
+                (
+                    "https://mobile.twitter.com/jack/status/20",
+                    "jack (@jack ✅): just setting up my twttr",
+                ),
+                (
+                    "https://twitter.com/Hyves",
+                    "Hyves Games (@Hyves) — Stel hier je vragen aan de Support afdeling van Hyves Games en volg ons voor updates! Volg @hyves voor nieuws over de website.",
+                ),
+                (
+                    "https://twitter.com/realdonaldtrump/",
+                    "Error: User has been suspended: [realdonaldtrump].",
+                ),
+                (
+                    "https://twitter.com/thomwigggers",
+                    "Error: Could not find user with username: [thomwigggers].",
+                ),
+                (
+                    "https://twitter.com/Twitter/status/1278763679421431809",
+                    "Twitter (@Twitter ✅): You can have an edit button when everyone wears a mask",
+                ),
+                (
+                    "https://twitter.com/Twitter/status/1274087694105075714",
+                    "Twitter (@Twitter ✅): @Twitter 📍 New York City 🗣️ @Afrikkana95 https://t.co/tEfs27p7xu",
+                ),
                 ("https://twitter.com/Twitter/status/13", "Tweet not found."),
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)
                     self.assertEqual(" ".join(result), expected)
-

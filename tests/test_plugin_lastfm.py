@@ -110,12 +110,14 @@ class LastfmPluginTest(BotTestCase):
     )
     def test_dm_works(self, mock):
         botnick = self.bot.nick
+
         async def wrap():
             self.bot.dispatch(f":bar!foo@host PRIVMSG {botnick} :!np")
             await one_moment()
             self.assertSent(
                 ["PRIVMSG bar :bar is someone who never " "scrobbled before."]
             )
+
         self.bot.loop.run_until_complete(wrap())
 
     @patch(
