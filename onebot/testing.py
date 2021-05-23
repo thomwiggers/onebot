@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 __unittest = True
 
+
 class IrcBot(Irc3IrcBot):
     def check_required(self):
         pass

@@ -319,7 +319,9 @@ class UrlInfo(object):
         """YouTube URLs don't contain a <title>"""
         self.log.debug("Checking if this is a YouTube URL")
         parsed_host = urlparse(url)
-        if parsed_host.hostname == "youtu.be":
+        if parsed_host.hostname == "youtu.be" or parsed_host.path.startswith(
+            "/shorts/"
+        ):
             self.log.debug("Short YouTube URL")
             video_id = parsed_host.path.lstrip("/")
         elif parsed_host.hostname in YOUTUBE_URLS:

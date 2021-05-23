@@ -111,7 +111,7 @@ class UrlInfoTestCase(BotTestCase):
         """Don't show very long title texts"""
         session = MagicMock()
         session.get.side_effect = mock_requests_get
-        result = self.plugin._process_url(session, "http://facebook.com")
+        result = self.plugin._process_url(session, "https://facebook.com")
         self.assertIsNotNone(result)
         self.assertLess(100, len(" ".join(result)), "text too short")
         self.assertGreater(320, len(" ".join(result)), "text too long")

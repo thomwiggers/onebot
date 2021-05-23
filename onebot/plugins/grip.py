@@ -98,7 +98,7 @@ class GRIPPlugin(object):
         %%grip [<day>...]
         """
         return self._process_command(args)
-    
+
     @command
     def klimhal(self, _mask, _target, args):
         """Check the availability at GRIP Klimcentrum.
