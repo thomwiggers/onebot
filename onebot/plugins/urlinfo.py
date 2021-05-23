@@ -17,6 +17,7 @@ import socket
 import time
 import datetime
 from io import StringIO
+from typing import List, Optional, Tuple
 from urllib.parse import urlparse, urlencode, parse_qs
 
 from bs4 import BeautifulSoup
@@ -57,7 +58,7 @@ def timedelta_format(duration: datetime.timedelta):
         return "%dm%ds" % (minutes, seconds)
 
 
-def _read_body(response):
+def _read_body(response) -> Tuple[int, Optional[str]]:
     """Count the size of the body of files"""
     content = StringIO()
     size = 0
@@ -79,7 +80,7 @@ def _read_body(response):
 URL_PATTERN = re.compile(r"\bhttps?://\S+")
 
 
-def _find_urls(string):
+def _find_urls(string) -> List[str]:
     """Find all urls in a string"""
     urls = []
     for match in URL_PATTERN.finditer(string):
@@ -112,6 +113,12 @@ class UrlSkipException(Exception):
     pass
 
 
+class UrlRedirectException(Exception):
+    def __init__(self, next: str):
+        super().__init__()
+        self.next = next
+
+
 @plugin
 class UrlInfo(object):
     """Bot User Interface plugin
@@ -122,6 +129,8 @@ class UrlInfo(object):
         - ``ignored_apps``: ignored ``application/`` classes
         - ``ignored_channels``: channels to not post information in
         - ``ignored_nicks``: whom to ignore
+        - ``youtube_api_key``: key for the YouTube API
+        - ``twitter_bearer_token``: Twitter API key
 
     **URL Map**
 
@@ -141,6 +150,7 @@ class UrlInfo(object):
         self.ignored_channels = self.config.get("ignored_channels", [])
         self.ignored_nicks = self.config.get("ignored_nicks", [])
         self.youtube_api_key = self.config.get("youtube_api_key", None)
+        self.twitter_bearer_token = self.config.get("twitter_bearer_token", None)
         self.cookiejar = None
         if cookiejar_file:
             with open(cookiejar_file, "rb") as f:
@@ -150,17 +160,39 @@ class UrlInfo(object):
 
         # URL processors
         self.url_processors = [
+            self._process_url_local,
             self._process_url_urlmap,
             self._process_url_twitter,
             self._process_url_reddit,
             self._process_url_youtube,
+            self._process_url_default,
         ]
 
-    def _process_url(self, session, url, **kwargs):
+    def _process_url(self, session, url, **kwargs) -> Optional[List[str]]:
+        i = 0
+        redirects = 0
+        while i < len(self.url_processors):
+            function = self.url_processors[i]
+            i += 1
+            try:
+                self.log.debug("Processing %s via %s", url, function.__name__)
+                result = function(session, url, **kwargs)
+            except UrlRedirectException as e:
+                if redirects > 10:
+                    return ["Too many redirects."]
+                url = e.next
+                redirects += 1
+                i = 0
+            except UrlSkipException:
+                return
+            if result:
+                return result
+
+    def _process_url_local(self, _session, url, **kwargs):
         try:
             # filter out private addresses
             # May raise exceptions
-            for (f, t, p, c, sockaddr) in socket.getaddrinfo(
+            for (_f, _t, _p, _c, sockaddr) in socket.getaddrinfo(
                 urlparse(url).hostname, None
             ):
                 ip = ipaddress.ip_address(sockaddr[0])
@@ -170,19 +202,9 @@ class UrlInfo(object):
                     or ip.is_link_local
                     or ip.is_reserved
                 ):
-                    return
+                    raise UrlSkipException()
         except Exception:
-            return
-
-        for function in self.url_processors:
-            try:
-                result = function(session, url, **kwargs)
-            except UrlSkipException:
-                return
-            if result:
-                return result
-
-        return self._process_url_default(session, url)
+            raise UrlSkipException()
 
     def _process_url_urlmap(self, session, url, already_extended=False):
         # FIXME what does this even do
@@ -191,9 +213,7 @@ class UrlInfo(object):
         o = urlparse(url)
         if o.hostname in self.urlmap:
             url = url.replace(o.hostname, self.urlmap[o.hostname], 1)
-            return [url].extend(
-                self._process_url(session, url, already_extended=True) or []
-            )
+            raise UrlRedirectException(url)
 
     def _process_url_reddit(self, session, url, **kwargs):
         """Skip reddit urls for now because they are unreliable
@@ -202,17 +222,106 @@ class UrlInfo(object):
         if urlparse(url).hostname.endswith("reddit.com"):
             raise UrlSkipException()
 
-    def _process_url_twitter(self, _session, url, **kwargs):
+    def _process_url_twitter(self, session: requests.Session, url, **kwargs):
         """Skip twitter urls because they're no longer useful"""
-        hostname = urlparse(url).hostname
-        if hostname.endswith("twitter.com") or hostname == "t.co":
-            raise UrlSkipException()
+        parsed_url = urlparse(url)
+        hostname = parsed_url.hostname
+        tweet_regex = re.compile(
+            r"/(?P<username>[A-Za-z0-9_]{1,15})/status/(?P<id>\d+)"
+        )
+        if hostname == "twitter.com" or hostname == "mobile.twitter.com":
+            if self.twitter_bearer_token is None:
+                raise UrlSkipException()
+
+            potential_username = parsed_url.path[1:].split("/", 1)[0]
+
+            # Get tweet
+            if matches := tweet_regex.search(parsed_url.path):
+                id = matches.group("id")
+                username = matches.group("username")
+                self.log.debug("Twitter url for tweet %d", id)
+                with closing(
+                    session.get(
+                        "https://api.twitter.com/2/tweets?"
+                        "expansions=author_id,in_reply_to_user_id&"
+                        "user.fields=name,verified&"
+                        "tweet.fields=author_id&"
+                        f"ids={id}",
+                        headers={
+                            "Authorization": f"Bearer {self.twitter_bearer_token}"
+                        },
+                    )
+                ) as response:
+                    data = response.json()
+                    if "data" not in data:
+                        return ["Tweet not found."]
+                    tweet = data["data"][0]
+                    author_id = tweet["author_id"]
+                    replying_to = None
+                    for user in data["includes"]["users"]:
+                        if user["id"] == author_id:
+                            author = user
+                        if user["id"] == tweet.get("in_reply_to_user_id"):
+                            replying_to = user
+                    verified = ""
+
+                    # Don't allow OneBot to be an id oracle
+                    if author["username"].lower() != username.lower():
+                        return ["Tweet not found."]
+
+                    if author["verified"]:
+                        verified = " ✅"
+                    message = [
+                        author["name"],
+                        f"(@{author['username']}{verified}):",
+                    ]
+                    if replying_to is not None:
+                        message.append(f"@{replying_to['name']}")
+                    message.append(data["data"][0]["text"].replace("\n", " "))
+                    return message
+
+            if potential_username != "":
+                if potential_username in (
+                    "i",
+                    "login",
+                    "home",
+                    "context",
+                    "notifications",
+                    "messages",
+                    "compose",
+                    "settings",
+                ):
+                    return ["Twitter"]
+                with closing(
+                    session.get(
+                        f"https://api.twitter.com/2/users/by/username/{potential_username}"
+                        "?user.fields=username,verified,location,description",
+                        headers={
+                            "Authorization": f"Bearer {self.twitter_bearer_token}"
+                        },
+                    )
+                ) as response:
+                    response = response.json()
+                    if "errors" in response:
+                        if "detail" in response["errors"][0]:
+                            return ["Error:", response["errors"][0]["detail"]]
+                        return ["User not found."]
+                    user = response["data"]
+                    return [
+                        user["name"],
+                        f"(@{user['username']}) —",
+                        user["description"].replace("\n", ""),
+                    ]
+
+            return ["Twitter"]
 
     def _process_url_youtube(self, session, url, **kwargs):
         """YouTube URLs don't contain a <title>"""
         self.log.debug("Checking if this is a YouTube URL")
         parsed_host = urlparse(url)
-        if parsed_host.hostname == "youtu.be":
+        if parsed_host.hostname == "youtu.be" or parsed_host.path.startswith(
+            "/shorts/"
+        ):
             self.log.debug("Short YouTube URL")
             video_id = parsed_host.path.lstrip("/")
         elif parsed_host.hostname in YOUTUBE_URLS:
@@ -250,8 +359,10 @@ class UrlInfo(object):
         message = []
         try:
             with closing(
-                session.get(url, allow_redirects=True, timeout=4, stream=True)
+                session.get(url, allow_redirects=False, timeout=4, stream=True)
             ) as response:
+                if response.status_code in (301, 302):
+                    raise UrlRedirectException(response.next.url)
                 content_type = response.headers.get("Content-Type", "text/html").split(
                     ";"
                 )[0]
@@ -308,7 +419,7 @@ class UrlInfo(object):
         ):
             return
         index = 1
-        messages = []
+        messages: List[str] = []
         urls = _find_urls(data)
         for url in urls:
             message = []

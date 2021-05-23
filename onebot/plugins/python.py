@@ -46,7 +46,7 @@ class PythonPlugin:
                 "--cap-drop",
                 "ALL",
                 "--pids-limit",
-                "5",
+                "10",
                 "--memory",
                 "100M",
                 "--cpus",

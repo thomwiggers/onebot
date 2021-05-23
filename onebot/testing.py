@@ -2,6 +2,8 @@ from irc3.testing import BotTestCase as Irc3BotTestCase, IrcBot as Irc3IrcBot
 
 from unittest.mock import patch
 
+__unittest = True
+
 
 class IrcBot(Irc3IrcBot):
     def check_required(self):
