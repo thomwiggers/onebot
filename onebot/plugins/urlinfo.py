@@ -266,11 +266,17 @@ class UrlInfo(object):
 
         with closing(session.get(apiurl, timeout=4)) as response:
             try:
-                data = response.json()
-                self.log.debug("Response: %r", data)
-                if response.status_code != 200:
-                    return [f"Got response code {response.status_code}"]
-
+                attempts = 0
+                while attempts < 3:
+                    attempts += 1
+                    data = response.json()
+                    self.log.debug("Response: %r", data)
+                    if response.status_code == 429:
+                        time.sleep(0.5*attempts)
+                        self.log.debug("Retrying reddit request")
+                        continue
+                    elif response.status_code != 200:
+                        return [f"Got response code {response.status_code}"]
                 return formatter(data)
 
             except ValueError:
