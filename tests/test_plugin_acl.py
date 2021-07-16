@@ -70,7 +70,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
             await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertSent(["PRIVMSG nobody :You are not allowed to use the cmd command"])
+        self.assertSent([])
 
     def test_command_ignored(self):
         async def wrap():
