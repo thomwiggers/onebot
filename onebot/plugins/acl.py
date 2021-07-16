@@ -56,10 +56,6 @@ class user_based_policy(object):
                 return meth(client, target, args)
         cmd_name = predicates.get("name", meth.__name__)
         self.log.info("Denied access to command %s to user %s", cmd_name, client)
-        self.bot.privmsg(
-            client.nick,
-            "You are not allowed to use the {command} command".format(command=cmd_name),
-        )
 
 
 @irc3.plugin
