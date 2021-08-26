@@ -32,16 +32,16 @@ class StonksPlugin(object):
         self.config = bot.config.get(__name__, {})
         self.api_key_iex = self.config["api_key_iex"]
 
+    """Lookup the stocks on IEX"""
     def lookup(self, symbol):
       try:
         api_key = self.api_key_iex
         response = requests.get(f"https://cloud.iexapis.com/stable/stock/{urllib.parse.quote_plus(symbol)}/quote?token={api_key}")
-        print(response)
         response.raise_for_status()
       except requests.RequestException:
-        print(2)
         return None
 
+      """If you get a valid return get the name, price and symbol"""
       try:
         quote = response.json()
         return {
@@ -59,6 +59,8 @@ class StonksPlugin(object):
         %%stonk <symbol>
         """
         result = self.lookup(args["<symbol>"])
+
+        """Check if a stock is returned"""
         if result != None:
           resultString = f"Name: {result['name']}, Price: {result['price']}, Symbol: {result['symbol']}"
           return resultString
