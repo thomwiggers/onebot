@@ -7,14 +7,63 @@ This plugin allows to query stonks
 """
 
 import requests
-import urllib.parse
+import json
+import re
 
 import irc3
 from irc3.plugins.command import command
 
 import logging
 
+from requests import exceptions
+
 logger = logging.getLogger(__name__)
+
+
+def stonks(symbol):
+    headers = {"User-agent": "Mozilla/5.0"}
+    url = f"https://finance.yahoo.com/quote/{symbol}?p={symbol}"
+    response = requests.get(url, headers=headers)
+    if response.status_code != requests.codes.ok:
+        return "Error when fetching from Yahoo Finance"
+    text = response.text
+
+    # Look for begin and end of the JSON Blob
+    json_start = re.search("root.App.main = ", text)
+    json_end = re.search("}}}};", text)
+
+    if json_start is None or json_end is None:
+        return "Unexpected response from Yahoo Finance"
+
+    # Cut down the text to only the JSON
+    text_cut = text[json_start.span()[1] : json_end.span()[1] - 1]
+
+    # Read the JSON and look for the preferred data
+    try:
+        data = json.loads(text_cut)
+    except json.JSONDecodeError:
+        return "Invalid JSON from Yahoo Finance"
+
+    try:
+        stock = data["context"]["dispatcher"]["stores"]["QuoteSummaryStore"]["price"]
+    except KeyError:
+        return "Symbol not found"
+
+    if stock["regularMarketPrice"]["raw"] == 0:
+        return "Symbol not found (perhaps try a variant symbol like .AS?)"
+
+    if stock["regularMarketChangePercent"]["raw"] > 0.0:
+        percentage = f"+{stock['regularMarketChangePercent']['fmt']}"
+    else:
+        percentage = stock["regularMarketChangePercent"]["fmt"]
+
+    output = (
+        f"{stock['shortName']}, "
+        f"{stock['currencySymbol']}{stock['regularMarketPrice']['fmt']}, "
+        f"{percentage}, "
+        f"{stock['exchangeName']} ({stock['marketState']})"
+    )
+    return output
 
 
 @irc3.plugin
@@ -30,27 +79,6 @@ class StonksPlugin(object):
         self.bot = bot
         self.log = bot.log.getChild(__name__)
         self.config = bot.config.get(__name__, {})
-        self.api_key_iex = self.config["api_key_iex"]
-
-    """Lookup the stocks on IEX"""
-    def lookup(self, symbol):
-      try:
-        api_key = self.api_key_iex
-        response = requests.get(f"https://cloud.iexapis.com/stable/stock/{urllib.parse.quote_plus(symbol)}/quote?token={api_key}")
-        response.raise_for_status()
-      except requests.RequestException:
-        return None
-
-      """If you get a valid return get the name, price and symbol"""
-      try:
-        quote = response.json()
-        return {
-              "name": quote["companyName"],
-              "price": float(quote["latestPrice"]),
-              "symbol": quote["symbol"]
-            }
-      except (KeyError, TypeError, ValueError):
-        return None
 
     @command
     def stonk(self, _mask, _target, args):
@@ -58,12 +86,9 @@ class StonksPlugin(object):
 
         %%stonk <symbol>
         """
-        result = self.lookup(args["<symbol>"])
+        symbol = args["<symbol>"]
+        return stonks(symbol)
 
-        """Check if a stock is returned"""
-        if result != None:
-          resultString = f"Name: {result['name']}, Price: {result['price']}, Symbol: {result['symbol']}"
-          return resultString
-        else:
-          return "Invalid"
-
+    @classmethod
+    def reload(cls, old):  # pragma: no cover
+        return cls(old.bot)

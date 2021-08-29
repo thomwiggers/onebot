@@ -272,7 +272,7 @@ class UrlInfo(object):
                     data = response.json()
                     self.log.debug("Response: %r", data)
                     if response.status_code == 429:
-                        time.sleep(0.5*attempts)
+                        time.sleep(0.5 * attempts)
                         self.log.debug("Retrying reddit request")
                         continue
                     elif response.status_code != 200:
