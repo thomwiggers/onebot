@@ -119,11 +119,11 @@ class UrlInfoTestCase(BotTestCase):
             for (url, expected) in [
                 (
                     "https://twitter.com/jack/status/20",
-                    "jack (@jack ✅): just setting up my twttr",
+                    "jack⚡️ (@jack ✅): just setting up my twttr",
                 ),
                 (
                     "https://mobile.twitter.com/jack/status/20",
-                    "jack (@jack ✅): just setting up my twttr",
+                    "jack⚡️ (@jack ✅): just setting up my twttr",
                 ),
                 (
                     "https://twitter.com/Hyves",
@@ -146,6 +146,8 @@ class UrlInfoTestCase(BotTestCase):
                     "Twitter (@Twitter ✅): @Twitter 📍 New York City 🗣️ @Afrikkana95 https://t.co/tEfs27p7xu",
                 ),
                 ("https://twitter.com/Twitter/status/13", "Tweet not found."),
+                # we don't match this one because otherwise we can be an ID tweet oracle
+                ("https://twitter.com/i/web/status/1440605916642959371", "Twitter"),
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)

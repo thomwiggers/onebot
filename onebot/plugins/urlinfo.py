@@ -287,7 +287,7 @@ class UrlInfo(object):
         parsed_url = urlparse(url)
         hostname = parsed_url.hostname
         tweet_regex = re.compile(
-            r"/(?P<username>[A-Za-z0-9_]{1,15})/status/(?P<id>\d+)"
+            r"^/(?P<username>[A-Za-z0-9_]{1,15})/status/(?P<id>\d+)"
         )
         if hostname == "twitter.com" or hostname == "mobile.twitter.com":
             if self.twitter_bearer_token is None:
@@ -327,7 +327,7 @@ class UrlInfo(object):
 
                     # Don't allow OneBot to be an id oracle
                     if author["username"].lower() != username.lower():
-                        return ["Tweet not found."]
+                        return ["Tweet not found"]
 
                     if author["verified"]:
                         verified = " ✅"
@@ -365,7 +365,7 @@ class UrlInfo(object):
                     if "errors" in response:
                         if "detail" in response["errors"][0]:
                             return ["Error:", response["errors"][0]["detail"]]
-                        return ["User not found."]
+                        return ["User not found"]
                     user = response["data"]
                     return [
                         user["name"],
