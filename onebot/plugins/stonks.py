@@ -15,9 +15,10 @@ from irc3.plugins.command import command
 
 import logging
 
-from requests import exceptions
-
 logger = logging.getLogger(__name__)
+
+
+NOT_FOUND_MSG = "Symbol not found (perhaps try a variant symbol like .AS?)"
 
 
 def stonks(symbol):
@@ -46,23 +47,24 @@ def stonks(symbol):
 
     try:
         stock = data["context"]["dispatcher"]["stores"]["QuoteSummaryStore"]["price"]
+
+        if stock["regularMarketPrice"]["raw"] == 0:
+            return NOT_FOUND_MSG
+
+        if stock["regularMarketChangePercent"]["raw"] > 0.0:
+            percentage = f"+{stock['regularMarketChangePercent']['fmt']}"
+        else:
+            percentage = stock["regularMarketChangePercent"]["fmt"]
+
+        output = (
+            f"{stock['shortName']}, "
+            f"{stock['currencySymbol']}{stock['regularMarketPrice']['fmt']}, "
+            f"{percentage}, "
+            f"{stock['exchangeName']} ({stock['marketState']})"
+        )
     except KeyError:
-        return "Symbol not found"
-
-    if stock["regularMarketPrice"]["raw"] == 0:
-        return "Symbol not found (perhaps try a variant symbol like .AS?)"
-
-    if stock["regularMarketChangePercent"]["raw"] > 0.0:
-        percentage = f"+{stock['regularMarketChangePercent']['fmt']}"
-    else:
-        percentage = stock["regularMarketChangePercent"]["fmt"]
-
-    output = (
-        f"{stock['shortName']}, "
-        f"{stock['currencySymbol']}{stock['regularMarketPrice']['fmt']}, "
-        f"{percentage}, "
-        f"{stock['exchangeName']} ({stock['marketState']})"
-    )
+        logger.exception("problem with response from yahoo finance")
+        return NOT_FOUND_MSG
     return output
 
 
