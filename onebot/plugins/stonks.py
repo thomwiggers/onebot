@@ -31,7 +31,14 @@ def stonks(symbol):
 
     # Look for begin and end of the JSON Blob
     json_start = re.search("root.App.main = ", text)
-    json_end = re.search("}}}};", text)
+    all_json_ends = re.finditer("}}}};", text)
+
+    # The JSON Blob has several ends matching the pattern. 
+    # Therefore the json_end has to be bigger than the JSON_start
+    for match in all_json_ends:
+        if match.span()[1] > json_start.span()[1]:
+            json_end = match
+            break
 
     if json_start is None or json_end is None:
         return "Unexpected response from Yahoo Finance"
@@ -89,7 +96,7 @@ class StonksPlugin(object):
         %%stonk <symbol>
         """
         symbol = args["<symbol>"]
-        return stonks(symbol)
+        return stonks("AAPL")
 
     @classmethod
     def reload(cls, old):  # pragma: no cover
