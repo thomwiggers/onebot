@@ -96,7 +96,7 @@ class StonksPlugin(object):
         %%stonk <symbol>
         """
         symbol = args["<symbol>"]
-        return stonks("AAPL")
+        return stonks(symbol)
 
     @classmethod
     def reload(cls, old):  # pragma: no cover
