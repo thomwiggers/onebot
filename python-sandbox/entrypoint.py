@@ -2,6 +2,7 @@
 
 import io
 import multiprocessing
+import sys
 
 from contextlib import redirect_stdout, redirect_stderr
 
@@ -20,18 +21,17 @@ class UserProcess(multiprocessing.Process):
         """Compile and capture the output"""
         out = io.StringIO()
         err = io.StringIO()
-        success = False
+
         with redirect_stdout(out), redirect_stderr(err):
             try:
                 code = compile(self.cmd, "<PEBKAC>", "single")
-                success = True
+                try:
+                    exec(code, {}, {})
+                except Exception as e:
+                    print(e, file=sys.stderr)
             except (SyntaxError, OverflowError, ValueError) as e:
                 print(e, file=sys.stderr)
-            if success:
-                try:
-                    exec(code)
-                except Exception as e:
-                    print(repr(e), file=sys.stderr)
+
         out = out.getvalue().strip()
         if out:
             print(f"Stdout: {out!r}")
