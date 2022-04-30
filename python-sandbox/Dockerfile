@@ -1,4 +1,4 @@
-FROM python:latest
+FROM python:slim
 USER nobody:nogroup
 
 ADD entrypoint.py /src/entrypoint.py
