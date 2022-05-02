@@ -22,8 +22,8 @@ Usage::
     >>> bot.include('onebot.plugins.lastfm')
 
 """
-import asyncio
 from datetime import datetime
+from typing import Any, Dict
 
 import irc3
 import lastfm.exceptions
@@ -61,7 +61,7 @@ class LastfmPlugin(object):
             )
 
     @command
-    async def np(self, mask, target, args):
+    async def np(self, mask, target, args) -> str:
         """Show currently playing track
 
         %%np [<user>]
@@ -87,7 +87,7 @@ class LastfmPlugin(object):
             ),
         )
 
-    async def now_playing_response(self, mask, args):
+    async def now_playing_response(self, mask, args) -> str:
         """Return appropriate response to np request"""
         lastfm_user = args["<user>"]
         if not lastfm_user:
@@ -187,7 +187,7 @@ class LastfmPlugin(object):
 
             return " ".join(response) + "."
 
-    async def get_lastfm_nick(self, nick):
+    async def get_lastfm_nick(self, nick) -> str:
         """Gets the last.fm nick associated with a user from the database"""
         user = self.bot.get_user(nick)
         if user:
@@ -196,7 +196,7 @@ class LastfmPlugin(object):
         else:  # pragma: no cover
             return nick
 
-    def fetch_extra_trackinfo(self, username, info):
+    def fetch_extra_trackinfo(self, username: str, info: Dict[str, Any]) -> None:
         """Updates info with extra trackinfo from the last.fm API and
         MusicBrainz API"""
         try:
@@ -234,11 +234,11 @@ class LastfmPlugin(object):
             info["loved"] = bool(int(api_result["userloved"]))
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: irc3.IrcBot):  # pragma: no cover
         return cls(old.bot)
 
 
-def _time_ago(time):
+def _time_ago(time: datetime):
     """Represent time past as a friendly string"""
     time_ago = datetime.utcnow() - time
     timestr = []
@@ -264,7 +264,7 @@ def _time_ago(time):
     return ", ".join(timestr)
 
 
-def _parse_trackinfo(track):
+def _parse_trackinfo(track: Dict[str, Any]) -> Dict[str, Any]:
     """Parses the track info into something more comprehensible"""
     now_playing = False
     if "@attr" in track and "nowplaying" in track["@attr"]:

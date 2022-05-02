@@ -10,6 +10,7 @@ Tests for urlinfo module.
 
 import os.path
 import logging
+import time
 import unittest
 from unittest.mock import MagicMock
 from pathlib import Path
@@ -153,7 +154,6 @@ class UrlInfoTestCase(BotTestCase):
                     result = self.plugin._process_url(session, url)
                     self.assertEqual(" ".join(result), expected)
 
-    @unittest.skipUnless("CI" not in os.environ, "Reddit tests are too flaky for CI")
     def test_reddit(self):
         with requests.Session() as session:
             session.headers.update(
@@ -177,4 +177,7 @@ class UrlInfoTestCase(BotTestCase):
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)
-                    self.assertEqual(" ".join(result), expected)
+                    result = " ".join(result)
+                    if "Reddit refused to give data." in result:
+                        raise unittest.SkipTest(result)
+                    self.assertEqual(result, expected)
