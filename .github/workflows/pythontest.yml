@@ -31,12 +31,12 @@ jobs:
     - name: Run pytest
       run: |
         poetry run pytest --cov=onebot -nauto
-        coverage lcov
+        poetry run coverage lcov
     - name: Run black
       run: |
         poetry run black --check .
     - name: Coveralls Parallel
-      uses: coverallsapp/github-action@master
+      uses: coverallsapp/github-action@1.1.3
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         flag-name: run-${{ matrix.python-version }}
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Coveralls Finished
-      uses: coverallsapp/github-action@master
+      uses: coverallsapp/github-action@1.1.3
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         parallel-finished: true
