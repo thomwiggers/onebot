@@ -31,7 +31,7 @@ requests = "^2.24.0"
 isodate = "^0.6.0"
 cryptography = "^3.2"
 tekore = "^4.0.0"
-dateparser = "^1.0.0"
+dateparser = "^1.1.1"
 redis = "^3.5.3"
 
 [tool.poetry.dev-dependencies]
