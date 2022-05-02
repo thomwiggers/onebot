@@ -21,7 +21,7 @@ packages = [
 onebot = "onebot:run"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 irc3 = { git = "https://github.com/gawel/irc3.git" }
 lfmh = "^1.1.1"
 musicbrainzngs = "^0.7.1"
