@@ -5,7 +5,7 @@ on:
   - pull_request
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,15 +27,27 @@ jobs:
       run: |
         pip install poetry
         poetry install --no-root
-        poetry run pip install coveralls coverage pytest-cov
+        poetry run pip install coverage pytest-cov
     - name: Run pytest
       run: |
         poetry run pytest --cov=onebot -nauto
+        coverage lcov
     - name: Run black
       run: |
         poetry run black --check .
-    - name: Upload coverage
-      run: |
-        poetry run coveralls
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+    - name: Coveralls Parallel
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        flag-name: run-${{ matrix.python-version }}
+        parallel: true
+        path-to-lcov: coverage.lcov
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true
