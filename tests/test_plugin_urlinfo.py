@@ -153,6 +153,7 @@ class UrlInfoTestCase(BotTestCase):
                     result = self.plugin._process_url(session, url)
                     self.assertEqual(" ".join(result), expected)
 
+    @unittest.skipUnless("CI" not in os.environ, "Reddit tests are too flaky for CI")
     def test_reddit(self):
         with requests.Session() as session:
             session.headers.update(

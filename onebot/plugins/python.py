@@ -42,7 +42,7 @@ class PythonPlugin:
                 "run",
                 "--rm",
                 "--read-only",
-                "--security-opt=\"no-new-privileges:true\"",
+                '--security-opt="no-new-privileges:true"',
                 "--net=none",
                 "--log-driver=none",
                 "--cap-drop=ALL",
