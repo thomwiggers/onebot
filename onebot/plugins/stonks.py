@@ -33,7 +33,7 @@ def stonks(symbol):
     json_start = re.search("root.App.main = ", text)
     all_json_ends = re.finditer("}}}};", text)
 
-    # The JSON Blob has several ends matching the pattern. 
+    # The JSON Blob has several ends matching the pattern.
     # Therefore the json_end has to be bigger than the JSON_start
     for match in all_json_ends:
         if match.span()[1] > json_start.span()[1]:

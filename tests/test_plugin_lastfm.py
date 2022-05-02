@@ -7,6 +7,7 @@ import calendar
 import datetime
 import json
 import os.path
+from typing import Any, Dict
 import unittest
 import freezegun
 
@@ -17,7 +18,7 @@ from onebot.testing import BotTestCase
 from irc3.utils import IrcString
 
 
-def _get_fixture(fixture_name):
+def _get_fixture(fixture_name: str) -> Dict[Any, Any]:
     """Reads a fixture from a file"""
     with open(
         os.path.join(os.path.dirname(__file__), "fixtures/{}".format(fixture_name)), "r"
@@ -26,7 +27,8 @@ def _get_fixture(fixture_name):
 
 
 async def one_moment():
-    await asyncio.sleep(0.01)
+    with freeze_time(tick=True):
+        await asyncio.sleep(0.01)
     return
 
 
@@ -97,12 +99,12 @@ class LastfmPluginTest(BotTestCase):
         async def wrap():
             self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!np")
             await one_moment()
-            mock.assert_called_with("bar", extended=True, limit=1)
-            self.assertSent(
-                ["PRIVMSG #chan :bar is someone who never " "scrobbled before."]
-            )
 
         self.bot.loop.run_until_complete(wrap())
+        mock.assert_called_with("bar", extended=True, limit=1)
+        self.assertSent(
+            ["PRIVMSG #chan :bar is someone who never " "scrobbled before."]
+        )
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -114,11 +116,9 @@ class LastfmPluginTest(BotTestCase):
         async def wrap():
             self.bot.dispatch(f":bar!foo@host PRIVMSG {botnick} :!np")
             await one_moment()
-            self.assertSent(
-                ["PRIVMSG bar :bar is someone who never " "scrobbled before."]
-            )
 
         self.bot.loop.run_until_complete(wrap())
+        self.assertSent(["PRIVMSG bar :bar is someone who never " "scrobbled before."])
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -131,9 +131,9 @@ class LastfmPluginTest(BotTestCase):
         async def wrap():
             self.bot.dispatch(":bar!id@host PRIVMSG #chan :!np")
             await one_moment()
-            self.assertSent(["PRIVMSG #chan :bar: Error: message_frommock"])
 
         self.bot.loop.run_until_complete(wrap())
+        self.assertSent(["PRIVMSG #chan :bar: Error: message_frommock"])
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -143,9 +143,9 @@ class LastfmPluginTest(BotTestCase):
         async def wrap():
             self.bot.dispatch(":bar!id@host PRIVMSG #chan :!np")
             await one_moment()
-            self.assertSent(["PRIVMSG #chan :bar: Error: message"])
 
         self.bot.loop.run_until_complete(wrap())
+        self.assertSent(["PRIVMSG #chan :bar: Error: message"])
 
     def test_get_lastfm_nick_from_database(self):
         mock = MagicMock()
@@ -163,11 +163,11 @@ class LastfmPluginTest(BotTestCase):
         self.bot.get_user = mock_user
         lastfm = self.bot.get_plugin("onebot.plugins.lastfm.LastfmPlugin")
 
-        async def wrap():
-            lastfmnick = await lastfm.get_lastfm_nick("nick")
-            assert lastfmnick == "lastfmuser"
+        async def wrap() -> str:
+            return await lastfm.get_lastfm_nick("nick")
 
-        self.bot.loop.run_until_complete(wrap())
+        lastfmnick = self.bot.loop.run_until_complete(wrap())
+        assert lastfmnick == "lastfmuser"
 
     def test_setuser(self):
         mock = MagicMock(name="MockGetUser")
@@ -235,9 +235,9 @@ class LastfmPluginTest(BotTestCase):
                 "bar is not currently playing "
                 "anything (last seen 3 days, 1 minute ago)."
             )
-            assert not mock.called, "Shouldn't call get_info if not recent"
 
         self.bot.loop.run_until_complete(wrap())
+        assert not mock.called, "Shouldn't call get_info if not recent"
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -266,9 +266,9 @@ class LastfmPluginTest(BotTestCase):
                 "bar is not currently playing anything "
                 "(last seen 3 days, 2 minutes ago)."
             )
-            assert not mock.called, "Shouldn't call get_info if not recent"
 
         self.bot.loop.run_until_complete(wrap())
+        assert not mock.called, "Shouldn't call get_info if not recent"
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -305,9 +305,9 @@ class LastfmPluginTest(BotTestCase):
             assert response == (
                 "bar is not currently playing anything " "(last seen 1 day ago)."
             )
-            assert not mock.called, "Shouldn't call get_info if not recent"
 
         self.bot.loop.run_until_complete(wrap())
+        assert not mock.called, "Shouldn't call get_info if not recent"
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -320,16 +320,15 @@ class LastfmPluginTest(BotTestCase):
             await one_moment()
             self.bot.dispatch(":bar!id@host PRIVMSG #chan :!np foo")
             await one_moment()
-            self.assertSent(
-                [
-                    "PRIVMSG #chan :bar is now playing "
-                    "“Etherwood – Weightless” (♥).",
-                    "PRIVMSG #chan :bar (foo on Last.FM) is now playing "
-                    "“Etherwood – Weightless” (♥).",
-                ]
-            )
 
         self.bot.loop.run_until_complete(wrap())
+        self.assertSent(
+            [
+                "PRIVMSG #chan :bar is now playing " "“Etherwood – Weightless” (♥).",
+                "PRIVMSG #chan :bar (foo on Last.FM) is now playing "
+                "“Etherwood – Weightless” (♥).",
+            ]
+        )
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",

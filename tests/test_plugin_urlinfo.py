@@ -10,6 +10,7 @@ Tests for urlinfo module.
 
 import os.path
 import logging
+import time
 import unittest
 from unittest.mock import MagicMock
 from pathlib import Path
@@ -176,4 +177,7 @@ class UrlInfoTestCase(BotTestCase):
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)
-                    self.assertEqual(" ".join(result), expected)
+                    result = " ".join(result)
+                    if "Reddit refused to give data." in result:
+                        raise unittest.SkipTest(result)
+                    self.assertEqual(result, expected)
