@@ -272,14 +272,16 @@ class UrlInfo(object):
                 while attempts < 3:
                     attempts += 1
                     data = response.json()
-                    self.log.debug("Response: %r", data)
-                    if response.status_code == 429:
+                    self.log.error("Response: %r", data)
+                    if response.status_code == 429 or not isinstance(data, dict) or data.get("error", 0) == 429:
                         time.sleep(0.5 * attempts)
                         self.log.debug("Retrying reddit request")
                         continue
                     elif response.status_code != 200:
                         return [f"Got response code {response.status_code}"]
-                return formatter(data)
+                    else:
+                        return formatter(data)
+                return [f"Reddit refused to give data."]
 
             except ValueError:
                 return ["Invalid JSON response from Reddit API"]
