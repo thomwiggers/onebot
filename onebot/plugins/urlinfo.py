@@ -273,7 +273,11 @@ class UrlInfo(object):
                     attempts += 1
                     data = response.json()
                     self.log.error("Response: %r", data)
-                    if response.status_code == 429 or not isinstance(data, dict) or data.get("error", 0) == 429:
+                    if (
+                        response.status_code == 429
+                        or not isinstance(data, dict)
+                        or data.get("error", 0) == 429
+                    ):
                         time.sleep(0.5 * attempts)
                         self.log.debug("Retrying reddit request")
                         continue

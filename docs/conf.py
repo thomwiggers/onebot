@@ -55,8 +55,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"OneBot"
-copyright = u"2014, Thom Wiggers"
+project = "OneBot"
+copyright = "2014, Thom Wiggers"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -206,7 +206,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ("index", "onebot.tex", u"OneBot Documentation", u"Thom Wiggers", "manual"),
+    ("index", "onebot.tex", "OneBot Documentation", "Thom Wiggers", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at
@@ -234,7 +234,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "onebot", u"OneBot Documentation", [u"Thom Wiggers"], 1)]
+man_pages = [("index", "onebot", "OneBot Documentation", ["Thom Wiggers"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -249,8 +249,8 @@ texinfo_documents = [
     (
         "index",
         "onebot",
-        u"OneBot Documentation",
-        u"Thom Wiggers",
+        "OneBot Documentation",
+        "Thom Wiggers",
         "onebot",
         "One line description of project.",
         "Miscellaneous",
