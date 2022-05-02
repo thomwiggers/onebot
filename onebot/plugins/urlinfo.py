@@ -193,9 +193,11 @@ class UrlInfo(object):
                 redirects += 1
                 i = 0
             except UrlSkipException:
-                return
+                return None
             if result:
                 return result
+
+        return None
 
     def _process_url_local(self, _session, url, **kwargs):
         try:

@@ -24,6 +24,7 @@ Usage::
 
 """
 import asyncio
+from typing import Set
 import irc3
 from irc3.plugins.command import command
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -152,9 +153,9 @@ class SpotifyPlugin(object):
 
 
 class SpotifyResponseServer(BaseHTTPRequestHandler):
-    key = None
-    bot = None
-    seen = set()
+    key: str
+    bot: irc3.IrcBot
+    seen: Set[str] = set()
 
     def do_GET(self):
         """Handle GET requests"""

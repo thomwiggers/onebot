@@ -213,11 +213,8 @@ class UsersPluginTest(BotTestCase):
         self.assertSent(["WHO #chan2"])
 
 
-class UserObjectTest(unittest.TestCase):
+class UserObjectTest(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-
         mask = IrcString("nick!user@host")
 
         async def id_func():
@@ -227,7 +224,6 @@ class UserObjectTest(unittest.TestCase):
 
     def tearDown(self):
         super().tearDown()
-        self.loop.close()
 
     def test_user_needs_channels(self):
         with self.assertRaises(ValueError):
@@ -260,21 +256,18 @@ class UserObjectTest(unittest.TestCase):
         self.user.part("#bar")
         assert self.user.channels == set()
 
-    def test_get_settings(self):
-        async def wrap():
-            self.user.set_settings({"setting": "hi"})
-            await asyncio.sleep(0.001)
-            assert (await self.user.get_settings()) == {"setting": "hi"}
-            assert (await self.user.get_setting("foo")) is None
-            assert (await self.user.get_setting("foo", "default")) == "default"
-            assert (await self.user.get_setting("setting")) == "hi"
-            assert (await self.user.get_setting("setting", "default")) == "hi"
-            assert (await self.user.get_setting("foo", "default")) == "default"
-            self.user.set_setting("setting", "bar")
-            await asyncio.sleep(0.001)
-            assert (await self.user.get_setting("setting")) == "bar"
-
-        self.loop.run_until_complete(wrap())
+    async def test_get_settings(self):
+        self.user.set_settings({"setting": "hi"})
+        await asyncio.sleep(0.001)
+        assert (await self.user.get_settings()) == {"setting": "hi"}
+        assert (await self.user.get_setting("foo")) is None
+        assert (await self.user.get_setting("foo", "default")) == "default"
+        assert (await self.user.get_setting("setting")) == "hi"
+        assert (await self.user.get_setting("setting", "default")) == "hi"
+        assert (await self.user.get_setting("foo", "default")) == "default"
+        self.user.set_setting("setting", "bar")
+        await asyncio.sleep(0.001)
+        assert (await self.user.get_setting("setting")) == "bar"
 
 
 if __name__ == "__main__":

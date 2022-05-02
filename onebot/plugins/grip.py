@@ -53,8 +53,8 @@ def grip_availability(day: date, area: int = 803) -> Optional[List[Dict[str, str
         GRIP_URL,
         params={
             "date": day.isoformat(),
-            "areas": [area],
-            "show_all": 0,
+            "areas": [str(area)],
+            "show_all": "0",
         },
     )
     try:

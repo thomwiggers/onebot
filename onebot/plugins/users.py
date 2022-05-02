@@ -13,22 +13,24 @@ from __future__ import unicode_literals, print_function
 import ast
 import asyncio
 import re
+from typing import Any, Dict, List, Optional, Set
 
 import irc3
-from irc3.utils import IrcString, BaseString
+from irc3.plugins.storage import Storage
+from irc3.utils import IrcString
 
 
 class User(object):
     """User object"""
 
-    def __init__(self, mask, channels, id_, database=None):
+    def __init__(self, mask, channels: List[str], id_, database=None):
         self.nick = mask.nick
         self.host = mask.host
-        self.channels = set()
+        self.channels: Set[str] = set()
         self.id = id_
-        self.database = database
+        self.database: Optional[Storage] = database
         try:
-            if isinstance(channels, BaseString):
+            if isinstance(channels, str):
                 raise ValueError("You must specify a list of channels!")
             for c in iter(channels):
                 self.channels.add(c)
@@ -36,36 +38,41 @@ class User(object):
             raise ValueError("You need to specify in which channel this " "user is!")
 
     @property
-    def mask(self):
+    def mask(self) -> IrcString:
         """Get the mask of this user"""
         return IrcString("{}!{}".format(self.nick, self.host))
+
+    def _get_database(self) -> Storage:
+        if self.database is None:
+            raise Exception("No database set for this user.")
+        return self.database
 
     def set_settings(self, settings):
         """Replaces the settings with the provided dictionary"""
 
         async def wrapper():
             id_ = await self.id()
-            self.database[id_] = settings
+            self._get_database()[id_] = settings
 
         asyncio.ensure_future(wrapper())
 
-    def set_setting(self, setting, value):
+    def set_setting(self, setting: str, value: Any):
         """Set a specified setting to a value"""
         print("Trying to set %s to %s" % (setting, value))
 
         async def wrapper():
             id_ = await self.id()
-            self.database.set(id_, **{setting: value})
+            self._get_database().set(id_, **{setting: value})
 
         asyncio.ensure_future(wrapper())
 
-    async def get_settings(self):
+    async def get_settings(self) -> Dict[str, Any]:
         """Get this users settings"""
         id_ = await self.id()
-        return self.database.get(id_, dict())
+        return self._get_database().get(id_, dict())
 
-    async def get_setting(self, setting, default=None):
-        """Gets a setting for the users"""
+    async def get_setting(self, setting, default=None) -> Any:
+        """Gets a setting for the users. Can be any type."""
         settings = await self.get_settings()
         result = settings.get(setting, default)
         if isinstance(result, str):
@@ -77,24 +84,26 @@ class User(object):
 
         return result
 
-    def join(self, channel):
+    def join(self, channel) -> None:
         """Register that the user joined a channel"""
         self.channels.add(channel)
 
-    def part(self, channel):
+    def part(self, channel) -> None:
         """Register that the user parted a channel"""
         self.channels.remove(channel)
 
-    def still_in_channels(self):
+    def still_in_channels(self) -> bool:
         """Is the user still in channels?"""
         return len(self.channels) > 0
 
-    def __eq__(self, user):
+    def __eq__(self, other: object) -> bool:
         """Compare users by nick
 
         Since nicks are unique this works for exactly one irc server.
         """
-        return self.nick == user.nick
+        if not isinstance(other, self.__class__):
+            return False
+        return self.nick == other.nick
 
 
 @irc3.plugin
@@ -115,7 +124,7 @@ class UsersPlugin(object):
 
     requires = ["irc3.plugins.storage", "irc3.plugins.asynchronious"]
 
-    def __init__(self, bot):
+    def __init__(self, bot: irc3.IrcBot):
         """Initialises the plugin"""
         self.bot = bot
         config = bot.config.get(__name__, {})
