@@ -32,7 +32,7 @@ isodate = "^0.6.1"
 cryptography = "^37.0.1"
 tekore = "^4.3.0"
 dateparser = "^1.1.1"
-redis = "^4.2.2"
+redis = "^4.3.0"
 
 [tool.poetry.dev-dependencies]
 freezegun = "1.2.1"
