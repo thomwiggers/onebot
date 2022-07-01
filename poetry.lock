@@ -764,14 +764,14 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "tekore"
-version = "4.3.0"
+version = "4.4.0"
 description = "Client for the Spotify Web API"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-httpx = ">=0.15,<0.23"
+httpx = ">=0.15,<0.24"
 
 [package.extras]
 checks = ["tox (>=3.0,<4.0)", "doc8", "flake8", "flake8-bugbear", "pydocstyle", "pygments"]
@@ -895,7 +895,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "08376f0e6de08bdfe4329d36398b33893a37bd56f6d2f3c316f0cd4bce98329c"
+content-hash = "6d170e6cf6580088e6fec376de9939dfc15ea735dab64fbb562f8150f9c794f2"
 
 [metadata.files]
 anyio = [
@@ -1317,8 +1317,8 @@ soupsieve = [
     {file = "soupsieve-2.3.2.post1.tar.gz", hash = "sha256:fc53893b3da2c33de295667a0e19f078c14bf86544af307354de5fcf12a3f30d"},
 ]
 tekore = [
-    {file = "tekore-4.3.0-py3-none-any.whl", hash = "sha256:8872549cede8a8359a7a130c1af80513aca1bfce5d9ea607f1bf3d88951c4c64"},
-    {file = "tekore-4.3.0.tar.gz", hash = "sha256:cf076acfd96f57daaa7df9b65ac6d7c81a82f2e74349377ab590dac6cdac29f1"},
+    {file = "tekore-4.4.0-py3-none-any.whl", hash = "sha256:fc46fc373804f78f6e42c11880d5ec7337932c3a0260ea20c909bc22dd3f8b92"},
+    {file = "tekore-4.4.0.tar.gz", hash = "sha256:713f587ccfc6b0f33f85e8ce34cbb095d3b413e03c37c3ce2cba0b3b8828e10c"},
 ]
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
