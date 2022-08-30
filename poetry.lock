@@ -250,7 +250,7 @@ testing = ["pre-commit"]
 
 [[package]]
 name = "freezegun"
-version = "1.2.1"
+version = "1.2.2"
 description = "Let your Python tests travel through time"
 category = "dev"
 optional = false
@@ -357,12 +357,11 @@ python-versions = "*"
 
 [[package]]
 name = "irc3"
-version = "1.1.9.dev0"
-description = ""
+version = "1.1.8"
+description = "plugable irc client library based on asyncio with DCC and SASL support"
 category = "main"
 optional = false
 python-versions = "*"
-develop = false
 
 [package.dependencies]
 docopt = "*"
@@ -371,12 +370,6 @@ venusian = ">=3.0"
 [package.extras]
 test = ["pytest-asyncio", "pytest-aiohttp", "feedparser", "requests", "pysocks", "twitter", "aiocron", "redis", "pytest", "irc3-plugins-test"]
 web = ["aiohttp"]
-
-[package.source]
-type = "git"
-url = "https://github.com/gawel/irc3.git"
-reference = "master"
-resolved_reference = "9c31edcbf27e33bc070faccfa02214003a77707f"
 
 [[package]]
 name = "isodate"
@@ -897,7 +890,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "9dae13a9c75dc6f39f7c8b04c1d31e8f28c7e345affad5a46d9de5835c430b30"
+content-hash = "cd0af4a4f294c31f35d7f98c0497cc42b4694f472bbc56c775e6a9d3200ed359"
 
 [metadata.files]
 anyio = [
@@ -1096,8 +1089,8 @@ execnet = [
     {file = "execnet-1.9.0.tar.gz", hash = "sha256:8f694f3ba9cc92cab508b152dcfe322153975c29bda272e2fd7f3f00f36e47c5"},
 ]
 freezegun = [
-    {file = "freezegun-1.2.1-py3-none-any.whl", hash = "sha256:15103a67dfa868ad809a8f508146e396be2995172d25f927e48ce51c0bf5cb09"},
-    {file = "freezegun-1.2.1.tar.gz", hash = "sha256:b4c64efb275e6bc68dc6e771b17ffe0ff0f90b81a2a5189043550b6519926ba4"},
+    {file = "freezegun-1.2.2-py3-none-any.whl", hash = "sha256:ea1b963b993cb9ea195adbd893a48d573fda951b0da64f60883d7e988b606c9f"},
+    {file = "freezegun-1.2.2.tar.gz", hash = "sha256:cd22d1ba06941384410cd967d8a99d5ae2442f57dfafeff2fda5de8dc5c05446"},
 ]
 h11 = [
     {file = "h11-0.12.0-py3-none-any.whl", hash = "sha256:36a3cb8c0a032f56e2da7084577878a035d3b61d104230d4bd49c0c6b555a9c6"},
@@ -1127,7 +1120,10 @@ iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
-irc3 = []
+irc3 = [
+    {file = "irc3-1.1.8-py3-none-any.whl", hash = "sha256:08a585420237ea476cc0a76504d7f4b3fb17232b5770f12741d53781339a921c"},
+    {file = "irc3-1.1.8.tar.gz", hash = "sha256:8057be86e89b79a2358d4fae9b9c404350af136bd0ce11e232e7f1bee7c3b04b"},
+]
 isodate = [
     {file = "isodate-0.6.1-py2.py3-none-any.whl", hash = "sha256:0751eece944162659049d35f4f549ed815792b38793f07cf73381c1c87cbed96"},
     {file = "isodate-0.6.1.tar.gz", hash = "sha256:48c5881de7e8b0a0d648cb024c8062dc84e7b840ed81e864c7614fd3c127bde9"},

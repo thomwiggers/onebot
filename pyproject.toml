@@ -22,7 +22,7 @@ onebot = "onebot:run"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-irc3 = { git = "https://github.com/gawel/irc3.git" }
+irc3 = "1.1.8"
 lfmh = "^1.1.1"
 musicbrainzngs = "^0.7.1"
 beautifulsoup4 = "^4.11.1"
@@ -35,7 +35,7 @@ dateparser = "^1.1.1"
 redis = "^4.3.4"
 
 [tool.poetry.dev-dependencies]
-freezegun = "1.2.1"
+freezegun = "^1.2.2"
 pytest = "^7.1.2"
 twine = "^4.0.1"
 black = "*"
