@@ -22,24 +22,24 @@ onebot = "onebot:run"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-irc3 = "1.1.8"
+irc3 = "^1.1"
 lfmh = "^1.1.1"
 musicbrainzngs = "^0.7.1"
-beautifulsoup4 = "^4.11.1"
-html5lib = "^1.1"
-requests = "^2.28.1"
-isodate = "^0.6.1"
-cryptography = "^37.0.4"
-tekore = "^4.4.0"
-dateparser = "^1.1.1"
-redis = "^4.3.4"
+beautifulsoup4 = "^4"
+html5lib = "^1"
+requests = "^2"
+isodate = "^0.6"
+cryptography = "^38"
+tekore = "^4"
+dateparser = "^1"
+redis = "^4"
 
 [tool.poetry.dev-dependencies]
 freezegun = "^1.2.2"
-pytest = "^7.1.2"
-twine = "^4.0.1"
+pytest = "*"
+twine = "*"
 black = "*"
-pytest-xdist = "^2.5.0"
+pytest-xdist = "*"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
