@@ -35,7 +35,7 @@ python-versions = ">=3.5"
 dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy (>=0.900,!=0.940)", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "sphinx", "sphinx-notfound-page", "zope.interface"]
 docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
 tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "zope.interface"]
-tests_no_zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
+tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
 
 [[package]]
 name = "backports.zoneinfo"
@@ -129,7 +129,7 @@ optional = false
 python-versions = ">=3.6.0"
 
 [package.extras]
-unicode_backport = ["unicodedata2"]
+unicode-backport = ["unicodedata2"]
 
 [[package]]
 name = "click"
@@ -693,7 +693,7 @@ urllib3 = ">=1.21.1,<1.27"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
-use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "requests-toolbelt"
@@ -774,7 +774,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "tekore"
-version = "4.4.0"
+version = "4.4.1"
 description = "Client for the Spotify Web API"
 category = "main"
 optional = false
@@ -1352,8 +1352,8 @@ soupsieve = [
     {file = "soupsieve-2.3.2.post1.tar.gz", hash = "sha256:fc53893b3da2c33de295667a0e19f078c14bf86544af307354de5fcf12a3f30d"},
 ]
 tekore = [
-    {file = "tekore-4.4.0-py3-none-any.whl", hash = "sha256:fc46fc373804f78f6e42c11880d5ec7337932c3a0260ea20c909bc22dd3f8b92"},
-    {file = "tekore-4.4.0.tar.gz", hash = "sha256:713f587ccfc6b0f33f85e8ce34cbb095d3b413e03c37c3ce2cba0b3b8828e10c"},
+    {file = "tekore-4.4.1-py3-none-any.whl", hash = "sha256:6ba8794c8aa880cb61b25892d47abade099a91e46614526553c8691f35e50345"},
+    {file = "tekore-4.4.1.tar.gz", hash = "sha256:02105f49888f52dfdde5e12b1db3f102da9ce6e061b6d079e6d7ea4ecd71d1df"},
 ]
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
