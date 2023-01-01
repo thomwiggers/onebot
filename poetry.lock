@@ -182,7 +182,7 @@ test = ["hypothesis (>=1.11.4,!=3.79.2)", "iso8601", "pretend", "pytest (>=6.2.0
 
 [[package]]
 name = "dateparser"
-version = "1.1.4"
+version = "1.1.5"
 description = "Date parsing library designed to parse dates from HTML pages"
 category = "main"
 optional = false
@@ -1036,8 +1036,8 @@ cryptography = [
     {file = "cryptography-38.0.4.tar.gz", hash = "sha256:175c1a818b87c9ac80bb7377f5520b7f31b3ef2a0004e2420319beadedb67290"},
 ]
 dateparser = [
-    {file = "dateparser-1.1.4-py2.py3-none-any.whl", hash = "sha256:4431159799b63d8acec5d7d844c5e06edf3d1b0eb2bda6d4cac87134ddddd01c"},
-    {file = "dateparser-1.1.4.tar.gz", hash = "sha256:73ec6e44a133c54076ecf9f9dc0fbe3dd4831f154f977ff06f53114d57c5425e"},
+    {file = "dateparser-1.1.5-py2.py3-none-any.whl", hash = "sha256:ceb159f1b4a9df54ed6209e91298097deafde476037f8611b4cb2b1cb8b31c58"},
+    {file = "dateparser-1.1.5.tar.gz", hash = "sha256:107f3cc87a60770e10d111349adc1504224a6b60753a47a64b0ec842ab85b5a9"},
 ]
 docopt = [
     {file = "docopt-0.6.2.tar.gz", hash = "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"},
