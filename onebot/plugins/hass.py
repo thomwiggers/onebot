@@ -31,7 +31,7 @@ class HassPlugin(object):
         self.allowed_sensors = self.config.get("sensors")
 
     @command
-    def panel(self, _mask, _target, _args):
+    def solar(self, _mask, _target, _args):
         """Get the current yield of Thom's solar panels
 
         %%solar
