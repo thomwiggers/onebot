@@ -12,7 +12,6 @@ from onebot.testing import BotTestCase
 
 
 class ExecutePluginTestCase(BotTestCase):
-
     config = {
         "includes": ["onebot.plugins.execute"],
         "onebot.plugins.execute": {"commands": ["command1", "command2"]},

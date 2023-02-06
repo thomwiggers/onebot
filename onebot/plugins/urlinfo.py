@@ -203,7 +203,7 @@ class UrlInfo(object):
         try:
             # filter out private addresses
             # May raise exceptions
-            for (_f, _t, _p, _c, sockaddr) in socket.getaddrinfo(
+            for _f, _t, _p, _c, sockaddr in socket.getaddrinfo(
                 urlparse(url).hostname, None
             ):
                 ip = ipaddress.ip_address(sockaddr[0])

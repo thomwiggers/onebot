@@ -151,7 +151,6 @@ class LastfmPlugin(object):
                     )
 
                 else:
-
                     self.fetch_extra_trackinfo(lastfm_user, info)
 
                     if info["now playing"]:

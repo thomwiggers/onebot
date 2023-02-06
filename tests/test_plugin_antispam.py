@@ -20,7 +20,6 @@ async def empty():
 
 
 class AntispamTestCase(BotTestCase):
-
     config = {"cmd": "!"}
 
     def assertSent(self, lines):

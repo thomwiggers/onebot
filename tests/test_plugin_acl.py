@@ -36,7 +36,6 @@ async def cmd2(bot, mask, target, args, **kwargs):
 
 
 class UserBasedGuardPolicyTestCase(BotTestCase):
-
     config = {
         "includes": ["irc3.plugins.command", __name__],
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
@@ -90,7 +89,6 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
 
 
 class ACLTestCase(BotTestCase):
-
     config = {"cmd": "!", "onebot.plugins.acl": {"superadmin": "root@localhost"}}
 
     @patch("irc3.plugins.storage.Storage")

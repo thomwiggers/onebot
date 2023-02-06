@@ -15,7 +15,6 @@ from .test_plugin_users import MockDb
 
 
 class PSATestCase(BotTestCase):
-
     config = {"includes": ["onebot.plugins.psa", "irc3.plugins.command"], "cmd": "!"}
 
     @patch("irc3.plugins.storage.Storage")

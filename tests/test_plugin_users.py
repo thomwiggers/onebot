@@ -101,7 +101,6 @@ class UsersPluginTestWithWhatcd(BotTestCase):
 
 
 class UsersPluginTest(BotTestCase):
-
     config = {
         "includes": ["onebot.plugins.users"],
         "cmd": "!",

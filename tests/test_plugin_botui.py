@@ -14,7 +14,6 @@ from .test_plugin_users import MockDb
 
 
 class BotUITestCase(BotTestCase):
-
     config = {"includes": ["onebot.plugins.botui", "irc3.plugins.command"], "cmd": "!"}
 
     @patch("irc3.plugins.storage.Storage")

@@ -195,7 +195,7 @@ class UsersPlugin(object):
     def part(self, nick, mask, channel=None, **kwargs):
         if nick == self.bot.nick:
             self.log.info("%s left %s by %s", nick, channel, kwargs["event"])
-            for (n, user) in self.active_users.copy().items():
+            for n, user in self.active_users.copy().items():
                 user.part(channel)
                 if not user.still_in_channels():
                     del self.active_users[n]

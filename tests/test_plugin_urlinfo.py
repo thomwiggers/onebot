@@ -117,7 +117,7 @@ class UrlInfoTestCase(BotTestCase):
             raise unittest.SkipTest("no twitter api key")
         self.plugin.twitter_bearer_token = os.environ["TWITTER_BEARER_TOKEN"]
         with requests.Session() as session:
-            for (url, expected) in [
+            for url, expected in [
                 (
                     "https://twitter.com/jack/status/20",
                     "jack⚡️ (@jack ✅): just setting up my twttr",
@@ -164,7 +164,7 @@ class UrlInfoTestCase(BotTestCase):
                     "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
                 }
             )
-            for (url, expected) in [
+            for url, expected in [
                 ("https://reddit.com/u/DutchDudeWCD", "/u/DutchDudeWCD on Reddit"),
                 (
                     "https://www.reddit.com/r/crypto/comments/7jrba2/crypto_is_not_cryptocurrency/",
