@@ -46,7 +46,7 @@ class HassPlugin(object):
 
         %%sensor <sensor_name>
         """
-        return self.get_sensor(args['<sensor_name>'])
+        return self.get_sensor(args["<sensor_name>"])
 
     def get_sensor(self, sensor_name: str) -> str:
         if sensor_name not in self.allowed_sensors:
@@ -58,7 +58,9 @@ class HassPlugin(object):
         }
         rsp = requests.get(url, headers=headers)
         if not rsp.ok:
-            self.log.error("Invalid response from HA: code %d: '%r'", rsp.status_code, rsp.text)
+            self.log.error(
+                "Invalid response from HA: code %d: '%r'", rsp.status_code, rsp.text
+            )
             return "Invalid response from Home Assistant"
 
         try:
