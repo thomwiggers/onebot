@@ -665,14 +665,14 @@ files = [
 
 [[package]]
 name = "irc3"
-version = "1.1.8"
+version = "1.1.9"
 description = "plugable irc client library based on asyncio with DCC and SASL support"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "irc3-1.1.8-py3-none-any.whl", hash = "sha256:08a585420237ea476cc0a76504d7f4b3fb17232b5770f12741d53781339a921c"},
-    {file = "irc3-1.1.8.tar.gz", hash = "sha256:8057be86e89b79a2358d4fae9b9c404350af136bd0ce11e232e7f1bee7c3b04b"},
+    {file = "irc3-1.1.9-py3-none-any.whl", hash = "sha256:049738d0bff0c8f067eb93dda4f08729266985b634717270c70f9857b6eef0fc"},
+    {file = "irc3-1.1.9.tar.gz", hash = "sha256:cadadb9d23be42f7f6bf7ecb893c0b8b3fd9b1327cb0cbfea9af4dbbd44b26fd"},
 ]
 
 [package.dependencies]
