@@ -21,7 +21,7 @@ packages = [
 onebot = "onebot:run"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 irc3 = "^1.1"
 lfmh = "^1.1.1"
 musicbrainzngs = "^0.7.1"
@@ -29,7 +29,7 @@ beautifulsoup4 = "^4"
 html5lib = "^1"
 requests = "^2"
 isodate = "^0.6"
-cryptography = "^40"
+cryptography = "^41"
 tekore = "^4"
 dateparser = "^1"
 redis = "^4"
