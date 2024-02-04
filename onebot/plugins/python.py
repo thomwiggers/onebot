@@ -15,6 +15,7 @@ Config:
       onebot.plugins.python
 """
 
+from typing import Self
 import irc3
 from irc3.plugins.command import command
 import subprocess
@@ -72,5 +73,5 @@ class PythonPlugin:
             yield line[:200]
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)

@@ -22,6 +22,7 @@ Config:
 irc3 also has a plugin now, might be more useful.
 """
 
+from typing import Self
 import irc3
 import time
 
@@ -53,5 +54,5 @@ class ExecutePlugin:
             self.bot.send(command)
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)

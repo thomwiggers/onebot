@@ -10,6 +10,7 @@ Based on http://git.io/v3HVL by gawel
 """
 
 
+from typing import Self
 from irc3.plugins.command import command
 from irc3 import plugin, event
 
@@ -36,7 +37,7 @@ class BotUI(object):
         r"^:(?P<sender>\S+?)!\S+ INVITE (?P<target>\S+) " r"(?P<channel>#\S+)",
         iotype="in",
     )
-    def onInvite(self, sender=None, target=None, channel=None):
+    def onInvite(self, sender, target, channel) -> None:
         """Will send a message to the admin or automatically join a channel
         when it gets invited."""
         self._log.info("%s invited me to %s." % (sender, channel))
@@ -69,7 +70,7 @@ class BotUI(object):
         self.bot.join(channel)
 
     @command(permission="operator", show_in_help_list=False)
-    def part(self, mask, target, args):
+    def part(self, mask, target, args) -> None:
         """
         Part - Command the bot to leave a channel
 
@@ -82,7 +83,7 @@ class BotUI(object):
         self.bot.part(target)
 
     @command(permission="admin", show_in_help_list=False)
-    def quit(self, mask, target, args):
+    def quit(self, mask, target, args) -> None:
         """
         Quit - Shutdown the bot
 
@@ -93,7 +94,7 @@ class BotUI(object):
         self.bot.loop.stop()
 
     @command(permission="admin", show_in_help_list=False)
-    def nick(self, mask, target, args):
+    def nick(self, mask, target, args) -> None:
         """
         Nick - Change nickname of the bot
 
@@ -103,7 +104,7 @@ class BotUI(object):
         self.bot.set_nick(args["<nick>"])
 
     @command(permission="operator", show_in_help_list=False)
-    def mode(self, mask, target, args):
+    def mode(self, mask, target, args) -> None:
         """
         Mode - Set user mode for the bot.
 
@@ -113,7 +114,7 @@ class BotUI(object):
         self.bot.mode(self.bot.nick, args["<mode-cmd>"])
 
     @command(permission="admin", show_in_help_list=False)
-    def msg(self, mask, target, args):
+    def msg(self, mask, target, args) -> None:
         """
         Msg - Send a message
 
@@ -124,7 +125,7 @@ class BotUI(object):
         self.bot.privmsg(args["<target>"], msg)
 
     @command(permission="admin", show_in_help_list=False)
-    def quote(self, mask, target, args):
+    def quote(self, mask, target, args) -> None:
         """Send a raw string to the ircd
 
         %%quote <string>...
@@ -134,7 +135,7 @@ class BotUI(object):
         self.bot.send(cmd)
 
     @command(name="reload", permission="admin", show_in_help_list=False)
-    def reload_cmd(self, mask, target, args):
+    def reload_cmd(self, mask, target, args) -> None:
         """Reload - Reloads a plugin and the config file without restarting the IrcBot
 
         %%reload <plugin>
@@ -161,5 +162,5 @@ class BotUI(object):
         sys.exit(2)
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)

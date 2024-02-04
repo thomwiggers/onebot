@@ -1,11 +1,12 @@
 """
 ================================================
-:mod:`onebot.plugins.stonks` 
+:mod:`onebot.plugins.stonks`
 ================================================
 
 This plugin allows to query stonks
 """
 
+from typing import Self
 import requests
 import json
 import re
@@ -99,5 +100,5 @@ class StonksPlugin(object):
         return stonks(symbol)
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)
