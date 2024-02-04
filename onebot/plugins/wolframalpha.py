@@ -64,8 +64,9 @@ class WolframAlphaPlugin(object):
             )
             response.raise_for_status()
             return f"{mask.nick}: {response.text}"
-        except requests.exceptions.HTTPError:
-            if response.status_code == 501:
+        except requests.exceptions.HTTPError as e:
+            assert e.response is not None
+            if e.response.status_code == 501:
                 self.log.info("no short answer for '%s'", question)
                 return (
                     "No short answer available. See "
@@ -74,7 +75,7 @@ class WolframAlphaPlugin(object):
                 )
 
             self.log.exception("HTTP error for question: '%s'", question)
-            return f"HTTP error {response.status_code}"
+            return f"HTTP error {e.response.status_code}"
         except requests.exceptions.Timeout:
             self.log.error("Request timed out")
             return "Request timed out"

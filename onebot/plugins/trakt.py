@@ -23,6 +23,7 @@ Usage::
 
 """
 import asyncio
+from typing import Self
 
 import irc3
 from irc3.plugins.command import command
@@ -136,5 +137,5 @@ class TrakttvPlugin(object):
             return nick
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)

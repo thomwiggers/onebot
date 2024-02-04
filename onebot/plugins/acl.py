@@ -10,6 +10,7 @@ settings with each user.
 """
 
 import asyncio
+from typing import Self
 
 import irc3
 from irc3.plugins.command import command
@@ -93,7 +94,7 @@ class ACLPlugin(object):
             self.bot.db.set(self.config["superadmin"], permissions=["all_permissions"])
 
     @command(permission="admin", show_in_help_list=False)
-    async def acl(self, mask, target, args):
+    async def acl(self, mask, target, args) -> None:
         """Administrate the ACL
 
         %%acl (add | remove) <user> <permission>
@@ -112,6 +113,7 @@ class ACLPlugin(object):
             )
             return
 
+        user = None
         if not args["--by-id"]:
             user = self.bot.get_user(username)
             if not user:
@@ -135,6 +137,7 @@ class ACLPlugin(object):
             current_permissions.remove(permission)
 
         if not args["--by-id"]:
+            assert user is not None
             user.set_setting("permissions", current_permissions)
         else:
             if args["<id>"] not in self.bot.db:
@@ -147,5 +150,5 @@ class ACLPlugin(object):
         )
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)

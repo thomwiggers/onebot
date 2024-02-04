@@ -24,7 +24,7 @@ Usage::
 
 """
 import asyncio
-from typing import Set
+from typing import Self, Set
 import irc3
 from irc3.plugins.command import command
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -67,8 +67,8 @@ class SpotifyPlugin(object):
         self.tk_cred = server.tk_cred = tk.RefreshingCredentials(
             client_id, client_secret, redirect_url
         )
-        http_server = ThreadingHTTPServer(server_address, server)
-        self.server_thread = threading.Thread(target=http_server.serve_forever)
+        self.http_server = ThreadingHTTPServer(server_address, server)
+        self.server_thread = threading.Thread(target=self.http_server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
 
@@ -141,19 +141,21 @@ class SpotifyPlugin(object):
         return "I've sent you a PRIVMSG with instructions"
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
-        old.server_thread.shutdown()
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
+        old.http_server.shutdown()
+        old.server_thread.join()
         newinstance = cls(old.bot)
         newinstance.key = old.key
         return newinstance
 
-    def __del__(self):  # pragma: no cover
-        self.server_thread.shutdown()
-        super().__del__()
+    def __del__(self) -> None:  # pragma: no cover
+        self.http_server.shutdown()
+        self.server_thread.join()
 
 
 class SpotifyResponseServer(BaseHTTPRequestHandler):
-    key: str
+    key: bytes
+    tk_cred: tk.RefreshingCredentials
     bot: irc3.IrcBot
     seen: Set[str] = set()
 

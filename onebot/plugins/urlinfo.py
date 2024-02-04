@@ -17,7 +17,7 @@ import socket
 import time
 import datetime
 from io import StringIO
-from typing import List, Optional, Tuple
+from typing import List, Optional, Self, Tuple
 from urllib.parse import urlparse, parse_qs
 
 from bs4 import BeautifulSoup
@@ -523,5 +523,5 @@ class UrlInfo(object):
             self.bot.privmsg(target, "{}.".format(" ".join(messages)))
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)

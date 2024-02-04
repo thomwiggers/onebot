@@ -20,7 +20,7 @@ class OneBot(irc3.IrcBot):
         self.defaults["userinfo"] = "IRC bot in python"
         self.defaults["cmdchar"] = "."
         self.defaults["url"] = "https://github.com/thomwiggers/OneBot/"
-        self.defaults["ctcp"]["version"] = "OneBot {version}"
+        self.defaults["ctcp"]["version"] = "OneBot {version}"  # type: ignore
         self.defaults["version"] = __version__
 
         if "locale" in kwargs:
@@ -49,12 +49,12 @@ def run(argv=None):  # pragma: no cover
     from irc3 import utils, config
 
     args = argv or sys.argv[1:]
-    args = docopt.docopt(textwrap.dedent(run.__doc__), args)
+    args = docopt.docopt(textwrap.dedent(run.__doc__), args)  # type: ignore
     cfg = utils.parse_config("bot", *args["<config>"])
     cfg.update(verbose=args["--verbose"], debug=args["--debug"])
 
-    if args["--logdir"] or "logdir" in cfg:
-        logdir = os.path.expanduser(args["--logdir"] or cfg.get("logdir"))
+    if (logdir := (args["--logdir"] or cfg.get("logdir"))) is not None:
+        logdir = os.path.expanduser(logdir)
         OneBot.logging_config = config.get_file_config(logdir)
 
     bot = OneBot.from_config(cfg)

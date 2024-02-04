@@ -14,6 +14,7 @@ Config options:
 import asyncio
 from collections import defaultdict
 import hashlib
+from typing import Self
 
 from irc3 import rfc, plugin
 from irc3.dec import event
@@ -77,5 +78,5 @@ class PSAPlugin(object):
         user.set_setting("last_line_num", num)
 
     @classmethod
-    def reload(cls, old):
+    def reload(cls, old: Self) -> Self:
         return cls(old.bot)

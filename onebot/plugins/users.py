@@ -13,7 +13,18 @@ from __future__ import unicode_literals, print_function
 import ast
 import asyncio
 import re
-from typing import Any, Dict, List, Optional, Set
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Self,
+    Set,
+)
 
 import irc3
 from irc3.plugins.storage import Storage
@@ -23,11 +34,17 @@ from irc3.utils import IrcString
 class User(object):
     """User object"""
 
-    def __init__(self, mask, channels: List[str], id_, database=None):
+    def __init__(
+        self,
+        mask: IrcString,
+        channels: Iterable[str],
+        id_: Callable[[], Awaitable[str]],
+        database=None,
+    ):
         self.nick = mask.nick
         self.host = mask.host
         self.channels: Set[str] = set()
-        self.id = id_
+        self.id: Callable[[], Awaitable[str]] = id_
         self.database: Optional[Storage] = database
         try:
             if isinstance(channels, str):
@@ -47,16 +64,16 @@ class User(object):
             raise Exception("No database set for this user.")
         return self.database
 
-    def set_settings(self, settings):
+    def set_settings(self, settings) -> None:
         """Replaces the settings with the provided dictionary"""
 
-        async def wrapper():
+        async def wrapper() -> None:
             id_ = await self.id()
             self._get_database()[id_] = settings
 
         asyncio.ensure_future(wrapper())
 
-    def set_setting(self, setting: str, value: Any):
+    def set_setting(self, setting: str, value: Any) -> None:
         """Set a specified setting to a value"""
         print("Trying to set %s to %s" % (setting, value))
 
@@ -69,7 +86,7 @@ class User(object):
     async def get_settings(self) -> Dict[str, Any]:
         """Get this users settings"""
         id_ = await self.id()
-        return self._get_database().get(id_, dict())
+        return self._get_database().get(id_, dict())  # type: ignore
 
     async def get_setting(self, setting, default=None) -> Any:
         """Gets a setting for the users. Can be any type."""
@@ -128,30 +145,35 @@ class UsersPlugin(object):
         """Initialises the plugin"""
         self.bot = bot
         config = bot.config.get(__name__, {})
-        self.identifying_method = config.get("identify_by", "mask")
+        method = config.get("identify_by", "mask")
+        if method not in ("mask", "nickserv", "whatcd"):
+            raise Exception(
+                "Invalid configuration: UsersPlugin.identifying_method invalid"
+            )
+        self.identifying_method: Literal["mask", "nickserv", "whatcd"] = method
         self.log = bot.log.getChild(__name__)
         self.connection_lost()
 
     @irc3.extend
-    def get_user(self, nick):
+    def get_user(self, nick: str):
         user = self.active_users.get(nick)
         if not user:
             self.log.warning("Couldn't find %s!", nick)
         return user
 
     @irc3.event(irc3.rfc.JOIN_PART_QUIT)
-    def on_join_part_quit(self, mask=None, **kwargs):
+    def on_join_part_quit(self, mask: IrcString, **kwargs):
         event = kwargs["event"]
         self.log.debug("%s %sed", mask.nick, event.lower())
         getattr(self, event.lower())(mask.nick, mask, **kwargs)
 
     @irc3.event(irc3.rfc.KICK)
-    def on_kick(self, mask=None, target=None, **kwargs):
+    def on_kick(self, mask: IrcString, target: IrcString, **kwargs):
         self.log.debug("%s kicked %s", mask.nick, target.nick)
         self.part(target.nick, target, **kwargs)
 
     @irc3.event(irc3.rfc.NEW_NICK)
-    def on_new_nick(self, nick=None, new_nick=None, **kwargs):
+    def on_new_nick(self, nick: IrcString, new_nick: IrcString, **kwargs):
         self.log.debug("%s renamed to %s", nick.nick, new_nick)
         if nick.nick in self.active_users:
             user = self.active_users[nick.nick]
@@ -160,10 +182,16 @@ class UsersPlugin(object):
             self.active_users[new_nick] = user
 
     @irc3.event(irc3.rfc.PRIVMSG)
-    def on_privmsg(self, mask=None, event=None, target=None, data=None):
+    def on_privmsg(
+        self,
+        mask: IrcString,
+        event: Literal["PRIVMSG", "NOTICE"],
+        target: IrcString,
+        data=None,
+    ):
         if target not in self.channels:
             return
-        if mask.nick not in self.active_users:
+        if mask.is_nick and mask.nick not in self.active_users:
             self.log.debug("Found user %s via PRIVMSG", mask.nick)
             self.active_users[mask.nick] = self.create_user(mask, [target])
         else:
@@ -173,7 +201,7 @@ class UsersPlugin(object):
         self.channels = set()
         self.active_users = dict()
 
-    def join(self, nick, mask, channel=None, **kwargs):
+    def join(self, nick: IrcString, mask: IrcString, channel: IrcString, **kwargs):
         self.log.debug("%s joined channel %s", nick, channel)
         # This can only be observed if we're in that channel
         self.channels.add(channel)
@@ -210,9 +238,31 @@ class UsersPlugin(object):
             self.log.debug("Lost %s out of sight", mask.nick)
             del self.active_users[nick]
 
+    @irc3.event(irc3.rfc.RPL_NAMREPLY)
+    def on_names(self, channel: IrcString, data: str, **kwargs):
+        """Initialise channel list and channel.modes"""
+        # possible modes from server
+        statusmsg = self.bot.server_config["STATUSMSG"]
+        nicknames = data.split(" ")
+        if channel not in self.channels:
+            self.log.warning("I got NAMES for a channel I'm not in: %", channel)
+            return
+        for item in nicknames:
+            nick = item.strip(statusmsg)
+            if nick not in self.active_users:
+                # We don't have the mask here, so skip setting up the user
+                continue
+            self.active_users[nick].join(channel)
+
     @irc3.event(irc3.rfc.RPL_WHOREPLY)
     def on_who(
-        self, channel=None, nick=None, username=None, host=None, server=None, **kwargs
+        self,
+        channel: IrcString,
+        nick: IrcString,
+        username=None,
+        host=None,
+        server=None,
+        **kwargs
     ):
         """Process a WHO reply since it could contain new information.
 
@@ -232,17 +282,19 @@ class UsersPlugin(object):
         else:
             self.active_users[nick].join(channel)
 
-    def create_user(self, mask, channels):
+    def create_user(self, mask: IrcString, channels: Iterable[str | IrcString]):
         """Return a User object"""
         if self.identifying_method == "mask":
 
-            async def id_func():
+            async def mask_id_func() -> str:
+                assert mask.host is not None
                 return mask.host
 
-            return User(mask, channels, id_func, self.bot.db)
+            return User(mask, channels, mask_id_func, self.bot.db)
         if self.identifying_method == "nickserv":
 
-            async def get_account():
+            async def get_account() -> str:
+                assert mask.nick is not None
                 user = self.get_user(mask.nick)
                 if hasattr(user, "account"):
                     return user.account
@@ -251,12 +303,14 @@ class UsersPlugin(object):
                     user.account = str(result["account"])
                     return user.account
                 else:
+                    assert mask.host is not None
                     return mask.host
 
             return User(mask, channels, get_account, self.bot.db)
         if self.identifying_method == "whatcd":
 
             async def id_func():
+                assert mask.host is not None
                 match = re.match(r"^\d+@(.*)\.\w+\.what\.cd", mask.host.lower())
                 if match:
                     return match.group(1)
@@ -272,10 +326,11 @@ class UsersPlugin(object):
             raise ValueError("A valid identifying method should be configured")
 
     @classmethod
-    def reload(cls, old):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         users = old.active_users
         newinstance = cls(old.bot)
         for user in users.values():
             user.database = newinstance.bot.db
         newinstance.channels = old.channels
-        newinstance.users = users
+        newinstance.active_users = users
+        return newinstance

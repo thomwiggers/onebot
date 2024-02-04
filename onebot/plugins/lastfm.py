@@ -23,7 +23,7 @@ Usage::
 
 """
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, LiteralString, Self
 
 import irc3
 import lastfm.exceptions
@@ -233,11 +233,11 @@ class LastfmPlugin(object):
             info["loved"] = bool(int(api_result["userloved"]))
 
     @classmethod
-    def reload(cls, old: irc3.IrcBot):  # pragma: no cover
+    def reload(cls, old: Self) -> Self:  # pragma: no cover
         return cls(old.bot)
 
 
-def _time_ago(time: datetime):
+def _time_ago(time: datetime) -> LiteralString:
     """Represent time past as a friendly string"""
     time_ago = datetime.utcnow() - time
     timestr = []
