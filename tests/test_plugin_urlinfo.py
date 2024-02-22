@@ -14,6 +14,7 @@ import time
 import unittest
 from unittest.mock import MagicMock
 from pathlib import Path
+import os
 
 from onebot.testing import BotTestCase
 from onebot.plugins.urlinfo import _find_urls
@@ -111,6 +112,7 @@ class UrlInfoTestCase(BotTestCase):
         self.assertLess(100, len(" ".join(result)), "text too short")
         self.assertGreater(320, len(" ".join(result)), "text too long")
 
+    @unittest.skipIf("CI" in os.environ, "Unreliable")
     def test_twitter(self):
         self.assertEqual(self.plugin.twitter_bearer_token, "foo")
         if "TWITTER_BEARER_TOKEN" not in os.environ:
@@ -154,6 +156,7 @@ class UrlInfoTestCase(BotTestCase):
                     result = self.plugin._process_url(session, url)
                     self.assertEqual(" ".join(result), expected)
 
+    @unittest.skipIf("CI" in os.environ, "Unreliable")
     def test_reddit(self):
         with requests.Session() as session:
             session.headers.update(
