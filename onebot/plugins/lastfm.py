@@ -237,7 +237,7 @@ class LastfmPlugin(object):
         return cls(old.bot)
 
 
-def _time_ago(time: datetime) -> LiteralString:
+def _time_ago(time: datetime) -> str:
     """Represent time past as a friendly string"""
     time_ago = datetime.utcnow() - time
     timestr = []
