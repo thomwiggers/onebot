@@ -369,7 +369,7 @@ class UrlInfo(object):
 
                 self.log.debug("File size: {}".format(repr(size)))
                 if not response.ok:
-                    message.append("error:")
+                    message.append(f"error: HTTP {response.status_code}")
                     message.append(response.reason.lower())
                 elif size < 0:
                     message.append("Safety error: unknown size, not reading")
