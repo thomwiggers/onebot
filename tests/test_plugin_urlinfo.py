@@ -10,7 +10,6 @@ Tests for urlinfo module.
 
 import os.path
 import logging
-import time
 import unittest
 from unittest.mock import MagicMock
 from pathlib import Path
@@ -112,66 +111,34 @@ class UrlInfoTestCase(BotTestCase):
         self.assertLess(100, len(" ".join(result)), "text too short")
         self.assertGreater(320, len(" ".join(result)), "text too long")
 
-    @unittest.skipIf("CI" in os.environ, "Unreliable")
     def test_twitter(self):
-        self.assertEqual(self.plugin.twitter_bearer_token, "foo")
-        if "TWITTER_BEARER_TOKEN" not in os.environ:
-            raise unittest.SkipTest("no twitter api key")
-        self.plugin.twitter_bearer_token = os.environ["TWITTER_BEARER_TOKEN"]
         with requests.Session() as session:
-            for url, expected in [
-                (
-                    "https://twitter.com/jack/status/20",
-                    "jack⚡️ (@jack ✅): just setting up my twttr",
-                ),
-                (
-                    "https://mobile.twitter.com/jack/status/20",
-                    "jack⚡️ (@jack ✅): just setting up my twttr",
-                ),
-                (
-                    "https://twitter.com/Hyves",
-                    "Hyves Games (@Hyves) — Stel hier je vragen aan de Support afdeling van Hyves Games en volg ons voor updates! Volg @hyves voor nieuws over de website.",
-                ),
-                (
-                    "https://twitter.com/realdonaldtrump/",
-                    "Error: User has been suspended: [realdonaldtrump].",
-                ),
-                (
-                    "https://twitter.com/thomwigggers",
-                    "Error: Could not find user with username: [thomwigggers].",
-                ),
-                (
-                    "https://twitter.com/Twitter/status/1278763679421431809",
-                    "Twitter (@Twitter ✅): You can have an edit button when everyone wears a mask",
-                ),
-                (
-                    "https://twitter.com/Twitter/status/1274087694105075714",
-                    "Twitter (@Twitter ✅): @Twitter 📍 New York City 🗣️ @Afrikkana95 https://t.co/tEfs27p7xu",
-                ),
-                ("https://twitter.com/Twitter/status/13", "Tweet not found."),
-                # we don't match this one because otherwise we can be an ID tweet oracle
-                ("https://twitter.com/i/web/status/1440605916642959371", "Twitter"),
+            for url in [
+                "https://twitter.com/jack/status/20",
+                "https://mobile.twitter.com/jack/status/20",
+                "https://twitter.com/Hyves",
+                "https://twitter.com/realdonaldtrump/",
+                "https://twitter.com/thomwigggers",
+                "https://twitter.com/Twitter/status/1278763679421431809",
+                "https://twitter.com/Twitter/status/1274087694105075714",
+                "https://twitter.com/Twitter/status/13",
+                "https://twitter.com/i/web/status/1440605916642959371",
+                "https://x.com/",
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)
-                    self.assertEqual(" ".join(result), expected)
+                    self.assertEqual(
+                        " ".join(result), "Twitter (or as Elon would insist, X)"
+                    )
 
-    @unittest.skipIf("CI" in os.environ, "Unreliable")
+    @unittest.skipIf("praw_client_id" not in os.environ, "No credentials provided")
     def test_reddit(self):
         with requests.Session() as session:
-            session.headers.update(
-                {
-                    "User-Agent": (
-                        "linux:onebot:1 by DutchDudeWCD " "(Compatible: curl/7.61)"
-                    ),
-                    "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
-                }
-            )
             for url, expected in [
                 ("https://reddit.com/u/DutchDudeWCD", "/u/DutchDudeWCD on Reddit"),
                 (
                     "https://www.reddit.com/r/crypto/comments/7jrba2/crypto_is_not_cryptocurrency/",
-                    "/r/crypto: Crypto is not cryptocurrency",
+                    "/r/crypto: “Crypto is not cryptocurrency” by /u/davidw_-",
                 ),
                 (
                     "https://www.reddit.com/r/crypto/comments/5vqe47/announcing_the_first_sha1_collision/de3ywos/?context=3",
@@ -181,6 +148,4 @@ class UrlInfoTestCase(BotTestCase):
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)
                     result = " ".join(result)
-                    if "Reddit refused to give data." in result:
-                        raise unittest.SkipTest(result)
                     self.assertEqual(result, expected)
