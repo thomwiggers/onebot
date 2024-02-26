@@ -175,12 +175,13 @@ class UrlInfo(object):
 
         self.praw = None
         if "praw_client_id" in os.environ and "praw_client_secret" in os.environ:
-            self.praw = praw.Reddit(user_agent=USER_AGENT_STRING)
+            self.praw = praw.Reddit(user_agent=USER_AGENT_STRING, check_for_async=False)
         if reddit_client_id is not None and reddit_client_secret is not None:
             self.praw = praw.Reddit(
                 client_id=reddit_client_id,
                 client_secret=reddit_client_secret,
                 user_agent=USER_AGENT_STRING,
+                check_for_async=False,
             )
 
         # URL processors
@@ -270,7 +271,7 @@ class UrlInfo(object):
                 ]
             except prawcore.exceptions.NotFound:
                 return ["Comment not found"]
-            except praw.exceptions.PRAWException:
+            except praw.exceptions.InvalidURL:
                 pass
 
             try:
