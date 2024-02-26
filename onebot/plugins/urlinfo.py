@@ -178,7 +178,9 @@ class UrlInfo(object):
             self.praw = praw.Reddit(user_agent=USER_AGENT_STRING)
         if reddit_client_id is not None and reddit_client_secret is not None:
             self.praw = praw.Reddit(
-                client_id=reddit_client_id, client_secret=reddit_client_secret
+                client_id=reddit_client_id,
+                client_secret=reddit_client_secret,
+                user_agent=USER_AGENT_STRING,
             )
 
         # URL processors
