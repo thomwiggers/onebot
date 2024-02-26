@@ -131,6 +131,7 @@ REDDIT_USER_PATTERN = re.compile(r"^/u(?:ser)?/(?P<user>[^/]+)/?$")
 # User agent for PRAW
 USER_AGENT_STRING = "OneBot by /u/DutchDudeWCD"
 
+
 @plugin
 class UrlInfo(object):
     """Bot User Interface plugin
@@ -156,7 +157,9 @@ class UrlInfo(object):
         self.config = bot.config.get(__name__, {})
         self.log: logging.Logger = self.bot.log.getChild(__name__)
         cookiejar_file = self.config.get("cookiejar")
-        self.ignored_classes: list[str] = self.config.get("ignored_classes", ["image", "text"])
+        self.ignored_classes: list[str] = self.config.get(
+            "ignored_classes", ["image", "text"]
+        )
         self.ignored_apps: list[str] = self.config.get("ignored_apps", ["pdf"])
         self.ignored_channels: list[str] = self.config.get("ignored_channels", [])
         self.ignored_nicks: list[str] = self.config.get("ignored_nicks", [])
@@ -172,9 +175,11 @@ class UrlInfo(object):
 
         self.praw = None
         if "praw_client_id" in os.environ and "praw_client_secret" in os.environ:
-           self.praw=praw.Reddit(user_agent=USER_AGENT_STRING)
+            self.praw = praw.Reddit(user_agent=USER_AGENT_STRING)
         if reddit_client_id is not None and reddit_client_secret is not None:
-            self.praw = praw.Reddit(client_id=reddit_client_id, client_secret=reddit_client_secret)
+            self.praw = praw.Reddit(
+                client_id=reddit_client_id, client_secret=reddit_client_secret
+            )
 
         # URL processors
         self.url_processors: List[Callable[..., Optional[list[str]]]] = [
@@ -254,7 +259,13 @@ class UrlInfo(object):
                 # Separately parse so that we prevent the not-found error
                 comment_id = praw.models.Comment.id_from_url(url)
                 comment = self.praw.comment(comment_id)
-                return [f"/{comment.submission.subreddit.display_name_prefixed}", "comment by", comment.author.name, "on", f"“{comment.submission.title}”"]
+                return [
+                    f"/{comment.submission.subreddit.display_name_prefixed}",
+                    "comment by",
+                    comment.author.name,
+                    "on",
+                    f"“{comment.submission.title}”",
+                ]
             except prawcore.exceptions.NotFound:
                 return ["Comment not found"]
             except praw.exceptions.PRAWException:
@@ -264,7 +275,12 @@ class UrlInfo(object):
                 # Separately parse so that we prevent the not-found error
                 submission_id = praw.models.Submission.id_from_url(url)
                 submission = self.praw.submission(submission_id)
-                return [f"/{submission.subreddit.display_name_prefixed}:", f"“{submission.title}”", "by", f"/u/{submission.author}"]
+                return [
+                    f"/{submission.subreddit.display_name_prefixed}:",
+                    f"“{submission.title}”",
+                    "by",
+                    f"/u/{submission.author}",
+                ]
             except prawcore.exceptions.NotFound:
                 return ["Subreddit not found"]
             except praw.exceptions.InvalidURL:
@@ -278,7 +294,6 @@ class UrlInfo(object):
         except prawcore.exceptions.PrawcoreException as e:
             self.log.exception("Reddit error")
             return ["Some exception occurred", str(e)]
-
 
     def _process_url_twitter(self, session: requests.Session, url, **kwargs):
         """Skip twitter urls because they're no longer useful"""
