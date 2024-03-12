@@ -15,12 +15,20 @@ from unittest.mock import MagicMock
 from pathlib import Path
 import os
 
+import betamax
+
 from onebot.testing import BotTestCase
 from onebot.plugins.urlinfo import _find_urls
 
 import requests
 
 from .test_plugin_users import MockDb
+
+from betamax import Betamax
+
+
+with Betamax.configure() as config:
+    config.cassette_library_dir = 'tests/fixtures/cassettes'
 
 
 def mock_requests_get(*args, **kwargs):
@@ -126,10 +134,23 @@ class UrlInfoTestCase(BotTestCase):
                 "https://x.com/",
             ]:
                 with self.subTest(url=url):
-                    result = self.plugin._process_url(session, url)
-                    self.assertEqual(
-                        " ".join(result), "Twitter (or as Elon would insist, X)"
-                    )
+                    with Betamax(session).use_cassette("twitter", record="none"):
+                        result = self.plugin._process_url(session, url)
+                        self.assertEqual(
+                            " ".join(result), "Twitter (or as Elon would insist, X)"
+                        )
+
+    def test_url_nos(self) -> None:
+        with requests.Session() as session:
+            with Betamax(session).use_cassette("test_url_nos"):
+                for (url, expected_title) in [
+                    ("https://nos.nl/l/2512497", "“Renovatie Binnenhof-complex opnieuw duurder, extra kosten 'aanzienlijk'”"),
+                ]:
+                    with self.subTest(url=url):
+                        result = self.plugin._process_url(session, url)
+                        self.assertIsNotNone(result)
+                        title = " ".join(result)
+                        self.assertEqual(title, expected_title)
 
     @unittest.skipIf("praw_client_id" not in os.environ, "No credentials provided")
     def test_reddit(self):

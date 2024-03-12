@@ -348,14 +348,14 @@ class UrlInfo(object):
             )
             return [f"“{title}” ({duration})"]
 
-    def _process_url_default(self, session: requests.Session, url: str, **kwargs):
+    def _process_url_default(self, session: requests.Session, url: str, **kwargs) -> list[str]:
         """Process an URL"""
         message = []
         try:
             with closing(
                 session.get(url, allow_redirects=False, timeout=4, stream=True)
             ) as response:
-                if response.status_code in (301, 302):
+                if response.status_code in (301, 302, 307, 308):
                     if response.next is not None and response.next.url is not None:
                         raise UrlRedirectException(response.next.url)
                 content_type = response.headers.get("Content-Type", "text/html").split(

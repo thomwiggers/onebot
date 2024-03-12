@@ -42,6 +42,9 @@ twine = "*"
 black = "*"
 pytest-xdist = "*"
 
+[tool.poetry.group.dev.dependencies]
+betamax = "^0.9.0"
+
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
