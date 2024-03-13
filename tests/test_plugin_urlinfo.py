@@ -28,7 +28,7 @@ from betamax import Betamax
 
 
 with Betamax.configure() as config:
-    config.cassette_library_dir = 'tests/fixtures/cassettes'
+    config.cassette_library_dir = "tests/fixtures/cassettes"
 
 
 def mock_requests_get(*args, **kwargs):
@@ -143,8 +143,11 @@ class UrlInfoTestCase(BotTestCase):
     def test_url_nos(self) -> None:
         with requests.Session() as session:
             with Betamax(session).use_cassette("test_url_nos"):
-                for (url, expected_title) in [
-                    ("https://nos.nl/l/2512497", "“Renovatie Binnenhof-complex opnieuw duurder, extra kosten 'aanzienlijk'”"),
+                for url, expected_title in [
+                    (
+                        "https://nos.nl/l/2512497",
+                        "“Renovatie Binnenhof-complex opnieuw duurder, extra kosten 'aanzienlijk'”",
+                    ),
                 ]:
                     with self.subTest(url=url):
                         result = self.plugin._process_url(session, url)

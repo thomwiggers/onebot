@@ -348,7 +348,9 @@ class UrlInfo(object):
             )
             return [f"“{title}” ({duration})"]
 
-    def _process_url_default(self, session: requests.Session, url: str, **kwargs) -> list[str]:
+    def _process_url_default(
+        self, session: requests.Session, url: str, **kwargs
+    ) -> list[str]:
         """Process an URL"""
         message = []
         try:
