@@ -343,10 +343,11 @@ class UrlInfo(object):
             except ValueError:
                 return ["Invalid JSON response from YouTube API"]
             title = data["items"][0]["snippet"]["title"]
+            channel = data["items"][0]["snippet"]["channelTitle"]
             duration = timedelta_format(
                 parse_duration(data["items"][0]["contentDetails"]["duration"])
             )
-            return [f"“{title}” ({duration})"]
+            return [f"“{title}” ({duration}) — {channel}"]
 
     def _process_url_default(
         self, session: requests.Session, url: str, **kwargs
