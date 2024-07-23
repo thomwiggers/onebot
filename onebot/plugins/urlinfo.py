@@ -209,7 +209,7 @@ class UrlInfo(object):
                     return result
             except UrlRedirectException as e:
                 if redirects > 10:
-                    return ["Too many redirects."]
+                    return ["Too many redirects"]
                 url = e.next
                 redirects += 1
                 i = 0
@@ -252,11 +252,15 @@ class UrlInfo(object):
         ):
             return
         if self.praw is None:
-            return ["Reddit support is not enabled, API key not provided."]
+            return ["Reddit support is not enabled, API key not provided"]
 
         try:
             if match := REDDIT_USER_PATTERN.match(urlinfo.path):
                 return [f"/u/{match.group(1)} on Reddit"]
+
+            # Don't process media urls: I don't know how
+            if urlinfo.path == "/media":
+                return ["Reddit"]
 
             try:
                 # Separately parse so that we prevent the not-found error
@@ -289,7 +293,7 @@ class UrlInfo(object):
             except praw.exceptions.InvalidURL:
                 pass
 
-            return ["Reddit."]
+            return ["Reddit"]
 
         except praw.exceptions.PRAWException as e:
             self.log.exception("Reddit error")

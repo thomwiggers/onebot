@@ -168,6 +168,10 @@ class UrlInfoTestCase(BotTestCase):
                     "https://www.reddit.com/r/crypto/comments/5vqe47/announcing_the_first_sha1_collision/de3ywos/?context=3",
                     "/r/crypto comment by Natanael_L on “Announcing the first SHA1 collision”",
                 ),
+                (
+                    "https://www.reddit.com/media?url=https%3A%2F%2Fi.redd.it%2Fb0fg70hndd4d1.png",
+                    "",
+                )
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)
