@@ -171,7 +171,7 @@ class UrlInfoTestCase(BotTestCase):
                 (
                     "https://www.reddit.com/media?url=https%3A%2F%2Fi.redd.it%2Fb0fg70hndd4d1.png",
                     "",
-                )
+                ),
             ]:
                 with self.subTest(url=url):
                     result = self.plugin._process_url(session, url)
