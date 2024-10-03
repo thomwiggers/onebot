@@ -311,7 +311,7 @@ class UrlInfo(object):
             or hostname.endswith(".twitter.com")
             or hostname == "x.com"
         ):
-            return ["Twitter (or as Elon would insist, X)"]
+            raise UrlSkipException()
 
     def _process_url_youtube(self, session, url, **kwargs):
         """YouTube URLs don't contain a <title>"""

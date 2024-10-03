@@ -136,9 +136,7 @@ class UrlInfoTestCase(BotTestCase):
                 with self.subTest(url=url):
                     with Betamax(session).use_cassette("twitter", record="none"):
                         result = self.plugin._process_url(session, url)
-                        self.assertEqual(
-                            " ".join(result), "Twitter (or as Elon would insist, X)"
-                        )
+                        self.assertIsNone(result)
 
     def test_url_nos(self) -> None:
         with requests.Session() as session:
