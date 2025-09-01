@@ -36,7 +36,7 @@ redis = "^6"
 praw = "^7.8.1"
 
 [tool.poetry.dev-dependencies]
-freezegun = "^1.5.2"
+freezegun = "^1.5.5"
 pytest = "*"
 twine = "*"
 black = "*"
