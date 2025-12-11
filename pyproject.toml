@@ -35,7 +35,7 @@ dateparser = "^1"
 redis = "^6"
 praw = "^7.8.1"
 
-[tool.poetry.dev-dependencies]
+[poetry.group.dev.dependencies]
 freezegun = "^1.5.5"
 pytest = "*"
 twine = "*"
