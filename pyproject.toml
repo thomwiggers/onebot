@@ -29,10 +29,10 @@ beautifulsoup4 = "^4"
 html5lib = "^1"
 requests = "^2"
 isodate = "^0.7"
-cryptography = "^45"
+cryptography = "^46"
 tekore = "^6"
 dateparser = "^1"
-redis = "^6"
+redis = "^7"
 praw = "^7.8.1"
 
 [tool.poetry.group.dev.dependencies]
