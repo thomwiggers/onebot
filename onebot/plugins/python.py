@@ -29,9 +29,7 @@ class PythonPlugin:
     def __init__(self, bot):
         self.bot = bot
         self.log = bot.log.getChild(__name__)
-        self.sandbox_url = os.environ.get(
-            "PYTHON_SANDBOX_URL", "http://localhost:8080"
-        )
+        self.sandbox_url = os.environ.get("PYTHON_SANDBOX_URL", "http://localhost:8080")
 
     @command(use_shlex=False)
     def py(self, _mask, _target, args):
