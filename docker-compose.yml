@@ -1,0 +1,30 @@
+services:
+  onebot:
+    build: .
+    volumes:
+      - ./config:/config
+    environment:
+      - PYTHON_SANDBOX_URL=http://python-sandbox:8080
+    depends_on:
+      - python-sandbox
+
+  python-sandbox:
+    build: ./python-sandbox
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64k
+    networks:
+      - sandbox_net
+
+networks:
+  sandbox_net:
+    internal: true
