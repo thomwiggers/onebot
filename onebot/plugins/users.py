@@ -262,7 +262,7 @@ class UsersPlugin(object):
         username=None,
         host=None,
         server=None,
-        **kwargs
+        **kwargs,
     ):
         """Process a WHO reply since it could contain new information.
 
