@@ -1,69 +1,83 @@
-[tool.poetry]
+[project]
 name = "onebot"
 version = "2.0.0"
 description = "OneBot is an irc bot based on irc3"
-authors = ["Thom Wiggers <thom@thomwiggers.nl>"]
+authors = [{name = "Thom Wiggers", email = "thom@thomwiggers.nl"}]
 readme = "README.rst"
-license = "BSD-3-Clause"
-repository = "https://github.com/thomwiggers/onebot"
-keywords= ["onebot", "irc"]
+license = {text = "BSD-3-Clause"}
+requires-python = ">=3.11"
+keywords = ["onebot", "irc"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Topic :: Communications :: Chat :: Internet Relay Chat",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-packages = [
-    { include = "onebot" },
+dependencies = [
+    "irc3>=1.1",
+    "lfmh>=1.1.1",
+    "musicbrainzngs>=0.7.1",
+    "beautifulsoup4>=4",
+    "html5lib>=1",
+    "requests>=2",
+    "isodate>=0.7",
+    "cryptography>=46",
+    "tekore>=6",
+    "dateparser>=1",
+    "redis>=7",
+    "praw>=7.8.1",
 ]
 
-[tool.poetry.scripts]
+[project.urls]
+Repository = "https://github.com/thomwiggers/onebot"
+
+[project.scripts]
 onebot = "onebot:run"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-irc3 = "^1.1"
-lfmh = "^1.1.1"
-musicbrainzngs = "^0.7.1"
-beautifulsoup4 = "^4"
-html5lib = "^1"
-requests = "^2"
-isodate = "^0.7"
-cryptography = "^46"
-tekore = "^6"
-dateparser = "^1"
-redis = "^7"
-praw = "^7.8.1"
-
-[tool.poetry.group.dev.dependencies]
-freezegun = "^1.5.5"
-pytest = "*"
-twine = "*"
-black = "*"
-betamax = "*"
+[dependency-groups]
+dev = [
+    "freezegun>=1.5.5",
+    "pytest",
+    "twine",
+    "black",
+    "pytest-xdist",
+    "betamax",
+    "coverage",
+    "pytest-cov",
+]
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["onebot"]
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
 isolated_build = true
-envlist = py38,py39,py310,package
+envlist = py311,py312,py313,py314,package
 
 [testenv]
-whitelist_externals = poetry
+allowlist_externals = uv
 commands =
-    poetry install --no-root -v
-    poetry run pytest
+    uv pip install -e .
+    uv pip install freezegun pytest twine black pytest-xdist betamax coverage pytest-cov
+    pytest
 
 [testenv:package]
 skip_install = True
 deps =
     twine
+    build
 commands =
-    poetry build
+    python -m build
     twine check dist/*
 """
 
