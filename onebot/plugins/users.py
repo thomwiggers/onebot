@@ -170,7 +170,10 @@ class UsersPlugin(object):
 
     @irc3.extend
     def redact_nicks(self, message: str, target: Optional[str] = None) -> str:
-        """Redacts all known nicks in the message"""
+        """Redacts all known nicks in the message.
+
+        If target is provided, only redacts nicks that are in that channel.
+        """
         if target:
             nicks = [n for n, u in self.active_users.items() if target in u.channels]
         else:
