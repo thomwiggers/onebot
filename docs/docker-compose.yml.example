@@ -28,6 +28,12 @@ services:
           cpus: '0.5'
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64k
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     logging:
       driver: "json-file"
       options:
