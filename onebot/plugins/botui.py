@@ -9,7 +9,6 @@ This plugin implements some utility commands.
 Based on http://git.io/v3HVL by gawel
 """
 
-
 from typing import Self
 from irc3.plugins.command import command
 from irc3 import plugin, event

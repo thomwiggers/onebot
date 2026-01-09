@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Main onebot class and the command line runner"""
+
 import locale
 
 import irc3

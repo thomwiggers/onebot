@@ -16,6 +16,7 @@ Usage::
     >>> bot.include('onebot.plugins.wolframalpha')
 
 """
+
 import urllib.parse
 
 import irc3
@@ -81,7 +82,7 @@ class WolframAlphaPlugin(object):
             return "Request timed out"
         except requests.exceptions.RequestException:
             self.log.error(f"Request '{question}' failed")
-            return f"Request failed"
+            return "Request failed"
 
     @classmethod
     def reload(cls, old):  # pragma: no cover

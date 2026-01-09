@@ -22,6 +22,7 @@ Usage::
     >>> bot.include('onebot.plugins.trakt')
 
 """
+
 import asyncio
 from typing import Self
 

@@ -7,6 +7,7 @@ test_onebot_antispam
 
 Tests for antispam module.
 """
+
 from irc3.testing import patch
 from onebot.testing import BotTestCase
 
