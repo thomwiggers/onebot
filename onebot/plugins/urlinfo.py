@@ -578,7 +578,7 @@ class UrlInfo(object):
         if not self._should_process_message(mask, event, target):
             return
 
-        urls = _find_urls(data)
+        urls = list(dict.fromkeys(_find_urls(data)))
         if not urls:
             return
 
@@ -600,8 +600,8 @@ class UrlInfo(object):
     def _process_urls(self, urls: List[str]) -> List[str]:
         """Process a list of URLs and return formatted messages."""
         messages = []
-        for index, url in enumerate(urls, 1):
-            with requests.Session() as session:
+        with requests.Session() as session:
+            for index, url in enumerate(urls, 1):
                 session.headers.update(
                     {
                         "User-Agent": "script:onebot:irc",

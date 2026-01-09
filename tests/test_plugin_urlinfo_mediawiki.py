@@ -124,7 +124,6 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
             )
 
         session.get.side_effect = lambda u, **k: side_effect("GET", u, **k)
-        # session.post.side_effect = lambda u, **k: side_effect("POST", u, **k)
         session.post.return_value = MagicMock(
             ok=True, json=lambda: {"login": {"result": "Success"}}
         )
