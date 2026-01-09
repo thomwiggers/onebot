@@ -6,13 +6,13 @@ on:
     tags: [ 'v*.*.*' ]
     paths:
       - 'python-sandbox/**'
-      - 'docker-compose.yml'
+      - 'docs/docker-compose.yml.example'
       - '.github/workflows/python-sandbox-publish.yml'
   pull_request:
     branches: [ "develop", "master" ]
     paths:
       - 'python-sandbox/**'
-      - 'docker-compose.yml'
+      - 'docs/docker-compose.yml.example'
       - '.github/workflows/python-sandbox-publish.yml'
 
 env:
