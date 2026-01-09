@@ -9,8 +9,8 @@ COPY . /app
 
 RUN pip install --no-cache-dir .
 
-RUN useradd -m onebot
+RUN useradd -m onebot && mkdir /config && chown onebot:onebot /config
 USER onebot
 
 ENTRYPOINT ["onebot"]
-CMD ["--help"]
+CMD ["/config/config.ini"]
