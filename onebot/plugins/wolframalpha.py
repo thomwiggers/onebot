@@ -64,7 +64,7 @@ class WolframAlphaPlugin(object):
                 },
             )
             response.raise_for_status()
-            return f"{mask.nick}: {response.text}"
+            return f"{mask.nick}: {self.bot.redact_nicks(response.text, target=target)}"
         except requests.exceptions.HTTPError as e:
             assert e.response is not None
             if e.response.status_code == 501:

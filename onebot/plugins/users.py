@@ -123,6 +123,13 @@ class User(object):
         return self.nick == other.nick
 
 
+def redact_nick(nick: str) -> str:
+    """Inserts a middle dot after the first character of a nick"""
+    if len(nick) <= 1:
+        return nick
+    return nick[0] + "·" + nick[1:]
+
+
 @irc3.plugin
 class UsersPlugin(object):
     """User management plugin for OneBot
@@ -160,6 +167,33 @@ class UsersPlugin(object):
         if not user:
             self.log.warning("Couldn't find %s!", nick)
         return user
+
+    @irc3.extend
+    def redact_nicks(self, message: str, target: Optional[str] = None) -> str:
+        """Redacts all known nicks in the message"""
+        if target:
+            nicks = [n for n, u in self.active_users.items() if target in u.channels]
+        else:
+            nicks = list(self.active_users.keys())
+
+        if not nicks:
+            return message
+
+        def replace(match):
+            return redact_nick(match.group(0))
+
+        # Sort by length descending to match longest possible nick first
+        nicks.sort(key=len, reverse=True)
+        escaped_nicks = [re.escape(n) for n in nicks if len(n) > 1]
+        if not escaped_nicks:
+            return message
+
+        nick_chars = r"A-Za-z0-9_\\\[\]\{\}^`|-"
+        pattern = re.compile(
+            rf"(?<![{nick_chars}])({'|'.join(escaped_nicks)})(?![{nick_chars}])",
+            re.IGNORECASE,
+        )
+        return pattern.sub(replace, message)
 
     @irc3.event(irc3.rfc.JOIN_PART_QUIT)
     def on_join_part_quit(self, mask: IrcString, **kwargs):

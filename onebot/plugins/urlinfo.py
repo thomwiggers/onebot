@@ -454,7 +454,8 @@ class UrlInfo(object):
             if message:
                 messages.append(" ".join(message))
         if messages:
-            self.bot.privmsg(target, "{}.".format(" ".join(messages)))
+            response = "{}.".format(" ".join(messages))
+            self.bot.privmsg(target, self.bot.redact_nicks(response, target=target))
 
     @classmethod
     def reload(cls, old: Self) -> Self:  # pragma: no cover

@@ -71,7 +71,10 @@ class LastfmPlugin(object):
             target = mask.nick
 
         response = await self.now_playing_response(mask, args)
-        return response
+        if response.startswith(mask.nick):
+            content = response[len(mask.nick) :]
+            return mask.nick + self.bot.redact_nicks(content, target=target)
+        return self.bot.redact_nicks(response, target=target)
 
     @command
     def setuser(self, mask, target, args):
