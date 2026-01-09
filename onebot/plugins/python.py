@@ -51,7 +51,13 @@ class PythonPlugin:
             stderr = data.get("stderr", "")
 
             if stderr:
-                yield f"Error: {stderr[:200]}"
+                lines = stderr.split("\n")
+                if len(lines) > 2:
+                    yield f"Error: {lines[0][:200]}"
+                    yield "Too many error lines returned?"
+                else:
+                    for line in lines:
+                        yield f"Error: {line[:200]}"
                 return
 
             if not stdout:
