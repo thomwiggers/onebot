@@ -21,7 +21,7 @@ import datetime
 import warnings
 from io import StringIO
 from typing import Callable, List, Optional, Self, Tuple
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import urlparse, parse_qs, unquote, ParseResult
 
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 import requests
@@ -94,8 +94,15 @@ def _find_urls(string: str) -> List[str]:
     for match in URL_PATTERN.finditer(string):
         url = match.group(0).rstrip(".,'\"")
         # Strip trailing closing brackets that don't have a matching opening bracket
-        for opening, closing in [("(", ")"), ("[", "]"), ("{", "}"), ("<", ">")]:
-            while url.endswith(closing) and url.count(closing) > url.count(opening):
+        for opening, closing_bracket in [
+            ("(", ")"),
+            ("[", "]"),
+            ("{", "}"),
+            ("<", ">"),
+        ]:
+            while url.endswith(closing_bracket) and url.count(
+                closing_bracket
+            ) > url.count(opening):
                 url = url[:-1]
 
         urls.append(url)
@@ -384,7 +391,7 @@ class UrlInfo(object):
 
         return None
 
-    def _mediawiki_get_title(self, parsed_url: urlparse) -> Optional[str]:
+    def _mediawiki_get_title(self, parsed_url: ParseResult) -> Optional[str]:
         """Extract MediaWiki page title from URL."""
         title = None
         if "/wiki/" in parsed_url.path:
@@ -417,6 +424,7 @@ class UrlInfo(object):
             if code in ("readapidenied", "badtoken", "mustbeloggedin"):
                 self.log.info("MediaWiki access denied (%s)", code)
                 return None
+            return [f"MediaWiki API error: {code}"]
 
         pages = data.get("query", {}).get("pages", {})
         if not pages:
@@ -430,12 +438,14 @@ class UrlInfo(object):
             extract = page.get("extract", "")
             summary = ""
             if extract:
-                summary = BeautifulSoup(extract, "html.parser").get_text().strip()
+                summary = extract.strip()
                 summary = summary.split("\n")[0]
                 if len(summary) > 50:
                     summary = summary[:49] + "…"
 
-            return [f"“{page_title}”", f"— {summary}"] if summary else [f"“{page_title}”"]
+            return (
+                [f"“{page_title}”", f"— {summary}"] if summary else [f"“{page_title}”"]
+            )
 
         return None
 
@@ -542,9 +552,9 @@ class UrlInfo(object):
         except ValueError:
             class_, app = content_type, ""
 
-        if (
-            class_ in self.ignored_classes or app in self.ignored_apps
-        ) and size < (1048576 * 5):
+        if (class_ in self.ignored_classes or app in self.ignored_apps) and size < (
+            1048576 * 5
+        ):
             return []
 
         return ["Content-Type:", content_type, "Filesize:", sizeof_fmt(size)]
