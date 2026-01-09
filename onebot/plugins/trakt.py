@@ -60,7 +60,12 @@ class TrakttvPlugin(object):
         async def wrap():
             response = await self.now_watching_response(mask, args)
             self.log.debug(response)
-            self.bot.privmsg(target, response)
+            if response.startswith(mask.nick):
+                content = response[len(mask.nick) :]
+                msg = mask.nick + self.bot.redact_nicks(content, target=target)
+            else:
+                msg = self.bot.redact_nicks(response, target=target)
+            self.bot.privmsg(target, msg)
 
         asyncio.ensure_future(wrap())
 

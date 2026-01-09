@@ -91,13 +91,13 @@ class StonksPlugin(object):
         self.config = bot.config.get(__name__, {})
 
     @command
-    def stonk(self, _mask, _target, args):
+    def stonk(self, _mask, target, args):
         """Check the value of your stonks.
 
         %%stonk <symbol>
         """
         symbol = args["<symbol>"]
-        return stonks(symbol)
+        return self.bot.redact_nicks(stonks(symbol), target=target)
 
     @classmethod
     def reload(cls, old: Self) -> Self:  # pragma: no cover

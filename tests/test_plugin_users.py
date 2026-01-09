@@ -172,6 +172,13 @@ class UsersPluginTest(BotTestCase):
         assert self.bot.get_user("bar") is None
         assert self.users.channels == set()
 
+    def test_names(self):
+        self.users.channels.add("#chan")
+        self.bot.dispatch(":server 353 me = #chan :bar bar2 bar3")
+        self.bot.dispatch(":server 366 me #chan :End")
+        # we only add users we know masks for
+        assert len(self.users.active_users) == 0
+
     def test_who(self):
         # Only accept these if we're in that channel
         self.bot.dispatch(":server 352 irc3 #chan ~user host serv bar H@ :hoi")
@@ -211,6 +218,36 @@ class UsersPluginTest(BotTestCase):
     def test_who_on_join(self):
         self.bot.dispatch(":{}!bar@baz JOIN #chan2".format(self.bot.nick))
         self.assertSent(["WHO #chan2"])
+
+    def test_redact_nicks(self):
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+        self.bot.dispatch(":Daan!foo@host JOIN #chan")
+
+        # redact all
+        msg = "Hello bar and Daan"
+        redacted = self.bot.redact_nicks(msg)
+        assert redacted == "Hello b·ar and D·aan"
+
+        # redact for specific channel
+        msg = "Hello bar and Daan"
+        redacted = self.bot.redact_nicks(msg, target="#chan")
+        assert redacted == "Hello b·ar and D·aan"
+
+        # redact for other channel (should be no-op for these nicks)
+        redacted = self.bot.redact_nicks(msg, target="#other")
+        assert redacted == msg
+
+        # test nick with special chars
+        self.bot.dispatch(":[Daan]!foo@host JOIN #chan")
+        msg = "Hello [Daan]"
+        redacted = self.bot.redact_nicks(msg, target="#chan")
+        assert redacted == "Hello [·Daan]"
+
+        # Method itself DOES redact if it's at the start
+        # The plugins now handle the split.
+        msg = "Daan: hello"
+        redacted = self.bot.redact_nicks(msg, target="#chan")
+        assert redacted == "D·aan: hello"
 
 
 class UserObjectTest(unittest.IsolatedAsyncioTestCase):

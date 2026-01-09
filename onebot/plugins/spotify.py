@@ -95,20 +95,24 @@ class SpotifyPlugin(object):
             track = currently_playing.item
             artists = ", ".join(artist.name for artist in track.artists)
             album = track.album
-            response = f"{mask.nick} is playing {artists} - “{track.name}”"
+            response = f"{mask.nick} is playing "
+            content = f"{artists} - “{track.name}”"
             if album.name != track.name:
-                response += f" (“{album.name}”)"
-            response += f" ({album.release_date[:4]})"
-            response += f" ({track.uri})"
-            return response
+                content += f" (“{album.name}”)"
+            content += f" ({album.release_date[:4]})"
+            content += f" ({track.uri})"
+            return response + self.bot.redact_nicks(content, target=target)
         elif playing_type == tk.model.CurrentlyPlayingType.ad:
             return "You're playing an ad!"
         elif playing_type == tk.model.CurrentlyPlayingType.episode:
             episode = currently_playing.item
-            response = f"{mask.nick} is listening to episode “{episode.name}” from “{episode.show.name}”"
-            return response
+            response = f"{mask.nick} is listening to "
+            content = f"episode “{episode.name}” from “{episode.show.name}”"
+            return response + self.bot.redact_nicks(content, target=target)
         else:
-            return f"{mask.nick} is listening to something, but I don't know what (type: {playing_type})"
+            response = f"{mask.nick} is listening to "
+            content = f"something, but I don't know what (type: {playing_type})"
+            return response + self.bot.redact_nicks(content, target=target)
 
     async def get_spotify_token(self, nick):
         user = self.bot.get_user(nick)
