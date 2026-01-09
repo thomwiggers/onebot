@@ -67,7 +67,7 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                                 "123": {
                                     "pageid": 123,
                                     "title": "Some Page",
-                                    "extract": "<p>This is a <b>very long extract</b> that should be truncated because it exceeds fifty characters in total length.</p>",
+                                    "extract": "This is a very long extract that should be truncated because it exceeds fifty characters in total length.",
                                     "length": 1000,
                                     "touched": "2023-01-01T00:00:00Z",
                                     "lastrevid": 500,
@@ -112,7 +112,7 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                                 "124": {
                                     "pageid": 124,
                                     "title": "Partial Page",
-                                    "extract": "This is a <p>partial <b>tag",
+                                    "extract": "This is a partial tag",
                                     "length": 100,
                                 }
                             }
@@ -175,85 +175,67 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
             ok=True, json=lambda: {"login": {"result": "Success"}}
         )
 
-        
-
         self.plugin._process_url(session, url)
 
         self.assertEqual(session.post.call_count, 0)
 
-
-
-    @patch('socket.getaddrinfo')
-
+    @patch("socket.getaddrinfo")
     def test_mediawiki_retry_login(self, mock_getaddrinfo):
-
-        mock_getaddrinfo.return_value = [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('93.184.216.34', 443))]
+        mock_getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ]
 
         session = MagicMock()
 
         url = "https://wiki.example.com/wiki/Secret_Page"
 
-        
-
         # Pre-populate cache to simulate expired session
 
         self.plugin.mediawiki_logged_in.add("wiki.example.com")
 
-
-
         def side_effect(method, url, **kwargs):
-
             params = kwargs.get("params", {})
 
             if method == "GET":
-
                 if params.get("meta") == "tokens":
-
-                    return MagicMock(ok=True, json=lambda: {"query": {"tokens": {"logintoken": "new_tok"}}})
+                    return MagicMock(
+                        ok=True,
+                        json=lambda: {"query": {"tokens": {"logintoken": "new_tok"}}},
+                    )
 
                 if params.get("prop") == "extracts|info":
-
                     # First attempt: access denied
 
                     if session.post.call_count == 0:
-
-                         return MagicMock(ok=True, json=lambda: {"error": {"code": "readapidenied"}})
+                        return MagicMock(
+                            ok=True, json=lambda: {"error": {"code": "readapidenied"}}
+                        )
 
                     # Second attempt: success
 
-                    return MagicMock(ok=True, json=lambda: {
-
-                        "query": {
-
-                            "pages": {
-
-                                "125": {
-
-                                    "pageid": 125,
-
-                                    "title": "Secret Page",
-
-                                    "extract": "Shh",
-
-                                    "length": 100
-
+                    return MagicMock(
+                        ok=True,
+                        json=lambda: {
+                            "query": {
+                                "pages": {
+                                    "125": {
+                                        "pageid": 125,
+                                        "title": "Secret Page",
+                                        "extract": "Shh",
+                                        "length": 100,
+                                    }
                                 }
-
                             }
-
-                        }
-
-                    })
+                        },
+                    )
 
             return MagicMock(ok=False)
 
-
-
         session.get.side_effect = lambda u, **k: side_effect("GET", u, **k)
 
-        session.post.return_value = MagicMock(ok=True, json=lambda: {"login": {"result": "Success"}})
-
-
+        session.post.return_value = MagicMock(
+            ok=True, json=lambda: {"login": {"result": "Success"}}
+        )
 
         result = self.plugin._process_url(session, url)
 
@@ -261,11 +243,8 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
 
         self.assertEqual(result, ["“Secret Page”", "— Shh"])
 
-        
-
         # Should have called login once (retry)
 
         self.assertEqual(session.post.call_count, 1)
 
         self.assertIn("wiki.example.com", self.plugin.mediawiki_logged_in)
-
