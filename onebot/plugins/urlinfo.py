@@ -174,6 +174,7 @@ class UrlInfo(object):
 
         self.urlmap = self.bot.config.get(__name__ + ".urlmap", {})
         self.mediawiki_sites = self.config.get("mediawiki_sites", {})
+        self.mediawiki_logged_in = set()
 
         self.praw = None
         if "praw_client_id" in os.environ and "praw_client_secret" in os.environ:
@@ -371,9 +372,14 @@ class UrlInfo(object):
 
         # Login if needed
         if "username" in site_config and "password" in site_config:
-            self._mediawiki_login(
-                session, api_url, site_config["username"], site_config["password"]
-            )
+            if hostname not in self.mediawiki_logged_in:
+                self._mediawiki_login(
+                    session,
+                    api_url,
+                    site_config["username"],
+                    site_config["password"],
+                    hostname,
+                )
 
         # Fetch Info
         # We need the page title.
@@ -437,7 +443,7 @@ class UrlInfo(object):
             self.log.error("MediaWiki error: %s", e)
             return None
 
-    def _mediawiki_login(self, session, api_url, username, password):
+    def _mediawiki_login(self, session, api_url, username, password, hostname):
         # 1. Get Token
         try:
             r = session.get(
@@ -469,7 +475,8 @@ class UrlInfo(object):
             r.raise_for_status()
             login_result = r.json().get("login", {}).get("result")
             if login_result == "Success":
-                self.log.debug("Logged in to MediaWiki %s", api_url)
+                self.log.info("Logged in to MediaWiki %s", api_url)
+                self.mediawiki_logged_in.add(hostname)
                 # Update self.cookiejar to persist?
                 if self.cookiejar:
                     self.cookiejar.update(session.cookies)
