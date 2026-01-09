@@ -221,33 +221,33 @@ class UsersPluginTest(BotTestCase):
 
     def test_redact_nicks(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
-        self.bot.dispatch(":Daan!foo@host JOIN #chan")
+        self.bot.dispatch(":baz!foo@host JOIN #chan")
 
         # redact all
-        msg = "Hello bar and Daan"
+        msg = "Hello bar and baz"
         redacted = self.bot.redact_nicks(msg)
-        assert redacted == "Hello b·ar and D·aan"
+        assert redacted == "Hello b·ar and b·az"
 
         # redact for specific channel
-        msg = "Hello bar and Daan"
+        msg = "Hello bar and baz"
         redacted = self.bot.redact_nicks(msg, target="#chan")
-        assert redacted == "Hello b·ar and D·aan"
+        assert redacted == "Hello b·ar and b·az"
 
         # redact for other channel (should be no-op for these nicks)
         redacted = self.bot.redact_nicks(msg, target="#other")
         assert redacted == msg
 
         # test nick with special chars
-        self.bot.dispatch(":[Daan]!foo@host JOIN #chan")
-        msg = "Hello [Daan]"
+        self.bot.dispatch(":[baz]!foo@host JOIN #chan")
+        msg = "Hello [baz]"
         redacted = self.bot.redact_nicks(msg, target="#chan")
-        assert redacted == "Hello [·Daan]"
+        assert redacted == "Hello [·baz]"
 
         # Method itself DOES redact if it's at the start
         # The plugins now handle the split.
-        msg = "Daan: hello"
+        msg = "baz: hello"
         redacted = self.bot.redact_nicks(msg, target="#chan")
-        assert redacted == "D·aan: hello"
+        assert redacted == "b·az: hello"
 
 
 class UserObjectTest(unittest.IsolatedAsyncioTestCase):
