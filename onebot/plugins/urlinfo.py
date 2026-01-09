@@ -21,7 +21,7 @@ import datetime
 import warnings
 from io import StringIO
 from typing import Callable, List, Optional, Self, Tuple
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
 
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 import requests
@@ -173,6 +173,7 @@ class UrlInfo(object):
                 self.cookiejar = pickle.load(f)
 
         self.urlmap = self.bot.config.get(__name__ + ".urlmap", {})
+        self.mediawiki_sites = self.config.get("mediawiki_sites", {})
 
         self.praw = None
         if "praw_client_id" in os.environ and "praw_client_secret" in os.environ:
@@ -191,6 +192,7 @@ class UrlInfo(object):
             self._process_url_urlmap,
             self._process_url_twitter,
             self._process_url_reddit,
+            self._process_url_mediawiki,
             self._process_url_youtube,
             self._process_url_default,
         ]
@@ -354,6 +356,132 @@ class UrlInfo(object):
             )
             return [f"“{title}” ({duration}) — {channel}"]
 
+    def _process_url_mediawiki(
+        self, session: requests.Session, url: str, **kwargs
+    ) -> Optional[list[str]]:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if hostname not in self.mediawiki_sites:
+            return None
+
+        site_config = self.mediawiki_sites[hostname]
+        api_url = site_config.get("api_url")
+        if not api_url:
+            return None
+
+        # Login if needed
+        if "username" in site_config and "password" in site_config:
+            self._mediawiki_login(
+                session, api_url, site_config["username"], site_config["password"]
+            )
+
+        # Fetch Info
+        # We need the page title.
+        # Handle /wiki/Title
+        title = None
+        if "/wiki/" in parsed.path:
+            title = parsed.path.split("/wiki/", 1)[1]
+
+        # Handle /w/index.php?title=Title
+        if not title:
+            query = parse_qs(parsed.query)
+            if "title" in query:
+                title = query["title"][0]
+
+        if not title:
+            return None
+
+        if "/wiki/" in parsed.path:
+            title = unquote(title)
+
+        params = {
+            "action": "query",
+            "prop": "extracts|info",
+            "exintro": True,
+            "explaintext": True,
+            "titles": title,
+            "format": "json",
+            "redirects": True,  # Follow redirects
+        }
+
+        try:
+            r = session.get(api_url, params=params, timeout=5)
+            r.raise_for_status()
+            data = r.json()
+
+            pages = data.get("query", {}).get("pages", {})
+            if not pages:
+                return ["MediaWiki: Page not found"]
+
+            # pages is a dict id -> page
+            for page_id, page in pages.items():
+                if page_id == "-1":  # Missing
+                    return ["MediaWiki: Page not found"]
+
+                output = []
+                page_title = page.get("title", title)
+                output.append(f"“{page_title}”")
+
+                extract = page.get("extract")
+                if extract:
+                    # Cleanup extract: strip HTML and limit length
+                    summary = BeautifulSoup(extract, "html.parser").get_text().strip()
+                    summary = summary.split("\n")[0]  # First paragraph
+                    if len(summary) > 50:
+                        summary = summary[:49] + "…"
+                    output.append(f"— {summary}")
+
+                return output
+
+        except Exception as e:
+            self.log.error("MediaWiki error: %s", e)
+            return None
+
+    def _mediawiki_login(self, session, api_url, username, password):
+        # 1. Get Token
+        try:
+            r = session.get(
+                api_url,
+                params={
+                    "action": "query",
+                    "meta": "tokens",
+                    "type": "login",
+                    "format": "json",
+                },
+                timeout=5,
+            )
+            r.raise_for_status()
+            data = r.json()
+            login_token = data["query"]["tokens"]["logintoken"]
+
+            # 2. Post Login
+            r = session.post(
+                api_url,
+                data={
+                    "action": "login",
+                    "lgname": username,
+                    "lgpassword": password,
+                    "lgtoken": login_token,
+                    "format": "json",
+                },
+                timeout=5,
+            )
+            r.raise_for_status()
+            login_result = r.json().get("login", {}).get("result")
+            if login_result == "Success":
+                self.log.debug("Logged in to MediaWiki %s", api_url)
+                # Update self.cookiejar to persist?
+                if self.cookiejar:
+                    self.cookiejar.update(session.cookies)
+                else:
+                    self.cookiejar = session.cookies
+            else:
+                self.log.warning(
+                    "Failed to login to MediaWiki %s: %s", api_url, login_result
+                )
+        except Exception as e:
+            self.log.error("MediaWiki login failed: %s", e)
+
     def _process_url_default(
         self, session: requests.Session, url: str, **kwargs
     ) -> list[str]:
@@ -396,13 +524,14 @@ class UrlInfo(object):
                     warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
                     soup = BeautifulSoup(
                         (content or response.content.decode("utf-8", "ignore")),
-                        "html5lib",
+                        "html.parser",
                     )
-                    if soup.title is not None and soup.title.string is not None:
-                        title = soup.title.string.strip()
-                        if len(title) > 320:
-                            title = "{}…".format(title[:310])
-                        message.append("“{}”".format(title))
+                    if soup.title is not None:
+                        title = soup.title.get_text().strip()
+                        if title:
+                            if len(title) > 320:
+                                title = "{}…".format(title[:310])
+                            message.append("“{}”".format(title))
             # endwith
         except requests.exceptions.Timeout:
             self.log.debug("Error while requesting %s", url)
