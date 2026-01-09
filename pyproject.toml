@@ -43,7 +43,6 @@ onebot = "onebot:run"
 dev = [
     "freezegun>=1.5.5",
     "pytest",
-    "twine",
     "ruff",
     "betamax",
     "coverage",
@@ -75,12 +74,8 @@ commands =
 
 [testenv:package]
 skip_install = True
-deps =
-    twine
-    build
 commands =
-    python -m build
-    twine check dist/*
+    uv build
 """
 
 [tool.pytest.ini_options]
