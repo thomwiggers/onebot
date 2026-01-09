@@ -410,38 +410,70 @@ class UrlInfo(object):
             "redirects": True,  # Follow redirects
         }
 
-        try:
-            r = session.get(api_url, params=params, timeout=5)
-            r.raise_for_status()
-            data = r.json()
+        for attempt in range(2):
+            # Login if needed
+            if "username" in site_config and "password" in site_config:
+                if hostname not in self.mediawiki_logged_in:
+                    self._mediawiki_login(
+                        session,
+                        api_url,
+                        site_config["username"],
+                        site_config["password"],
+                        hostname,
+                    )
 
-            pages = data.get("query", {}).get("pages", {})
-            if not pages:
-                return ["MediaWiki: Page not found"]
+            try:
+                r = session.get(api_url, params=params, timeout=5)
+                r.raise_for_status()
+                data = r.json()
 
-            # pages is a dict id -> page
-            for page_id, page in pages.items():
-                if page_id == "-1":  # Missing
+                if "error" in data:
+                    code = data["error"].get("code")
+                    if (
+                        code in ("readapidenied", "badtoken", "mustbeloggedin")
+                        and attempt == 0
+                    ):
+                        self.log.info(
+                            "MediaWiki access denied (%s), retrying login...", code
+                        )
+                        if hostname in self.mediawiki_logged_in:
+                            self.mediawiki_logged_in.remove(hostname)
+                        continue
+
+                pages = data.get("query", {}).get("pages", {})
+                if not pages:
                     return ["MediaWiki: Page not found"]
 
-                output = []
-                page_title = page.get("title", title)
-                output.append(f"“{page_title}”")
+                # pages is a dict id -> page
+                for page_id, page in pages.items():
+                    if page_id == "-1":  # Missing
+                        return ["MediaWiki: Page not found"]
 
-                extract = page.get("extract")
-                if extract:
-                    # Cleanup extract: strip HTML and limit length
-                    summary = BeautifulSoup(extract, "html.parser").get_text().strip()
-                    summary = summary.split("\n")[0]  # First paragraph
-                    if len(summary) > 50:
-                        summary = summary[:49] + "…"
-                    output.append(f"— {summary}")
+                    output = []
+                    page_title = page.get("title", title)
+                    output.append(f"“{page_title}”")
 
-                return output
+                    extract = page.get("extract")
+                    if extract:
+                        # Cleanup extract: strip HTML and limit length
+                        summary = (
+                            BeautifulSoup(extract, "html.parser").get_text().strip()
+                        )
+                        summary = summary.split("\n")[0]  # First paragraph
+                        if len(summary) > 50:
+                            summary = summary[:49] + "…"
+                        output.append(f"— {summary}")
 
-        except Exception as e:
-            self.log.error("MediaWiki error: %s", e)
-            return None
+                    return output
+
+                # Break if successful but no pages found (shouldn't happen with title query)
+                break
+
+            except Exception as e:
+                self.log.error("MediaWiki error: %s", e)
+                return None
+
+        return None
 
     def _mediawiki_login(self, session, api_url, username, password, hostname):
         # 1. Get Token
