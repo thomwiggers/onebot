@@ -2,7 +2,6 @@
 
 import io
 import multiprocessing
-import os
 import resource
 import sys
 
