@@ -50,6 +50,13 @@ def run_user_code(cmd, queue):
 
 
 class SandboxHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        """Handle healthchecks"""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"OK")
+
     def do_POST(self):
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
