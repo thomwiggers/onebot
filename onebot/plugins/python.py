@@ -50,14 +50,23 @@ class PythonPlugin:
             stdout = data.get("stdout", "")
             stderr = data.get("stderr", "")
 
-            if stdout:
-                for line in stdout.split("\n")[:2]:
-                    yield line[:200]
             if stderr:
-                for line in stderr.split("\n")[:2]:
-                    yield f"Error: {line[:200]}"
-            if not stdout and not stderr:
+                yield f"Error: {stderr[:200]}"
+                return
+
+            if not stdout:
                 yield "No output."
+                return
+
+            lines = stdout.split("\n")
+            if len(lines) > 2:
+                self.log.warning("Too many lines for '%s'", cmd)
+                self.log.info("Output: %r", lines)
+                yield "Too many lines returned?"
+                return
+
+            for line in lines:
+                yield line[:200]
 
         except requests.exceptions.RequestException as e:
             self.log.error("Failed to connect to sandbox: %s", e)
