@@ -115,3 +115,31 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
         # Verify calls
         self.assertEqual(session.get.call_count, 2)
         self.assertEqual(session.post.call_count, 1)
+
+    @patch('socket.getaddrinfo')
+    def test_mediawiki_login_caching(self, mock_getaddrinfo):
+        mock_getaddrinfo.return_value = [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('93.184.216.34', 443))]
+        session = MagicMock()
+        url = "https://wiki.example.com/wiki/Some_Page"
+        
+        def side_effect(method, url, **kwargs):
+            params = kwargs.get("params", {})
+            if method == "GET" and params.get("meta") == "tokens":
+                return MagicMock(ok=True, json=lambda: {"query": {"tokens": {"logintoken": "tok"}}})
+            return MagicMock(ok=True, json=lambda: {"query": {"pages": {"1": {"title": "T", "extract": "E"}}}})
+
+        session.get.side_effect = lambda u, **k: side_effect("GET", u, **k)
+        session.post.return_value = MagicMock(ok=True, json=lambda: {"login": {"result": "Success"}})
+
+        # First call: should login
+        self.plugin._process_url(session, url)
+        self.assertEqual(session.post.call_count, 1)
+        self.assertIn("wiki.example.com", self.plugin.mediawiki_logged_in)
+
+        # Second call: should NOT login
+        session.reset_mock()
+        session.get.side_effect = lambda u, **k: side_effect("GET", u, **k)
+        session.post.return_value = MagicMock(ok=True, json=lambda: {"login": {"result": "Success"}})
+        
+        self.plugin._process_url(session, url)
+        self.assertEqual(session.post.call_count, 0)
