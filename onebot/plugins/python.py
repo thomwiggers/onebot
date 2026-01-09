@@ -18,7 +18,8 @@ Config:
 from typing import Self
 import irc3
 from irc3.plugins.command import command
-import subprocess
+import requests
+import os
 
 
 @irc3.plugin
@@ -28,6 +29,9 @@ class PythonPlugin:
     def __init__(self, bot):
         self.bot = bot
         self.log = bot.log.getChild(__name__)
+        self.sandbox_url = os.environ.get(
+            "PYTHON_SANDBOX_URL", "http://localhost:8080"
+        )
 
     @command(use_shlex=False)
     def py(self, _mask, _target, args):
@@ -37,42 +41,29 @@ class PythonPlugin:
         """
         cmd = " ".join(args["<command>"])
         self.log.debug("Command: '%s'", cmd)
-        proc = subprocess.run(
-            [
-                "docker",
-                "run",
-                "--rm",
-                "--read-only",
-                "--security-opt=no-new-privileges:true",
-                "--net=none",
-                "--log-driver=none",
-                "--cap-drop=ALL",
-                "--pids-limit=10",
-                "--memory=50M",
-                "--cpus=0.5",  # CPU shares
-                "--ipc=none",  # inter-process communication (none < priv)
-                "--tmpfs",
-                "/tmp:rw,noexec,nosuid,size=64k",
-                "ghcr.io/thomwiggers/onebot/python-sandbox",
-                cmd,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-        if proc.returncode != 0:
-            self.log.warning("Error when calling docker: '%s'", proc.stderr)
-            yield "Error code {} when calling Docker".format(proc.returncode)
-            return
-        lines = proc.stdout.split("\n")
-        self.log.debug("Received: %s", proc.stdout)
-        if len(lines) > 2:
-            self.log.warning("Too many lines for '%s'", cmd)
-            self.log.info("Output: %r", lines)
-            yield "Too many lines returned?"
-            return
-        for line in lines:
-            yield line[:200]
+        try:
+            response = requests.post(
+                self.sandbox_url,
+                json={"code": cmd},
+                timeout=10,
+            )
+            response.raise_for_status()
+            data = response.json()
+            stdout = data.get("stdout", "")
+            stderr = data.get("stderr", "")
+
+            if stdout:
+                for line in stdout.split("\n")[:2]:
+                    yield line[:200]
+            if stderr:
+                for line in stderr.split("\n")[:2]:
+                    yield f"Error: {line[:200]}"
+            if not stdout and not stderr:
+                yield "No output."
+
+        except requests.exceptions.RequestException as e:
+            self.log.error("Failed to connect to sandbox: %s", e)
+            yield "Error: Could not connect to Python sandbox."
 
     @classmethod
     def reload(cls, old: Self) -> Self:  # pragma: no cover

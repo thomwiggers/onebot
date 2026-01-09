@@ -10,5 +10,7 @@ RUN chmod 555 /src/entrypoint.py
 # Switch to non-root user
 USER nobody:nogroup
 
+EXPOSE 8080
+
 ENTRYPOINT ["/usr/local/bin/python3", "/src/entrypoint.py"]
 CMD []
