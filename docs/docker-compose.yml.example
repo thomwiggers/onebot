@@ -15,6 +15,12 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    pids_limit: 16
+    ulimits:
+      nproc: 64
+      nofile:
+        soft: 64
+        hard: 64
     deploy:
       resources:
         limits:
@@ -22,6 +28,11 @@ services:
           cpus: '0.5'
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64k
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - sandbox_net
 
