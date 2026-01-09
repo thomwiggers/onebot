@@ -45,7 +45,6 @@ dev = [
     "pytest",
     "twine",
     "black",
-    "pytest-xdist",
     "betamax",
     "coverage",
     "pytest-cov",

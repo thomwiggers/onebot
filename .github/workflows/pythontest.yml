@@ -27,7 +27,7 @@ jobs:
         uv sync --all-groups
     - name: Run pytest
       run: |
-        uv run pytest --cov=onebot -nauto
+        uv run pytest --cov=onebot
         uv run coverage lcov
     - name: Run black
       run: |
