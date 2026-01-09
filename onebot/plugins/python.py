@@ -51,7 +51,9 @@ class PythonPlugin:
                 "--memory=50M",
                 "--cpus=0.5",  # CPU shares
                 "--ipc=none",  # inter-process communication (none < priv)
-                "twiggers/python-sandbox",
+                "--tmpfs",
+                "/tmp:rw,noexec,nosuid,size=64k",
+                "ghcr.io/thomwiggers/onebot/python-sandbox",
                 cmd,
             ],
             capture_output=True,
