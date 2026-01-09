@@ -23,7 +23,6 @@ dependencies = [
     "lfmh>=1.1.1",
     "musicbrainzngs>=0.7.1",
     "beautifulsoup4>=4",
-    "html5lib>=1",
     "requests>=2",
     "isodate>=0.7",
     "cryptography>=46",
