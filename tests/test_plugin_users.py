@@ -244,7 +244,6 @@ class UsersPluginTest(BotTestCase):
         assert redacted == "Hello [·baz]"
 
         # Method itself DOES redact if it's at the start
-        # The plugins now handle the split.
         msg = "baz: hello"
         redacted = self.bot.redact_nicks(msg, target="#chan")
         assert redacted == "b·az: hello"
