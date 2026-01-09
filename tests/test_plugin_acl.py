@@ -7,6 +7,7 @@ test_onebot_acl
 
 Tests for ACL module.
 """
+
 import asyncio
 
 from irc3.testing import patch

@@ -23,14 +23,13 @@ Usage::
     >>> bot.include('onebot.plugins.spotify')
 
 """
-import asyncio
+
 from typing import Self, Set
 import irc3
 from irc3.plugins.command import command
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlencode, parse_qs
+from urllib.parse import parse_qs
 import threading
-from functools import partial
 
 from cryptography.fernet import Fernet, InvalidToken
 import tekore as tk

@@ -119,10 +119,7 @@ class ACLPlugin(object):
             if not user:
                 self.bot.privmsg(
                     target,
-                    (
-                        "I don't know {user}. "
-                        "Please use --by-id".format(user=username)
-                    ),
+                    ("I don't know {user}. Please use --by-id".format(user=username)),
                 )
                 return
             current_permissions = await user.get_setting("permissions", [])
