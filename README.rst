@@ -2,8 +2,8 @@
 OneBot
 ===============================
 
-.. image:: https://travis-ci.org/thomwiggers/onebot.png?branch=develop
-        :target: https://travis-ci.org/thomwiggers/onebot
+.. image:: https://github.com/thomwiggers/onebot/actions/workflows/pythontest.yml/badge.svg
+        :target: https://github.com/thomwiggers/onebot/actions/workflows/pythontest.yml
 
 .. image:: https://coveralls.io/repos/thomwiggers/onebot/badge.png?branch=develop
         :target: https://coveralls.io/r/thomwiggers/onebot 
