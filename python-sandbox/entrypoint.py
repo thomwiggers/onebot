@@ -2,12 +2,34 @@
 
 import io
 import multiprocessing
+import os
+import resource
 import sys
 
 from contextlib import redirect_stdout, redirect_stderr
 
 
 TIMEOUT = 5
+
+
+def set_resource_limits():
+    """Set resource limits for the user process"""
+    # Limit memory to 100MB
+    mem_limit = 100 * 1024 * 1024
+    resource.setrlimit(resource.RLIMIT_AS, (mem_limit, mem_limit))
+    # Limit CPU time to TIMEOUT + 1 seconds
+    resource.setrlimit(resource.RLIMIT_CPU, (TIMEOUT + 1, TIMEOUT + 1))
+    # Disable core dumps
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+    # Limit number of processes to 0 (can't fork)
+    # Note: This might prevent some imports or complex operations,
+    # but it's great for simple snippets.
+    try:
+        resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
+    except Exception:
+        pass
+    # Limit file size creation
+    resource.setrlimit(resource.RLIMIT_FSIZE, (0, 0))
 
 
 class UserProcess(multiprocessing.Process):
@@ -19,6 +41,7 @@ class UserProcess(multiprocessing.Process):
 
     def run(self):
         """Compile and capture the output"""
+        set_resource_limits()
         out = io.StringIO()
         err = io.StringIO()
 
