@@ -8,6 +8,7 @@ Keeps track of the users in channels. Also provides an authorisation system.
 This plugin uses WHOIS to figure out someones NickServ account and then links
 that to an automatically created, in-bot account.
 """
+
 from __future__ import unicode_literals, print_function
 
 import ast
@@ -19,7 +20,6 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    List,
     Literal,
     Optional,
     Self,
@@ -52,7 +52,7 @@ class User(object):
             for c in iter(channels):
                 self.channels.add(c)
         except TypeError:
-            raise ValueError("You need to specify in which channel this " "user is!")
+            raise ValueError("You need to specify in which channel this user is!")
 
     @property
     def mask(self) -> IrcString:
@@ -316,8 +316,9 @@ class UsersPlugin(object):
                     return match.group(1)
                 else:
                     self.log.debug(
-                        "Failed to extract what.cd user name"
-                        "from {mask}".format(mask=mask)
+                        "Failed to extract what.cd user namefrom {mask}".format(
+                            mask=mask
+                        )
                     )
                     return mask.host
 

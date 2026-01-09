@@ -15,7 +15,6 @@ from unittest.mock import MagicMock
 from pathlib import Path
 import os
 
-import betamax
 
 from onebot.testing import BotTestCase
 from onebot.plugins.urlinfo import _find_urls

@@ -2,14 +2,12 @@
 from __future__ import unicode_literals, print_function
 
 import asyncio
-from asyncio.events import get_event_loop
 import calendar
 import datetime
 import json
 import os.path
 from typing import Any, Dict
 import unittest
-import freezegun
 
 import lastfm.exceptions
 from freezegun import freeze_time
@@ -47,7 +45,7 @@ def _get_patched_time_fixture(fixture_name, **kwargs):
     fixture = _get_fixture(fixture_name)
     date = datetime.datetime.utcnow().replace(microsecond=0)
     date -= datetime.timedelta(**kwargs)
-    if not type(fixture["track"]) == list:
+    if not isinstance(fixture["track"], list):
         fixture["track"]["date"]["uts"] = str(calendar.timegm(date.timetuple()))
         fixture["track"]["date"]["#text"] = date.strftime("%D %b %Y, %h:%M")
     else:
@@ -102,9 +100,7 @@ class LastfmPluginTest(BotTestCase):
 
         self.bot.loop.run_until_complete(wrap())
         mock.assert_called_with("bar", extended=True, limit=1)
-        self.assertSent(
-            ["PRIVMSG #chan :bar is someone who never " "scrobbled before."]
-        )
+        self.assertSent(["PRIVMSG #chan :bar is someone who never scrobbled before."])
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -118,7 +114,7 @@ class LastfmPluginTest(BotTestCase):
             await one_moment()
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertSent(["PRIVMSG bar :bar is someone who never " "scrobbled before."])
+        self.assertSent(["PRIVMSG bar :bar is someone who never scrobbled before."])
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -176,7 +172,7 @@ class LastfmPluginTest(BotTestCase):
         self.bot.get_user = mock
         self.bot.dispatch(":bar!id@host PRIVMSG #chan :!setuser foo")
         mock().set_setting.assert_called_with("lastfmuser", "foo")
-        self.assertSent(["PRIVMSG #chan :Ok, so you are " "https://last.fm/user/foo"])
+        self.assertSent(["PRIVMSG #chan :Ok, so you are https://last.fm/user/foo"])
 
     @patch(
         "lastfm.lfm.User.get_recent_tracks",
@@ -192,8 +188,7 @@ class LastfmPluginTest(BotTestCase):
             )
             await one_moment()
             assert response == (
-                "bar is not currently playing "
-                "anything (last seen 3 days, 1 hour ago)."
+                "bar is not currently playing anything (last seen 3 days, 1 hour ago)."
             )
 
         self.bot.loop.run_until_complete(wrap())
@@ -212,8 +207,7 @@ class LastfmPluginTest(BotTestCase):
             )
             await one_moment()
             assert response == (
-                "bar is not currently playing "
-                "anything (last seen 3 days, 2 hours ago)."
+                "bar is not currently playing anything (last seen 3 days, 2 hours ago)."
             )
 
         self.bot.loop.run_until_complete(wrap())
@@ -284,7 +278,7 @@ class LastfmPluginTest(BotTestCase):
             )
             await one_moment()
             assert response == (
-                "bar is not currently playing anything " "(last seen 3 days ago)."
+                "bar is not currently playing anything (last seen 3 days ago)."
             )
 
         self.bot.loop.run_until_complete(wrap())
@@ -303,7 +297,7 @@ class LastfmPluginTest(BotTestCase):
             )
             await one_moment()
             assert response == (
-                "bar is not currently playing anything " "(last seen 1 day ago)."
+                "bar is not currently playing anything (last seen 1 day ago)."
             )
 
         self.bot.loop.run_until_complete(wrap())
@@ -324,7 +318,7 @@ class LastfmPluginTest(BotTestCase):
         self.bot.loop.run_until_complete(wrap())
         self.assertSent(
             [
-                "PRIVMSG #chan :bar is now playing " "“Etherwood – Weightless” (♥).",
+                "PRIVMSG #chan :bar is now playing “Etherwood – Weightless” (♥).",
                 "PRIVMSG #chan :bar (foo on Last.FM) is now playing "
                 "“Etherwood – Weightless” (♥).",
             ]
@@ -343,7 +337,7 @@ class LastfmPluginTest(BotTestCase):
                 IrcString("bar!id@host"), {"<user>": None}
             )
             assert response == (
-                "bar was just playing " "“M83 – Kim & Jessie” (3m00s ago)."
+                "bar was just playing “M83 – Kim & Jessie” (3m00s ago)."
             )
 
         self.bot.loop.run_until_complete(wrap())

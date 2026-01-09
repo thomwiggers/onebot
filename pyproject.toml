@@ -44,10 +44,12 @@ dev = [
     "freezegun>=1.5.5",
     "pytest",
     "twine",
-    "black",
+    "ruff",
     "betamax",
     "coverage",
     "pytest-cov",
+    "tox",
+    "tox-uv",
 ]
 
 [build-system]
@@ -60,14 +62,15 @@ packages = ["onebot"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-isolated_build = true
+requires =
+    tox-uv
 envlist = py311,py312,py313,py314,package
 
 [testenv]
-allowlist_externals = uv
+package = editable
+dependency_groups =
+    dev
 commands =
-    uv pip install -e .
-    uv pip install freezegun pytest twine black pytest-xdist betamax coverage pytest-cov
     pytest
 
 [testenv:package]
@@ -83,3 +86,7 @@ commands =
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "--doctest-modules --ignore=docs/"
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"

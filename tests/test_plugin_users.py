@@ -7,6 +7,7 @@ test_onebot
 
 Tests for `onebot` module.
 """
+
 from __future__ import unicode_literals
 
 import asyncio

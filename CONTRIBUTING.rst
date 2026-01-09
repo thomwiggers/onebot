@@ -78,10 +78,9 @@ Ready to contribute? Here's how to set up `onebot` for local development.
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass black and the tests, including testing other Python versions with tox::
+5. When you're done making changes, check that your changes pass ruff formatting and the tests, including testing other Python versions with tox::
 
-    $ uv run black .
-    $ uv run pytest
+    $ uv run ruff format .
     $ uv run tox
 
 6. Commit your changes and push your branch to GitHub::

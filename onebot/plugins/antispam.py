@@ -11,7 +11,6 @@ Config options:
 
 """
 
-import asyncio
 from collections import defaultdict
 import hashlib
 from typing import Self

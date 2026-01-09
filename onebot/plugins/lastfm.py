@@ -22,8 +22,9 @@ Usage::
     >>> bot.include('onebot.plugins.lastfm')
 
 """
+
 from datetime import datetime
-from typing import Any, Dict, LiteralString, Self
+from typing import Any, Dict, Self
 
 import irc3
 import lastfm.exceptions
