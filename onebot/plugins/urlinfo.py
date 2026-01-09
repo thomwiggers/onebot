@@ -88,31 +88,16 @@ def _read_body(response) -> Tuple[int, Optional[str]]:
 URL_PATTERN = re.compile(r"\bhttps?://\S+")
 
 
-def _find_urls(string) -> List[str]:
-    """Find all urls in a string"""
+def _find_urls(string: str) -> List[str]:
+    """Find all URLs in a string, stripping trailing punctuation and matching brackets."""
     urls = []
     for match in URL_PATTERN.finditer(string):
         url = match.group(0).rstrip(".,'\"")
-        # Find matching pairs, strip others
-        for lbr, rbr in [("(", ")"), ("[", "]"), ("{", "}"), ("<", ">")]:
-            rest = url
-            count = 0
-            # FIXME this is still really hacky
-            for char in reversed(url):
-                # ends with rb
-                if char == rbr:
-                    # find lbr and what follows
-                    split = rest.split(lbr, maxsplit=1)
-                    if len(split) < 2:
-                        count += 1
-                    else:
-                        rest = split[1]
-                        if rbr in rest.rstrip(rbr):
-                            count += 1
-                else:
-                    break
-            if count > 0:
-                url = url[:-count]
+        # Strip trailing closing brackets that don't have a matching opening bracket
+        for opening, closing in [("(", ")"), ("[", "]"), ("{", "}"), ("<", ">")]:
+            while url.endswith(closing) and url.count(closing) > url.count(opening):
+                url = url[:-1]
+
         urls.append(url)
     return urls
 
@@ -370,48 +355,11 @@ class UrlInfo(object):
         if not api_url:
             return None
 
-        # Login if needed
-        if "username" in site_config and "password" in site_config:
-            if hostname not in self.mediawiki_logged_in:
-                self._mediawiki_login(
-                    session,
-                    api_url,
-                    site_config["username"],
-                    site_config["password"],
-                    hostname,
-                )
-
-        # Fetch Info
-        # We need the page title.
-        # Handle /wiki/Title
-        title = None
-        if "/wiki/" in parsed.path:
-            title = parsed.path.split("/wiki/", 1)[1]
-
-        # Handle /w/index.php?title=Title
-        if not title:
-            query = parse_qs(parsed.query)
-            if "title" in query:
-                title = query["title"][0]
-
+        title = self._mediawiki_get_title(parsed)
         if not title:
             return None
 
-        if "/wiki/" in parsed.path:
-            title = unquote(title)
-
-        params = {
-            "action": "query",
-            "prop": "extracts|info",
-            "exintro": True,
-            "explaintext": True,
-            "titles": title,
-            "format": "json",
-            "redirects": True,  # Follow redirects
-        }
-
         for attempt in range(2):
-            # Login if needed
             if "username" in site_config and "password" in site_config:
                 if hostname not in self.mediawiki_logged_in:
                     self._mediawiki_login(
@@ -423,55 +371,71 @@ class UrlInfo(object):
                     )
 
             try:
-                r = session.get(api_url, params=params, timeout=5)
-                r.raise_for_status()
-                data = r.json()
-
-                if "error" in data:
-                    code = data["error"].get("code")
-                    if (
-                        code in ("readapidenied", "badtoken", "mustbeloggedin")
-                        and attempt == 0
-                    ):
-                        self.log.info(
-                            "MediaWiki access denied (%s), retrying login...", code
-                        )
-                        if hostname in self.mediawiki_logged_in:
-                            self.mediawiki_logged_in.remove(hostname)
+                result = self._mediawiki_request_info(session, api_url, title)
+                if result is None:  # Possible auth error
+                    if attempt == 0:
+                        self.mediawiki_logged_in.discard(hostname)
                         continue
-
-                pages = data.get("query", {}).get("pages", {})
-                if not pages:
-                    return ["MediaWiki: Page not found"]
-
-                # pages is a dict id -> page
-                for page_id, page in pages.items():
-                    if page_id == "-1":  # Missing
-                        return ["MediaWiki: Page not found"]
-
-                    output = []
-                    page_title = page.get("title", title)
-                    output.append(f"“{page_title}”")
-
-                    extract = page.get("extract")
-                    if extract:
-                        # Cleanup extract: strip HTML and limit length
-                        summary = (
-                            BeautifulSoup(extract, "html.parser").get_text().strip()
-                        )
-                        summary = summary.split("\n")[0]  # First paragraph
-                        if len(summary) > 50:
-                            summary = summary[:49] + "…"
-                        output.append(f"— {summary}")
-
-                    return output
-
-                # Break if successful but no pages found (shouldn't happen with title query)
-                break
-
+                    return None
+                return result
             except Exception as e:
                 self.log.error("MediaWiki error: %s", e)
                 return None
+
+        return None
+
+    def _mediawiki_get_title(self, parsed_url: urlparse) -> Optional[str]:
+        """Extract MediaWiki page title from URL."""
+        title = None
+        if "/wiki/" in parsed_url.path:
+            title = unquote(parsed_url.path.split("/wiki/", 1)[1])
+        else:
+            query = parse_qs(parsed_url.query)
+            if "title" in query:
+                title = query["title"][0]
+        return title
+
+    def _mediawiki_request_info(
+        self, session: requests.Session, api_url: str, title: str
+    ) -> Optional[list[str]]:
+        """Request page info and extract from MediaWiki API."""
+        params = {
+            "action": "query",
+            "prop": "extracts|info",
+            "exintro": True,
+            "explaintext": True,
+            "titles": title,
+            "format": "json",
+            "redirects": True,
+        }
+        r = session.get(api_url, params=params, timeout=5)
+        r.raise_for_status()
+        data = r.json()
+
+        if "error" in data:
+            code = data["error"].get("code")
+            if code in ("readapidenied", "badtoken", "mustbeloggedin"):
+                self.log.info("MediaWiki access denied (%s)", code)
+                return None
+
+        pages = data.get("query", {}).get("pages", {})
+        if not pages:
+            return ["MediaWiki: Page not found"]
+
+        for page_id, page in pages.items():
+            if page_id == "-1":
+                return ["MediaWiki: Page not found"]
+
+            page_title = page.get("title", title)
+            extract = page.get("extract", "")
+            summary = ""
+            if extract:
+                summary = BeautifulSoup(extract, "html.parser").get_text().strip()
+                summary = summary.split("\n")[0]
+                if len(summary) > 50:
+                    summary = summary[:49] + "…"
+
+            return [f"“{page_title}”", f"— {summary}"] if summary else [f"“{page_title}”"]
 
         return None
 
@@ -524,80 +488,109 @@ class UrlInfo(object):
     def _process_url_default(
         self, session: requests.Session, url: str, **kwargs
     ) -> list[str]:
-        """Process an URL"""
-        message = []
+        """Default URL processor: fetches the page and extracts its title or metadata."""
         try:
             with closing(
                 session.get(url, allow_redirects=False, timeout=4, stream=True)
             ) as response:
                 if response.status_code in (301, 302, 307, 308):
-                    if response.next is not None and response.next.url is not None:
+                    if response.next and response.next.url:
                         raise UrlRedirectException(response.next.url)
-                content_type = response.headers.get("Content-Type", "text/html").split(
-                    ";"
-                )[0]
-                size = int(response.headers.get("Content-Length", 0))
 
-                # handle chunked transfers
-                content = None
-                if size == 0:
-                    size, content = _read_body(response)
-
-                self.log.debug("File size: {}".format(repr(size)))
-                if not response.ok:
-                    message.append(f"error: HTTP {response.status_code}")
-                    message.append(response.reason.lower())
-                elif size < 0:
-                    message.append("Safety error: unknown size, not reading")
-                elif content_type not in ("text/html", "application/xhtml+xml"):
-                    class_, app = content_type.split("/")
-                    if not (
-                        (class_ in self.ignored_classes or app in self.ignored_apps)
-                        and size < (1048576 * 5)
-                    ):
-                        message.append("Content-Type:")
-                        message.append(content_type)
-                        message.append("Filesize:")
-                        message.append(sizeof_fmt(size))
-                elif size < (1048576 * 2):
-                    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-                    soup = BeautifulSoup(
-                        (content or response.content.decode("utf-8", "ignore")),
-                        "html.parser",
-                    )
-                    if soup.title is not None:
-                        title = soup.title.get_text().strip()
-                        if title:
-                            if len(title) > 320:
-                                title = "{}…".format(title[:310])
-                            message.append("“{}”".format(title))
-            # endwith
+                return self._handle_default_response(response)
+        except UrlRedirectException:
+            raise
         except requests.exceptions.Timeout:
-            self.log.debug("Error while requesting %s", url)
-            message.append("Timeout")
-        return message
+            self.log.debug("Timeout while requesting %s", url)
+            return ["Timeout"]
+        except Exception:
+            self.log.exception("Error in _process_url_default for %s", url)
+            return []
+
+    def _handle_default_response(self, response: requests.Response) -> list[str]:
+        """Handle the response from the default URL processor."""
+        content_type = response.headers.get("Content-Type", "text/html").split(";")[0]
+        size_header = response.headers.get("Content-Length")
+        size = int(size_header) if size_header else 0
+
+        content = None
+        if size == 0:
+            size, content = _read_body(response)
+
+        self.log.debug("File size: %s, Content-Type: %s", size, content_type)
+
+        if not response.ok:
+            return [f"error: HTTP {response.status_code}", response.reason.lower()]
+
+        if size < 0:
+            return ["Safety error: unknown size, not reading"]
+
+        if content_type not in ("text/html", "application/xhtml+xml"):
+            return self._format_metadata(content_type, size)
+
+        if size < (1048576 * 2):
+            html_content = content or response.content.decode("utf-8", "ignore")
+            self.log.debug("HTML content length: %s", len(html_content))
+            return self._extract_title_from_content(html_content)
+
+        return []
+
+    def _format_metadata(self, content_type: str, size: int) -> list[str]:
+        """Format metadata for non-HTML files."""
+        try:
+            class_, app = content_type.split("/", 1)
+        except ValueError:
+            class_, app = content_type, ""
+
+        if (
+            class_ in self.ignored_classes or app in self.ignored_apps
+        ) and size < (1048576 * 5):
+            return []
+
+        return ["Content-Type:", content_type, "Filesize:", sizeof_fmt(size)]
+
+    def _extract_title_from_content(self, content: str) -> list[str]:
+        """Extract the <title> from HTML content."""
+        warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+        soup = BeautifulSoup(content, "html.parser")
+        if soup.title and soup.title.get_text().strip():
+            title = soup.title.get_text().strip()
+            if len(title) > 320:
+                title = f"{title[:310]}…"
+            return [f"“{title}”"]
+        return []
 
     @event(
         r"^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) "
         r"(?P<target>\S+) :\s*(?P<data>(.*(https?://)).*)$"
     )
     def on_message(self, mask, event, target, data):
-        if (
+        if not self._should_process_message(mask, event, target):
+            return
+
+        urls = _find_urls(data)
+        if not urls:
+            return
+
+        messages = self._process_urls(urls)
+        if messages:
+            response = "{}.".format(" ".join(messages))
+            self.bot.privmsg(target, self.bot.redact_nicks(response, target=target))
+
+    def _should_process_message(self, mask, event, target) -> bool:
+        """Determine if a message should be processed for URLs."""
+        return not (
             mask.nick == self.bot.nick
             or event == "NOTICE"
             or not target.is_channel
             or target in self.ignored_channels
             or mask.nick in self.ignored_nicks
-        ):
-            return
-        index = 1
-        messages: List[str] = []
-        urls = _find_urls(data)
-        for url in urls:
-            message: list[str] = []
-            if len(urls) > 1:
-                message.append("({})".format(index))
-                index += 1
+        )
+
+    def _process_urls(self, urls: List[str]) -> List[str]:
+        """Process a list of URLs and return formatted messages."""
+        messages = []
+        for index, url in enumerate(urls, 1):
             with requests.Session() as session:
                 session.headers.update(
                     {
@@ -607,23 +600,17 @@ class UrlInfo(object):
                 )
                 if self.cookiejar:
                     session.cookies = self.cookiejar
+
                 self.log.debug("processing %s", url)
                 try:
-                    urlmesg = self._process_url(session, url)
-                    if not urlmesg:
-                        continue
-                    else:
-                        message.extend(urlmesg)
+                    url_msg_parts = self._process_url(session, url)
+                    if url_msg_parts:
+                        prefix = f"({index}) " if len(urls) > 1 else ""
+                        messages.append(f"{prefix}{' '.join(url_msg_parts)}")
                 except Exception:
                     self.log.exception("Exception while requesting %s", url)
-                    continue
-                # end try
-            # end with session
-            if message:
-                messages.append(" ".join(message))
-        if messages:
-            response = "{}.".format(" ".join(messages))
-            self.bot.privmsg(target, self.bot.redact_nicks(response, target=target))
+
+        return messages
 
     @classmethod
     def reload(cls, old: Self) -> Self:  # pragma: no cover
