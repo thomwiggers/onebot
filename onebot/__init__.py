@@ -31,30 +31,39 @@ class OneBot(irc3.IrcBot):
 
 
 def run(argv=None):  # pragma: no cover
-    """Run OneBot from a config file
-
-    Usage: onebot [options] <config>...
-
-    Options::
-
-        --logdir DIRECTORY  Log directory to use instead of stderr
-        --logdate           Show datetimes in console output
-        -r,--raw            Show raw IRC log on the console
-        -v,--verbose        Increase verbosity
-        -d,--debug          Add debug commands/utils
-    """
+    """Run OneBot from a config file"""
     import sys
-    import docopt
-    import textwrap
+    import argparse
     import os
     from irc3 import utils, config
 
-    args = argv or sys.argv[1:]
-    args = docopt.docopt(textwrap.dedent(run.__doc__), args)  # type: ignore
-    cfg = utils.parse_config("bot", *args["<config>"])
-    cfg.update(verbose=args["--verbose"], debug=args["--debug"])
+    parser = argparse.ArgumentParser(
+        prog="onebot",
+        description="Run OneBot from a config file",
+    )
+    parser.add_argument(
+        "--logdir", metavar="DIRECTORY", help="Log directory to use instead of stderr"
+    )
+    parser.add_argument(
+        "--logdate", action="store_true", help="Show datetimes in console output"
+    )
+    parser.add_argument(
+        "-r", "--raw", action="store_true", help="Show raw IRC log on the console"
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Increase verbosity"
+    )
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Add debug commands/utils"
+    )
+    parser.add_argument("config", nargs="+", help="Config file(s)")
 
-    if (logdir := (args["--logdir"] or cfg.get("logdir"))) is not None:
+    args = parser.parse_args(argv if argv is not None else sys.argv[1:])
+
+    cfg = utils.parse_config("bot", *args.config)
+    cfg.update(verbose=args.verbose, debug=args.debug)
+
+    if (logdir := (args.logdir or cfg.get("logdir"))) is not None:
         logdir = os.path.expanduser(logdir)
         OneBot.logging_config = config.get_file_config(logdir)
 
