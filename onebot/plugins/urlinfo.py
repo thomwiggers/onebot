@@ -18,11 +18,12 @@ import ipaddress
 import socket
 import time
 import datetime
+import warnings
 from io import StringIO
 from typing import Callable, List, Optional, Self, Tuple
 from urllib.parse import urlparse, parse_qs
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 import requests
 import requests.exceptions
 from irc3 import plugin, event
@@ -392,6 +393,7 @@ class UrlInfo(object):
                         message.append("Filesize:")
                         message.append(sizeof_fmt(size))
                 elif size < (1048576 * 2):
+                    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
                     soup = BeautifulSoup(
                         (content or response.content.decode("utf-8", "ignore")),
                         "html5lib",
