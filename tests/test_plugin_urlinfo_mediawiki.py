@@ -46,7 +46,7 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                         "https://en.wikipedia.org/w/index.php?title=IRC",
                         [
                             "“IRC”",
-                            "— Internet Relay Chat (IRC) is a text-based chat sy…",
+                            "— IRC (Internet Relay Chat) is a text-based chat sy…",
                         ],
                     ),
                 ]:
