@@ -21,7 +21,7 @@ import datetime
 import warnings
 from io import StringIO
 from typing import Callable, List, Optional, Self, Tuple
-from urllib.parse import urlparse, parse_qs, unquote, ParseResult
+from urllib.parse import urlparse, parse_qs, unquote, ParseResult, urljoin
 
 from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 import requests
@@ -474,7 +474,23 @@ class UrlInfo(object):
             )
             r.raise_for_status()
             data = r.json()
-            login_token = data["query"]["tokens"]["logintoken"]
+            # If we get a "readapidenied" here, we might still be able to login via HTML
+            # checking error code is tricky because some private wikis return it in 'error' field
+            # but allow token fetching sometimes?
+            # Actually, my test showed token fetching worked.
+
+            if "error" in data and data["error"].get("code") == "readapidenied":
+                # If we can't even get a token, try HTML login immediately?
+                # But wait, my test showed I GOT a token, then failed on POST.
+                pass
+
+            login_token = data.get("query", {}).get("tokens", {}).get("logintoken")
+            if not login_token:
+                self.log.warning("Could not get login token for %s", api_url)
+                # Fallback to HTML login
+                return self._mediawiki_login_html(
+                    session, api_url, username, password, hostname
+                )
 
             # 2. Post Login
             r = session.post(
@@ -489,7 +505,17 @@ class UrlInfo(object):
                 timeout=5,
             )
             r.raise_for_status()
-            login_result = r.json().get("login", {}).get("result")
+            data = r.json()
+
+            if "error" in data and data["error"].get("code") == "writeapidenied":
+                self.log.warning(
+                    "Write API denied for %s, trying HTML login fallback", api_url
+                )
+                return self._mediawiki_login_html(
+                    session, api_url, username, password, hostname
+                )
+
+            login_result = data.get("login", {}).get("result")
             if login_result == "Success":
                 self.log.info("Logged in to MediaWiki %s", api_url)
                 self.mediawiki_logged_in.add(hostname)
@@ -502,8 +528,63 @@ class UrlInfo(object):
                 self.log.warning(
                     "Failed to login to MediaWiki %s: %s", api_url, login_result
                 )
+                # Fallback
+                self._mediawiki_login_html(
+                    session, api_url, username, password, hostname
+                )
+
         except Exception as e:
             self.log.error("MediaWiki login failed: %s", e)
+            self._mediawiki_login_html(session, api_url, username, password, hostname)
+
+    def _mediawiki_login_html(self, session, api_url, username, password, hostname):
+        """Fallback login via HTML form."""
+        self.log.debug("Attempting HTML login fallback for %s", api_url)
+        if api_url.endswith("api.php"):
+            base_url = api_url[:-7]  # strip 'api.php'
+            login_url = base_url + "index.php?title=Special:UserLogin"
+        else:
+            self.log.warning("Cannot deduce login URL from %s", api_url)
+            return
+
+        try:
+            r = session.get(login_url, timeout=10)
+            r.raise_for_status()
+            soup = BeautifulSoup(r.content, "html.parser")
+
+            inputs = {}
+            for inp in soup.find_all("input"):
+                if inp.get("name"):
+                    inputs[inp.get("name")] = inp.get("value", "")
+
+            inputs["wpName"] = username
+            inputs["wpPassword"] = password
+            inputs["wploginattempt"] = "Log in"
+
+            form = soup.find("form", action=True)
+            if not form:
+                self.log.warning("No login form found at %s", login_url)
+                return
+
+            action = form.get("action")
+            # Handle relative URL
+            action = urljoin(login_url, action)
+
+            r = session.post(action, data=inputs, timeout=10)
+            r.raise_for_status()
+
+            if "Log out" in r.text or "Special:UserLogout" in r.text:
+                self.log.info("Logged in to MediaWiki %s via HTML", api_url)
+                self.mediawiki_logged_in.add(hostname)
+                if self.cookiejar:
+                    self.cookiejar.update(session.cookies)
+                else:
+                    self.cookiejar = session.cookies
+            else:
+                self.log.warning("HTML Login failed for %s", api_url)
+
+        except Exception as e:
+            self.log.error("HTML Login exception: %s", e)
 
     def _process_url_default(
         self, session: requests.Session, url: str, **kwargs
