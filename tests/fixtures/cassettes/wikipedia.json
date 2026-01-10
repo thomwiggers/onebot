@@ -1,0 +1,69 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "body": {
+          "encoding": "utf-8",
+          "string": ""
+        },
+        "headers": {
+          "User-Agent": [
+            "script:onebot:irc"
+          ]
+        },
+        "method": "GET",
+        "uri": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts%7Cinfo&exintro=True&explaintext=True&titles=Python_%28programming_language%29&format=json&redirects=True"
+      },
+      "response": {
+        "body": {
+          "encoding": "utf-8",
+          "string": "{\"query\":{\"pages\":{\"23862\":{\"pageid\":23862,\"ns\":0,\"title\":\"Python (programming language)\",\"extract\":\"Python is a high-level, general-purpose programming language.\"}}}}"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=utf-8"
+          ]
+        },
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts%7Cinfo&exintro=True&explaintext=True&titles=Python_%28programming_language%29&format=json&redirects=True"
+      },
+      "recorded_at": "2026-01-09T17:30:00"
+    },
+    {
+      "request": {
+        "body": {
+          "encoding": "utf-8",
+          "string": ""
+        },
+        "headers": {
+          "User-Agent": [
+            "script:onebot:irc"
+          ]
+        },
+        "method": "GET",
+        "uri": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts%7Cinfo&exintro=True&explaintext=True&titles=IRC&format=json&redirects=True"
+      },
+      "response": {
+        "body": {
+          "encoding": "utf-8",
+          "string": "{\"query\":{\"pages\":{\"14771\":{\"pageid\":14771,\"ns\":0,\"title\":\"IRC\",\"extract\":\"Internet Relay Chat (IRC) is a text-based chat system for instant messaging.\"}}}}"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=utf-8"
+          ]
+        },
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "url": "https://en.wikipedia.org/w/api.php?action=query&prop=extracts%7Cinfo&exintro=True&explaintext=True&titles=IRC&format=json&redirects=True"
+      },
+      "recorded_at": "2026-01-09T17:30:00"
+    }
+  ],
+  "recorded_with": "betamax/0.9.0"
+}

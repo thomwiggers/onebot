@@ -1,7 +1,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import socket
+import requests
+from betamax import Betamax
 from onebot.plugins.urlinfo import UrlInfo
+
+
+with Betamax.configure() as config:
+    config.cassette_library_dir = "tests/fixtures/cassettes"
 
 
 class MediaWikiUrlInfoTestCase(unittest.TestCase):
@@ -14,12 +20,39 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                         "api_url": "https://wiki.example.com/api.php",
                         "username": "BotUser",
                         "password": "BotPassword",
-                    }
+                    },
+                    "en.wikipedia.org": {
+                        "api_url": "https://en.wikipedia.org/w/api.php",
+                    },
                 }
             }
         }
         self.bot.log = MagicMock()
         self.plugin = UrlInfo(self.bot)
+
+    def test_wikipedia(self):
+        with requests.Session() as session:
+            session.headers.update({"User-Agent": "script:onebot:irc"})
+            with Betamax(session).use_cassette("wikipedia"):
+                for url, expected in [
+                    (
+                        "https://en.wikipedia.org/wiki/Python_(programming_language)",
+                        [
+                            "“Python (programming language)”",
+                            "— Python is a high-level, general-purpose programmi…",
+                        ],
+                    ),
+                    (
+                        "https://en.wikipedia.org/w/index.php?title=IRC",
+                        [
+                            "“IRC”",
+                            "— Internet Relay Chat (IRC) is a text-based chat sy…",
+                        ],
+                    ),
+                ]:
+                    with self.subTest(url=url):
+                        result = self.plugin._process_url(session, url)
+                        self.assertEqual(result, expected)
 
     @patch("socket.getaddrinfo")
     def test_mediawiki_login_and_fetch(self, mock_getaddrinfo):
