@@ -166,8 +166,18 @@ class UrlInfo(object):
 
         self.urlmap = self.bot.config.get(__name__ + ".urlmap", {})
         self.mediawiki_sites = self.config.get("mediawiki_sites", {})
+        prefix = __name__ + ".mediawiki_sites."
+        for key, value in self.bot.config.items():
+            if key.startswith(prefix):
+                site_name = key[len(prefix) :]
+                if site_name.startswith('"') and site_name.endswith('"'):
+                    site_name = site_name[1:-1]
+                elif site_name.startswith("'") and site_name.endswith("'"):
+                    site_name = site_name[1:-1]
+                self.mediawiki_sites[site_name] = value
         self.mediawiki_logged_in = set()
 
+        self.log.debug("Got these mediawiki sites: %s", self.mediawiki_sites)
         self.praw = None
         if "praw_client_id" in os.environ and "praw_client_secret" in os.environ:
             self.praw = praw.Reddit(user_agent=USER_AGENT_STRING, check_for_async=False)
@@ -183,9 +193,9 @@ class UrlInfo(object):
         self.url_processors: List[Callable[..., Optional[list[str]]]] = [
             self._process_url_local,
             self._process_url_urlmap,
+            self._process_url_mediawiki,
             self._process_url_twitter,
             self._process_url_reddit,
-            self._process_url_mediawiki,
             self._process_url_youtube,
             self._process_url_default,
         ]
