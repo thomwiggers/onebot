@@ -30,7 +30,7 @@ def set_resource_limits():
     resource.setrlimit(resource.RLIMIT_FSIZE, (0, 0))
 
 
-def run_user_code(cmd, queue):
+def run_user_code(cmd, pipe):
     """Compile and capture the output in a subprocess"""
     set_resource_limits()
     out = io.StringIO()
@@ -46,7 +46,8 @@ def run_user_code(cmd, queue):
         except (SyntaxError, OverflowError, ValueError) as e:
             print(e, file=sys.stderr)
 
-    queue.put({"stdout": out.getvalue().strip(), "stderr": err.getvalue().strip()})
+    pipe.send({"stdout": out.getvalue().strip(), "stderr": err.getvalue().strip()})
+    pipe.close()
 
 
 class SandboxHandler(BaseHTTPRequestHandler):
@@ -68,8 +69,8 @@ class SandboxHandler(BaseHTTPRequestHandler):
             self.send_error(400, "Invalid JSON")
             return
 
-        queue = multiprocessing.Queue()
-        process = multiprocessing.Process(target=run_user_code, args=(code, queue))
+        parent_conn, child_conn = multiprocessing.Pipe()
+        process = multiprocessing.Process(target=run_user_code, args=(code, child_conn))
         process.start()
         process.join(TIMEOUT)
 
@@ -77,10 +78,13 @@ class SandboxHandler(BaseHTTPRequestHandler):
             process.terminate()
             response = {"stdout": "", "stderr": f"Terminated after {TIMEOUT} seconds."}
         else:
-            if not queue.empty():
-                response = queue.get()
+            if parent_conn.poll():
+                response = parent_conn.recv()
             else:
                 response = {"stdout": "", "stderr": "No output received from process."}
+
+        parent_conn.close()
+        child_conn.close()
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
