@@ -17,5 +17,4 @@ RUN uv pip install --no-cache-dir --system .
 RUN useradd -m onebot && mkdir /config && chown onebot:onebot /config
 USER onebot
 
-ENTRYPOINT ["onebot"]
-CMD ["/config/config.ini"]
+CMD ["onebot", "/config/config.ini"]
