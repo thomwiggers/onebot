@@ -364,6 +364,11 @@ class UrlInfo(object):
     ) -> Optional[list[str]]:
         parsed = urlparse(url)
         hostname = parsed.hostname
+
+        # Auto-detect Wikipedia URLs (any language edition)
+        if hostname and hostname.endswith(".wikipedia.org"):
+            return self._process_wikipedia(session, parsed)
+
         if hostname not in self.mediawiki_sites:
             return None
 
@@ -400,6 +405,21 @@ class UrlInfo(object):
                 return None
 
         return None
+
+    def _process_wikipedia(
+        self, session: requests.Session, parsed: ParseResult
+    ) -> Optional[list[str]]:
+        """Handle public Wikipedia URLs without requiring config."""
+        title = self._mediawiki_get_title(parsed)
+        if not title:
+            return None
+
+        api_url = f"https://{parsed.hostname}/w/api.php"
+        try:
+            return self._mediawiki_request_info(session, api_url, title)
+        except Exception as e:
+            self.log.error("Wikipedia error: %s", e)
+            return None
 
     def _mediawiki_get_title(self, parsed_url: ParseResult) -> Optional[str]:
         """Extract MediaWiki page title from URL."""
