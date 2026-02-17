@@ -105,7 +105,6 @@ class ACLTestCase(BotTestCase):
     def tearDown(self):
         super().tearDown()
         self.bot.SIGINT()
-        self.config["loop"].close()
 
     def assertSent(self, lines):
         """Assert that these lines have been sent"""
