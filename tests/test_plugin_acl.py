@@ -57,7 +57,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
     def test_command_allowed(self):
         async def wrap():
             self.bot.dispatch(":im!the@boss JOIN #chan")
-            self.bot.db["the@boss"] = {"permissions": {"test"}}
+            self.bot.db["the@boss"] = {"permissions": '["test"]'}
             self.bot.dispatch(":im!the@boss PRIVMSG #chan :!cmd")
             await asyncio.sleep(0.001)
 
@@ -75,7 +75,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
     def test_command_ignored(self):
         async def wrap():
             self.bot.dispatch(":Groxxxy!stupid@idiot JOIN #chan")
-            self.bot.db["stupid@idiot"] = {"permissions": {"ignore"}}
+            self.bot.db["stupid@idiot"] = {"permissions": '["ignore"]'}
             self.bot.dispatch(":Groxxxy!stupid@idiot PRIVMSG #chan :!cmd2")
             await asyncio.sleep(0.001)
 
@@ -116,7 +116,7 @@ class ACLTestCase(BotTestCase):
             await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEqual(self.bot.db["foo@host"].get("permissions"), ["admin"])
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), '["admin"]')
         self.assertSent(["PRIVMSG #chan :Updated permissions for bar"])
 
     def test_add_unknown_user(self):
@@ -136,7 +136,7 @@ class ACLTestCase(BotTestCase):
             await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEqual(self.bot.db["bak"].get("permissions"), ["admin"])
+        self.assertEqual(self.bot.db["bak"].get("permissions"), '["admin"]')
         self.assertSent(["PRIVMSG #chan :Updated permissions for bak"])
 
     def test_invalid_permission(self):
@@ -154,14 +154,14 @@ class ACLTestCase(BotTestCase):
         )
 
     def test_remove_acl(self):
-        self.bot.db["foo@host"] = {"permissions": {"admin"}}
+        self.bot.db["foo@host"] = {"permissions": '["admin"]'}
 
         # sanity check
-        self.assertEqual(self.bot.db["foo@host"].get("permissions"), {"admin"})
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), '["admin"]')
 
         async def wrap():
             self.bot.dispatch(":root@localhost PRIVMSG #chan :!acl remove bar admin")
             await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEqual(self.bot.db["foo@host"].get("permissions"), set())
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), "[]")
