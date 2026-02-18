@@ -21,9 +21,6 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                         "username": "BotUser",
                         "password": "BotPassword",
                     },
-                    "en.wikipedia.org": {
-                        "api_url": "https://en.wikipedia.org/w/api.php",
-                    },
                 }
             }
         }
@@ -53,6 +50,45 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                     with self.subTest(url=url):
                         result = self.plugin._process_url(session, url)
                         self.assertEqual(result, expected)
+
+    @patch("socket.getaddrinfo")
+    def test_wikipedia_auto_detect_without_config(self, mock_getaddrinfo):
+        """Wikipedia URLs work without explicit mediawiki_sites config."""
+        mock_getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("198.35.26.96", 443))
+        ]
+        session = MagicMock()
+        url = "https://nl.wikipedia.org/wiki/Internet_Relay_Chat"
+
+        def side_effect(url, **kwargs):
+            params = kwargs.get("params", {})
+            if params.get("prop") == "extracts|info":
+                return MagicMock(
+                    ok=True,
+                    json=lambda: {
+                        "query": {
+                            "pages": {
+                                "42": {
+                                    "pageid": 42,
+                                    "title": "Internet Relay Chat",
+                                    "extract": "IRC is een chatprotocol.",
+                                }
+                            }
+                        }
+                    },
+                )
+            return MagicMock(ok=True, json=lambda: {})
+
+        session.get.side_effect = side_effect
+
+        result = self.plugin._process_url(session, url)
+        self.assertEqual(
+            result,
+            ["\u201cInternet Relay Chat\u201d", "\u2014 IRC is een chatprotocol."],
+        )
+        # Verify the API was called with the correct nl.wikipedia.org URL
+        call_args = session.get.call_args_list[-1]
+        self.assertIn("nl.wikipedia.org", call_args[0][0])
 
     @patch("socket.getaddrinfo")
     def test_mediawiki_login_and_fetch(self, mock_getaddrinfo):
