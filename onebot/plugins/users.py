@@ -11,8 +11,8 @@ that to an automatically created, in-bot account.
 
 from __future__ import unicode_literals, print_function
 
-import ast
 import asyncio
+import json
 import re
 from typing import (
     Any,
@@ -29,6 +29,22 @@ from typing import (
 import irc3
 from irc3.plugins.storage import Storage
 from irc3.utils import IrcString
+
+
+def deserialize_setting(value: Any) -> Any:
+    """Safely deserialize a setting value"""
+    if not isinstance(value, str):
+        return value
+
+    # Try to parse as JSON
+    try:
+        # Handles JSON lists, dicts, booleans (true/false), null, and numbers
+        return json.loads(value)
+    except (ValueError, json.JSONDecodeError):
+        pass
+
+    # Return as a plain string
+    return value
 
 
 class User(object):
@@ -75,7 +91,12 @@ class User(object):
 
     def set_setting(self, setting: str, value: Any) -> None:
         """Set a specified setting to a value"""
-        print("Trying to set %s to %s" % (setting, value))
+
+        # Serialize non-string types to JSON for consistent storage across backends
+        if not isinstance(value, str):
+            if isinstance(value, set):
+                value = list(value)
+            value = json.dumps(value)
 
         async def wrapper():
             id_ = await self.id()
@@ -91,15 +112,7 @@ class User(object):
     async def get_setting(self, setting, default=None) -> Any:
         """Gets a setting for the users. Can be any type."""
         settings = await self.get_settings()
-        result = settings.get(setting, default)
-        if isinstance(result, str):
-            try:
-                parsed = ast.literal_eval(result)
-                return parsed
-            except (ValueError, SyntaxError):
-                pass
-
-        return result
+        return deserialize_setting(settings.get(setting, default))
 
     def join(self, channel) -> None:
         """Register that the user joined a channel"""
@@ -167,6 +180,10 @@ class UsersPlugin(object):
         if not user:
             self.log.warning("Couldn't find %s!", nick)
         return user
+
+    @irc3.extend
+    def deserialize_setting(self, value: Any) -> Any:
+        return deserialize_setting(value)
 
     @irc3.extend
     def redact_nicks(self, message: str, target: Optional[str] = None) -> str:

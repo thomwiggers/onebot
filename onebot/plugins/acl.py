@@ -10,6 +10,7 @@ settings with each user.
 """
 
 import asyncio
+import json
 from typing import Self
 
 import irc3
@@ -91,7 +92,9 @@ class ACLPlugin(object):
         self.log.debug("Config: %r", self.config)
         if "superadmin" in self.config:
             self.log.info("Giving {} all_permissions".format(self.config["superadmin"]))
-            self.bot.db.set(self.config["superadmin"], permissions=["all_permissions"])
+            self.bot.db.set(
+                self.config["superadmin"], permissions=json.dumps(["all_permissions"])
+            )
 
     @command(permission="admin", show_in_help_list=False)
     async def acl(self, mask, target, args) -> None:
@@ -127,6 +130,7 @@ class ACLPlugin(object):
             current_permissions = self.bot.db.get(args["<id>"], {}).get(
                 "permissions", []
             )
+            current_permissions = self.bot.deserialize_setting(current_permissions)
 
         if args["add"] and permission not in current_permissions:
             current_permissions.append(permission)
@@ -137,9 +141,7 @@ class ACLPlugin(object):
             assert user is not None
             user.set_setting("permissions", current_permissions)
         else:
-            if args["<id>"] not in self.bot.db:
-                self.bot.db[args["<id>"]] = {}
-            self.bot.db[args["<id>"]]["permissions"] = current_permissions
+            self.bot.db.set(args["<id>"], permissions=json.dumps(current_permissions))
 
         self.bot.privmsg(
             target,
