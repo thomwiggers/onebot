@@ -194,7 +194,7 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
             self.wfile.write(b"Stored your token")
             asyncio.run_coroutine_threadsafe(
                 user.set_setting("spotify_refresh_token", user_token.refresh_token),
-                self.bot.loop
+                self.bot.loop,
             )
         except InvalidToken:
             self.send_error(403, message="Token expired, try again")

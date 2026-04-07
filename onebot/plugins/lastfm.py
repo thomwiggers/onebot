@@ -83,7 +83,9 @@ class LastfmPlugin:
         %%setuser <lastfmnick>
         """
         self.log.info("Storing lastfmuser %s for %s", args["<lastfmnick>"], mask.nick)
-        await self.bot.get_user(mask.nick).set_setting("lastfmuser", args["<lastfmnick>"])
+        await self.bot.get_user(mask.nick).set_setting(
+            "lastfmuser", args["<lastfmnick>"]
+        )
         self.bot.privmsg(
             target,
             "Ok, so you are https://last.fm/user/{username}".format(

@@ -76,7 +76,9 @@ class TrakttvPlugin:
         %%settraktuser <trakttvnick>
         """
         self.log.info("Storing trakt user %s for %s", args["<trakttvnick>"], mask.nick)
-        await self.bot.get_user(mask.nick).set_setting("trakttvnick", args["<trakttvnick>"])
+        await self.bot.get_user(mask.nick).set_setting(
+            "trakttvnick", args["<trakttvnick>"]
+        )
         self.bot.privmsg(
             target,
             "Ok, so you are https://trakt.tv/users/{username}".format(
