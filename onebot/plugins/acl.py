@@ -141,7 +141,7 @@ class ACLPlugin:
             assert user is not None
             await user.set_setting("permissions", current_permissions)
         else:
-            self.bot.db.set(args["<id>"], permissions=current_permissions)
+            self.bot.db.set(args["<id>"], permissions=json.dumps(current_permissions))
 
         self.bot.privmsg(
             target,
