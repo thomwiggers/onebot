@@ -11,7 +11,6 @@ that to an automatically created, in-bot account.
 
 from __future__ import unicode_literals, print_function
 
-import asyncio
 import json
 import re
 from typing import (
