@@ -47,7 +47,7 @@ def deserialize_setting(value: Any) -> Any:
     return value
 
 
-class User(object):
+class User:
     """User object"""
 
     def __init__(
@@ -80,16 +80,13 @@ class User(object):
             raise Exception("No database set for this user.")
         return self.database
 
-    def set_settings(self, settings) -> None:
+    async def set_settings(self, settings) -> None:
         """Replaces the settings with the provided dictionary"""
 
-        async def wrapper() -> None:
-            id_ = await self.id()
-            self._get_database()[id_] = settings
+        id_ = await self.id()
+        self._get_database()[id_] = settings
 
-        asyncio.ensure_future(wrapper())
-
-    def set_setting(self, setting: str, value: Any) -> None:
+    async def set_setting(self, setting: str, value: Any) -> None:
         """Set a specified setting to a value"""
 
         # Serialize non-string types to JSON for consistent storage across backends
@@ -98,11 +95,8 @@ class User(object):
                 value = list(value)
             value = json.dumps(value)
 
-        async def wrapper():
-            id_ = await self.id()
-            self._get_database().set(id_, **{setting: value})
-
-        asyncio.ensure_future(wrapper())
+        id_ = await self.id()
+        self._get_database().set(id_, **{setting: value})
 
     async def get_settings(self) -> Dict[str, Any]:
         """Get this users settings"""
@@ -144,7 +138,7 @@ def redact_nick(nick: str) -> str:
 
 
 @irc3.plugin
-class UsersPlugin(object):
+class UsersPlugin:
     """User management plugin for OneBot
 
     Doesn't do anything with NAMES because we can't get hosts through

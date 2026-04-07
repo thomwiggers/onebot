@@ -293,16 +293,14 @@ class UserObjectTest(unittest.IsolatedAsyncioTestCase):
         assert self.user.channels == set()
 
     async def test_get_settings(self):
-        self.user.set_settings({"setting": "hi"})
-        await asyncio.sleep(0.001)
+        await self.user.set_settings({"setting": "hi"})
         assert (await self.user.get_settings()) == {"setting": "hi"}
         assert (await self.user.get_setting("foo")) is None
         assert (await self.user.get_setting("foo", "default")) == "default"
         assert (await self.user.get_setting("setting")) == "hi"
         assert (await self.user.get_setting("setting", "default")) == "hi"
         assert (await self.user.get_setting("foo", "default")) == "default"
-        self.user.set_setting("setting", "bar")
-        await asyncio.sleep(0.001)
+        await self.user.set_setting("setting", "bar")
         assert (await self.user.get_setting("setting")) == "bar"
 
 

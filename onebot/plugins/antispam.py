@@ -26,7 +26,7 @@ def _hash(string):
 
 
 @plugin
-class PSAPlugin(object):
+class PSAPlugin:
     """PSA Plugin"""
 
     requires = ["irc3.plugins.userlist", "onebot.plugins.users"]
@@ -72,9 +72,9 @@ class PSAPlugin(object):
                     "({} repeating lines)".format(num),
                 )
         else:
-            user.set_setting("last_line", data)
+            await user.set_setting("last_line", data)
             num = 1
-        user.set_setting("last_line_num", num)
+        await user.set_setting("last_line_num", num)
 
     @classmethod
     def reload(cls, old: Self) -> Self:

@@ -171,6 +171,11 @@ class LastfmPluginTest(BotTestCase):
         self.callFTU()
         self.bot.get_user = mock
         self.bot.dispatch(":bar!id@host PRIVMSG #chan :!setuser foo")
+
+        async def wrap():
+            await mock().set_setting("lastfmuser", "foo")
+
+        self.bot.loop.run_until_complete(wrap())
         mock().set_setting.assert_called_with("lastfmuser", "foo")
         self.assertSent(["PRIVMSG #chan :Ok, so you are https://last.fm/user/foo"])
 

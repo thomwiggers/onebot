@@ -33,7 +33,7 @@ import requests
 
 
 @irc3.plugin
-class TrakttvPlugin(object):
+class TrakttvPlugin:
     """Plugin to provide:
 
     * now watching functionality
@@ -70,13 +70,13 @@ class TrakttvPlugin(object):
         asyncio.ensure_future(wrap())
 
     @command
-    def settraktuser(self, mask, target, args):
+    async def settraktuser(self, mask, target, args):
         """Sets the trakttv username of the user
 
         %%settraktuser <trakttvnick>
         """
         self.log.info("Storing trakt user %s for %s", args["<trakttvnick>"], mask.nick)
-        self.bot.get_user(mask.nick).set_setting("trakttvnick", args["<trakttvnick>"])
+        await self.bot.get_user(mask.nick).set_setting("trakttvnick", args["<trakttvnick>"])
         self.bot.privmsg(
             target,
             "Ok, so you are https://trakt.tv/users/{username}".format(
