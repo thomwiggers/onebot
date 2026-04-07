@@ -7,6 +7,7 @@ import datetime
 import json
 import os.path
 from typing import Any, Dict
+from unittest.mock import AsyncMock
 import unittest
 
 import lastfm.exceptions
@@ -167,16 +168,16 @@ class LastfmPluginTest(BotTestCase):
 
     def test_setuser(self):
         mock = MagicMock(name="MockGetUser")
-        del self.config["loop"]
+        mock.return_value.set_setting = AsyncMock()
         self.callFTU()
         self.bot.get_user = mock
-        self.bot.dispatch(":bar!id@host PRIVMSG #chan :!setuser foo")
 
         async def wrap():
-            await mock().set_setting("lastfmuser", "foo")
+            self.bot.dispatch(":bar!id@host PRIVMSG #chan :!setuser foo")
+            await one_moment()
 
         self.bot.loop.run_until_complete(wrap())
-        mock().set_setting.assert_called_with("lastfmuser", "foo")
+        mock.return_value.set_setting.assert_called_with("lastfmuser", "foo")
         self.assertSent(["PRIVMSG #chan :Ok, so you are https://last.fm/user/foo"])
 
     @patch(

@@ -164,4 +164,4 @@ class ACLTestCase(BotTestCase):
             await asyncio.sleep(0.001)
 
         self.bot.loop.run_until_complete(wrap())
-        self.assertEqual(self.bot.db["foo@host"].get("permissions"), [])
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), '[]')
