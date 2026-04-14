@@ -110,14 +110,28 @@ class UrlInfoTestCase(BotTestCase):
                 expected, _find_urls(message), "String: {}".format(message)
             )
 
-    def test_too_long_title_text(self):
-        """Don't show very long title texts"""
+    def test_og_title_preferred_over_title_tag(self):
+        """og:title is used instead of <title> when present."""
         session = MagicMock()
         session.get.side_effect = mock_requests_get
-        result = self.plugin._process_url(session, "https://facebook.com")
+        # fb-example.html has og:title "Trolley problem memes" and a very long <title>
+        with patch(
+            "onebot.plugins.urlinfo.socket.getaddrinfo",
+            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("157.240.241.35", 0))],
+        ):
+            result = self.plugin._process_url(session, "https://facebook.com")
         self.assertIsNotNone(result)
-        self.assertLess(100, len(" ".join(result)), "text too short")
-        self.assertGreater(320, len(" ".join(result)), "text too long")
+        title = " ".join(result)
+        self.assertIn("Trolley problem memes", title)
+        self.assertLess(len(title), 320, "og:title should be short")
+
+    def test_too_long_title_truncated(self):
+        """Titles longer than 320 characters are truncated."""
+        long_title = "A" * 400
+        html = f"<html><head><title>{long_title}</title></head><body></body></html>"
+        result = self.plugin._extract_title_from_content(html)
+        self.assertIsNotNone(result)
+        self.assertLess(len(" ".join(result)), 320)
 
     def test_twitter(self):
         with requests.Session() as session:

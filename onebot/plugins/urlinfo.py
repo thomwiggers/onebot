@@ -197,7 +197,6 @@ class UrlInfo(object):
             self._process_url_twitter,
             self._process_url_reddit,
             self._process_url_youtube,
-            self._process_url_instagram,
             self._process_url_default,
         ]
 
@@ -607,39 +606,6 @@ class UrlInfo(object):
         except Exception as e:
             self.log.error("HTML Login exception: %s", e)
 
-    def _process_url_instagram(
-        self, session: requests.Session, url: str, **kwargs
-    ) -> Optional[list[str]]:
-        """Handle Instagram URLs by extracting og:title meta tag."""
-        parsed_url = urlparse(url)
-        hostname = parsed_url.hostname
-        if hostname != "www.instagram.com" and hostname != "instagram.com":
-            return None
-
-        try:
-            with closing(session.get(url, timeout=8, stream=True)) as response:
-                if not response.ok:
-                    return None
-                content_type = response.headers.get("Content-Type", "").split(";")[0]
-                if content_type not in ("text/html", "application/xhtml+xml"):
-                    return None
-                _, content = _read_body(response)
-                if not content:
-                    return None
-
-            warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
-            soup = BeautifulSoup(content, "html.parser")
-            og_title = soup.find("meta", property="og:title")
-            if og_title and og_title.get("content", "").strip():
-                title = og_title["content"].strip()
-                if len(title) > 320:
-                    title = f"{title[:310]}…"
-                return [f"\u201c{title}\u201d"]
-        except Exception:
-            self.log.exception("Error in _process_url_instagram for %s", url)
-
-        return None
-
     def _process_url_default(
         self, session: requests.Session, url: str, **kwargs
     ) -> list[str]:
@@ -705,9 +671,16 @@ class UrlInfo(object):
         return ["Content-Type:", content_type, "Filesize:", sizeof_fmt(size)]
 
     def _extract_title_from_content(self, content: str) -> list[str]:
-        """Extract the <title> from HTML content."""
+        """Extract a title from HTML content, preferring og:title over <title>."""
         warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
         soup = BeautifulSoup(content, "html.parser")
+        og_title_tag = soup.find("meta", property="og:title")
+        if og_title_tag:
+            title = og_title_tag.get("content", "").strip()
+            if title:
+                if len(title) > 320:
+                    title = f"{title[:310]}…"
+                return [f"“{title}”"]
         if soup.title and soup.title.get_text().strip():
             title = soup.title.get_text().strip()
             if len(title) > 320:
