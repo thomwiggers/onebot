@@ -173,6 +173,9 @@ class UrlInfoTestCase(BotTestCase):
             session.headers.update({
                 "User-Agent": "script:onebot:irc",
                 "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
+                # Betamax bug: it cannot round-trip zstd-compressed bodies
+                # through its JSON cassette format (binary frames get
+                # corrupted), so force gzip to avoid that code path.
                 "Accept-Encoding": "gzip, deflate",
             })
             with Betamax(session).use_cassette("test_instagram", record="none"):
