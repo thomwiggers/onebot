@@ -117,7 +117,9 @@ class UrlInfoTestCase(BotTestCase):
         # fb-example.html has og:title "Trolley problem memes" and a very long <title>
         with patch(
             "onebot.plugins.urlinfo.socket.getaddrinfo",
-            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("157.240.241.35", 0))],
+            return_value=[
+                (socket.AF_INET, socket.SOCK_STREAM, 0, "", ("157.240.241.35", 0))
+            ],
         ):
             result = self.plugin._process_url(session, "https://facebook.com")
         self.assertIsNotNone(result)
@@ -170,14 +172,16 @@ class UrlInfoTestCase(BotTestCase):
     def test_instagram(self):
         """Instagram reel URLs show og:title instead of the generic page title."""
         with requests.Session() as session:
-            session.headers.update({
-                "User-Agent": "script:onebot:irc",
-                "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
-                # Betamax bug: it cannot round-trip zstd-compressed bodies
-                # through its JSON cassette format (binary frames get
-                # corrupted), so force gzip to avoid that code path.
-                "Accept-Encoding": "gzip, deflate",
-            })
+            session.headers.update(
+                {
+                    "User-Agent": "script:onebot:irc",
+                    "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
+                    # Betamax bug: it cannot round-trip zstd-compressed bodies
+                    # through its JSON cassette format (binary frames get
+                    # corrupted), so force gzip to avoid that code path.
+                    "Accept-Encoding": "gzip, deflate",
+                }
+            )
             with Betamax(session).use_cassette("test_instagram", record="none"):
                 result = self.plugin._process_url(
                     session,
