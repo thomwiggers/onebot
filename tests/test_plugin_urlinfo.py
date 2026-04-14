@@ -189,6 +189,8 @@ class UrlInfoTestCase(BotTestCase):
                 )
                 self.assertIsNotNone(result)
                 title = " ".join(result)
+                self.assertIn("Pannenkoekenboot", title)
+                self.assertNotIn("\n", title)
                 self.assertIn("Instagram", title)
                 self.assertGreater(len(title), len("\u201cInstagram\u201d"))
 
