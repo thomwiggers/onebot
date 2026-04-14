@@ -123,7 +123,7 @@ class TrakttvPlugin(object):
                     response.append("({})".format(data["movie"]["year"]))
                 else:
                     response.append("something I don't understand")
-            except (ValueError, KeyError):
+            except ValueError, KeyError:
                 return "Something went wrong"
         else:
             response.append(

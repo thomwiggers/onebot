@@ -40,7 +40,7 @@ def deserialize_setting(value: Any) -> Any:
     try:
         # Handles JSON lists, dicts, booleans (true/false), null, and numbers
         return json.loads(value)
-    except (ValueError, json.JSONDecodeError):
+    except ValueError, json.JSONDecodeError:
         pass
 
     # Return as a plain string

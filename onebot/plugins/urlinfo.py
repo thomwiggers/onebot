@@ -675,9 +675,9 @@ class UrlInfo(object):
         warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
         soup = BeautifulSoup(content, "html.parser")
         og_tag = soup.find("meta", property="og:title")
-        title = (
-            " ".join(og_tag.get("content", "").split()) if og_tag else ""
-        ) or (" ".join(soup.title.get_text().split()) if soup.title else "")
+        title = (" ".join(og_tag.get("content", "").split()) if og_tag else "") or (
+            " ".join(soup.title.get_text().split()) if soup.title else ""
+        )
         if not title:
             return []
         if len(title) > 320:
