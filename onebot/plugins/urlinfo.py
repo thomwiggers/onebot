@@ -674,19 +674,15 @@ class UrlInfo(object):
         """Extract a title from HTML content, preferring og:title over <title>."""
         warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
         soup = BeautifulSoup(content, "html.parser")
-        og_title_tag = soup.find("meta", property="og:title")
-        if og_title_tag:
-            title = og_title_tag.get("content", "").strip()
-            if title:
-                if len(title) > 320:
-                    title = f"{title[:310]}…"
-                return [f"“{title}”"]
-        if soup.title and soup.title.get_text().strip():
-            title = soup.title.get_text().strip()
-            if len(title) > 320:
-                title = f"{title[:310]}…"
-            return [f"“{title}”"]
-        return []
+        og_tag = soup.find("meta", property="og:title")
+        title = (og_tag.get("content", "").strip() if og_tag else "") or (
+            soup.title.get_text().strip() if soup.title else ""
+        )
+        if not title:
+            return []
+        if len(title) > 320:
+            title = f"{title[:310]}…"
+        return [f"“{title}”"]
 
     @event(
         r"^:(?P<mask>\S+!\S+@\S+) (?P<event>(PRIVMSG|NOTICE)) "
