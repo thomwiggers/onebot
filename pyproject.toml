@@ -2,34 +2,34 @@
 name = "onebot"
 version = "2.0.0"
 description = "OneBot is an irc bot based on irc3"
-authors = [{name = "Thom Wiggers", email = "thom@thomwiggers.nl"}]
+authors = [{ name = "Thom Wiggers", email = "thom@thomwiggers.nl" }]
 readme = "README.rst"
-license = {text = "BSD-3-Clause"}
+license = { text = "BSD-3-Clause" }
 requires-python = ">=3.11"
 keywords = ["onebot", "irc"]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Topic :: Communications :: Chat :: Internet Relay Chat",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
+  "Development Status :: 5 - Production/Stable",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Topic :: Communications :: Chat :: Internet Relay Chat",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "irc3>=1.1",
-    "lfmh>=1.1.1",
-    "musicbrainzngs>=0.7.1",
-    "beautifulsoup4>=4",
-    "requests>=2",
-    "isodate>=0.7",
-    "cryptography>=46",
-    "tekore>=6",
-    "dateparser>=1",
-    "redis>=7",
-    "praw>=7.8.1",
+  "irc3>=1.1",
+  "lfmh>=1.1.1",
+  "musicbrainzngs>=0.7.1",
+  "beautifulsoup4>=4",
+  "requests>=2",
+  "isodate>=0.7",
+  "cryptography>=46",
+  "tekore>=6",
+  "dateparser>=1",
+  "redis>=7",
+  "praw>=7.8.1",
 ]
 
 [project.urls]
@@ -40,14 +40,14 @@ onebot = "onebot:run"
 
 [dependency-groups]
 dev = [
-    "freezegun>=1.5.5",
-    "pytest",
-    "ruff",
-    "betamax",
-    "coverage",
-    "pytest-cov",
-    "tox",
-    "tox-uv",
+  "freezegun>=1.5.5",
+  "pytest",
+  "ruff",
+  "betamax",
+  "coverage",
+  "pytest-cov",
+  "tox",
+  "tox-uv",
 ]
 
 [build-system]
@@ -83,4 +83,4 @@ addopts = "--doctest-modules --ignore=docs/"
 
 [tool.ruff]
 line-length = 88
-target-version = "py314"
+target-version = "py311"
