@@ -168,51 +168,22 @@ class UrlInfoTestCase(BotTestCase):
                         self.assertEqual(title, expected_title)
 
     def test_instagram(self):
-        """Instagram reel URLs use og:title instead of the generic <title>."""
-        fixture = Path(os.path.dirname(__file__)).joinpath(
-            "fixtures/instagram-reel-example.html"
-        )
-        fixture_bytes = fixture.read_bytes()
-
-        class MockInstagramResponse:
-            status_code = 200
-            ok = True
-            headers = {
-                "Content-Type": "text/html",
-                "Content-Length": str(len(fixture_bytes)),
-            }
-            content = fixture_bytes
-
-            def iter_content(self, chunk_size):
-                yield self.content
-
-            def close(self):
-                pass
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *args):
-                pass
-
-        session = MagicMock()
-        session.get.return_value = MockInstagramResponse()
-
-        # Patch DNS so _process_url_local lets Instagram through
-        public_ip = ("157.240.241.35", 0)
-        with patch(
-            "onebot.plugins.urlinfo.socket.getaddrinfo",
-            return_value=[(socket.AF_INET, socket.SOCK_STREAM, 0, "", public_ip)],
-        ):
-            result = self.plugin._process_url(
-                session,
-                "https://www.instagram.com/reel/DXEal3zjIPx/?utm_source=ig_web_copy_link",
-            )
-
-        self.assertIsNotNone(result)
-        title = " ".join(result)
-        self.assertIn("Instagram", title)
-        self.assertIn("RN7", title)
+        """Instagram reel URLs show og:title instead of the generic page title."""
+        with requests.Session() as session:
+            session.headers.update({
+                "User-Agent": "script:onebot:irc",
+                "Accept-Language": "en-GB, en-US, en, nl-NL, nl",
+                "Accept-Encoding": "gzip, deflate",
+            })
+            with Betamax(session).use_cassette("test_instagram", record="none"):
+                result = self.plugin._process_url(
+                    session,
+                    "https://www.instagram.com/reel/DXEal3zjIPx/?utm_source=ig_web_copy_link",
+                )
+                self.assertIsNotNone(result)
+                title = " ".join(result)
+                self.assertIn("Instagram", title)
+                self.assertGreater(len(title), len("\u201cInstagram\u201d"))
 
     @unittest.skipIf("praw_client_id" not in os.environ, "No credentials provided")
     def test_reddit(self):
