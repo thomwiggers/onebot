@@ -30,13 +30,14 @@ from irc3.plugins.command import command
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs
 import threading
+import asyncio
 
 from cryptography.fernet import Fernet, InvalidToken
 import tekore as tk
 
 
 @irc3.plugin
-class SpotifyPlugin(object):
+class SpotifyPlugin:
     """Plugin to provide:
 
     * now playing functionality
@@ -122,7 +123,7 @@ class SpotifyPlugin(object):
         if not result:
             return None
         new_token = self.tk_cred.refresh_user_token(result)
-        user.set_setting("spotify_refresh_token", new_token.refresh_token)
+        await user.set_setting("spotify_refresh_token", new_token.refresh_token)
         return new_token
 
     @command
@@ -191,8 +192,9 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"Stored your token")
-            self.bot.loop.call_soon_threadsafe(
-                user.set_setting, "spotify_refresh_token", user_token.refresh_token
+            asyncio.run_coroutine_threadsafe(
+                user.set_setting("spotify_refresh_token", user_token.refresh_token),
+                self.bot.loop,
             )
         except InvalidToken:
             self.send_error(403, message="Token expired, try again")

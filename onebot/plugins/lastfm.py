@@ -35,7 +35,7 @@ from lastfm import lfm
 
 
 @irc3.plugin
-class LastfmPlugin(object):
+class LastfmPlugin:
     """Plugin to provide:
 
     * now playing functionality
@@ -77,13 +77,15 @@ class LastfmPlugin(object):
         return self.bot.redact_nicks(response, target=target)
 
     @command
-    def setuser(self, mask, target, args):
+    async def setuser(self, mask, target, args):
         """Sets the lastfm username of the user
 
         %%setuser <lastfmnick>
         """
         self.log.info("Storing lastfmuser %s for %s", args["<lastfmnick>"], mask.nick)
-        self.bot.get_user(mask.nick).set_setting("lastfmuser", args["<lastfmnick>"])
+        await self.bot.get_user(mask.nick).set_setting(
+            "lastfmuser", args["<lastfmnick>"]
+        )
         self.bot.privmsg(
             target,
             "Ok, so you are https://last.fm/user/{username}".format(

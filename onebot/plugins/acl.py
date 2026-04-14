@@ -17,7 +17,7 @@ import irc3
 from irc3.plugins.command import command
 
 
-class user_based_policy(object):
+class user_based_policy:
     """Policy to allow access based on permissions stored in users
 
     Depends on the :mod:`onebot.plugins.users` plugin.
@@ -65,7 +65,7 @@ class user_based_policy(object):
 
 
 @irc3.plugin
-class ACLPlugin(object):
+class ACLPlugin:
     """Plugin to provide access control moderation
 
     Depends on the :mod:`irc3.plugins.command`, :mod:`irc3.plugins.storage`
@@ -139,7 +139,7 @@ class ACLPlugin(object):
 
         if not args["--by-id"]:
             assert user is not None
-            user.set_setting("permissions", current_permissions)
+            await user.set_setting("permissions", current_permissions)
         else:
             self.bot.db.set(args["<id>"], permissions=json.dumps(current_permissions))
 
