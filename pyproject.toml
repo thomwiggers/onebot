@@ -19,16 +19,16 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "irc3>=1.1",
+  "irc3>=1.1.10",
   "lfmh>=1.1.1",
   "musicbrainzngs>=0.7.1",
-  "beautifulsoup4>=4",
-  "requests>=2",
-  "isodate>=0.7",
-  "cryptography>=46",
-  "tekore>=6",
-  "dateparser>=1",
-  "redis>=7",
+  "beautifulsoup4>=4.14.3",
+  "requests>=2.33.1",
+  "isodate>=0.7.2",
+  "cryptography>=47.0.0",
+  "tekore>=6.1.1",
+  "dateparser>=1.4.0",
+  "redis>=7.4.0",
   "praw>=7.8.1",
 ]
 
