@@ -141,3 +141,4 @@ cython_debug/
 
 .gemini/
 gha-creds-*.json
+.claude/settings.local.json
