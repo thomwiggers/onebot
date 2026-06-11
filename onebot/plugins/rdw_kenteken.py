@@ -1,4 +1,3 @@
-import math
 import re
 import logging
 
@@ -53,7 +52,7 @@ def format_drivetrain(vehicle: dict, fuel: dict | None) -> str:
     parts.append(f"{int(vehicle['cilinderinhoud']) / 1000:.1f}L")
     if fuel:
         if fuel.get("nettomaximumvermogen"):
-            parts.append(f"{math.floor(float(fuel['nettomaximumvermogen']) + 0.5)}kW")
+            parts.append(f"{int(float(fuel['nettomaximumvermogen']) + 0.5)}kW")
         if fuel.get("uitlaatemissieniveau"):
             parts.append(fuel["uitlaatemissieniveau"])
     return " ".join(parts)
