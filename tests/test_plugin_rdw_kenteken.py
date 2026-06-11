@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+import requests
+
 from onebot.plugins.rdw_kenteken import (
     format_date,
     format_drivetrain,
@@ -123,6 +125,34 @@ class RdwCommandTestCase(BotTestCase):
                 "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2021 | Benzine 1.0L 88kW EURO 6 AP | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h"
             ]
         )
+
+    @patch("onebot.plugins.rdw_kenteken.requests.get")
+    def test_plate_not_found(self, mock_get):
+        mock_get.return_value = _mock_response([])
+        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw XXXXXX")
+        self.assertSent(["PRIVMSG #chan :Kenteken niet gevonden."])
+
+    @patch("onebot.plugins.rdw_kenteken.requests.get")
+    def test_http_error(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_get.return_value.raise_for_status.side_effect = (
+            requests.exceptions.HTTPError(response=mock_response)
+        )
+        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+        self.assertSent(["PRIVMSG #chan :Fout bij opvragen RDW data (HTTP 500)."])
+
+    @patch("onebot.plugins.rdw_kenteken.requests.get")
+    def test_timeout(self, mock_get):
+        mock_get.side_effect = requests.exceptions.Timeout()
+        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+        self.assertSent(["PRIVMSG #chan :RDW verzoek verlopen."])
+
+    @patch("onebot.plugins.rdw_kenteken.requests.get")
+    def test_request_exception(self, mock_get):
+        mock_get.side_effect = requests.exceptions.ConnectionError()
+        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+        self.assertSent(["PRIVMSG #chan :RDW verzoek mislukt."])
 
     @patch("onebot.plugins.rdw_kenteken.requests.get")
     def test_flags_imported_sends_second_message(self, mock_get):

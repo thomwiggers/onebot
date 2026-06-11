@@ -153,11 +153,23 @@ class RdwKentekenPlugin:
         """
         plate = normalize_plate(args["<plate>"])
 
-        vehicles = _rdw_get(
-            f"{RDW_BASE}{VEHICLE_DATASET}.json",
-            {"kenteken": plate},
-            self.app_token,
-        )
+        try:
+            vehicles = _rdw_get(
+                f"{RDW_BASE}{VEHICLE_DATASET}.json",
+                {"kenteken": plate},
+                self.app_token,
+            )
+        except requests.exceptions.Timeout:
+            self.bot.privmsg(target, "RDW verzoek verlopen.")
+            return
+        except requests.exceptions.HTTPError as e:
+            code = e.response.status_code if e.response is not None else "?"
+            self.bot.privmsg(target, f"Fout bij opvragen RDW data (HTTP {code}).")
+            return
+        except requests.exceptions.RequestException:
+            self.log.exception("RDW request failed for plate %s", plate)
+            self.bot.privmsg(target, "RDW verzoek mislukt.")
+            return
 
         if not vehicles:
             self.bot.privmsg(target, "Kenteken niet gevonden.")
