@@ -176,15 +176,19 @@ class RdwCommandTestCase(BotTestCase):
     @patch("onebot.plugins.rdw_kenteken.requests.get")
     def test_fuel_fetch_failure_still_returns_summary(self, mock_get):
         error_response = MagicMock()
-        error_response.raise_for_status.side_effect = requests.exceptions.ConnectionError()
+        error_response.raise_for_status.side_effect = (
+            requests.exceptions.ConnectionError()
+        )
         mock_get.side_effect = [
             _mock_response([VEHICLE_RECORD]),
             error_response,
         ]
         self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
-        self.assertSent([
-            "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2021 | 1.0L | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h"
-        ])
+        self.assertSent(
+            [
+                "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2021 | 1.0L | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h"
+            ]
+        )
 
 
 class FormatFlagsTest(unittest.TestCase):

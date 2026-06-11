@@ -7,7 +7,7 @@ IRC bot plugin that looks up Dutch vehicle registration data from the RDW open d
 ## Command
 
 ```
-!kenteken <plate>
+!rdw <plate>
 ```
 
 Plate input is normalized: dashes and spaces stripped, uppercased. `N-524-KT`, `n524kt`, `N 524 KT` all resolve to `N524KT`.
@@ -18,16 +18,17 @@ Base URL: `https://opendata.rdw.nl/resource/`
 
 | Dataset | ID | Fields used |
 |---|---|---|
-| Gekentekende voertuigen | `m9d7-ebf2` | merk, handelsbenaming, inrichting, datum_eerste_toelating, catalogusprijs, vervaldatum_apk |
-| Brandstof | `8ys7-d773` | brandstof_omschrijving, cilinderinhoud, nettomaximumvermogen, uitlaatemissieniveau |
+| Gekentekende voertuigen | `m9d7-ebf2` | merk, handelsbenaming, inrichting, datum_eerste_toelating, datum_eerste_tenaamstelling_in_nederland, catalogusprijs, vervaldatum_apk, cilinderinhoud, maximale_constructiesnelheid, export_indicator, openstaande_terugroepactie_indicator, tellerstandoordeel, wacht_op_keuren |
+| Terugroepactie status | `t49b-isb7` | (checked for any records) |
+| Brandstof | `8ys7-d773` | brandstof_omschrijving, nettomaximumvermogen, uitlaatemissieniveau |
 
-Both requests use `?kenteken=<PLATE>` and `X-App-Token` header.
+All requests use `?kenteken=<PLATE>` and `X-App-Token` header. Engine size (`cilinderinhoud`) comes from the main dataset; fuel type and power from brandstof.
 
 ## Configuration
 
 ```ini
 [onebot.plugins.rdw_kenteken]
-app_token = <token>
+rdw_app_token = <token>
 ```
 
 ## Output Format
@@ -35,7 +36,7 @@ app_token = <token>
 Single IRC line:
 
 ```
-N-524-KT: KIA CEED Stationwagen | 2021 | Benzine 1.0L 88kW Euro 6 AP | Catalogus: €27.645 | APK: 06-08-2027
+N-524-KT: KIA CEED Stationwagen | 2021 | Benzine 1.0L 88kW Euro 6 AP | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h
 ```
 
 Fields:
@@ -45,6 +46,19 @@ Fields:
 - `brandstof_omschrijving` + engine size in L (cilinderinhoud / 1000, 1 decimal) + power in kW (nettomaximumvermogen, rounded) + `uitlaatemissieniveau`
 - Catalogus price formatted with dots as thousands separator + euro sign
 - APK expiry reformatted from `YYYYMMDD` to `DD-MM-YYYY`
+- `maximale_constructiesnelheid` in km/h
+
+## Flags (optional second message)
+
+Only sent if one or more flags apply. Format: `⚠ N-524-KT: <flag>, <flag>, ...`
+
+| Condition | Field | Flag text |
+|---|---|---|
+| Imported | `datum_eerste_toelating` predates `datum_eerste_tenaamstelling_in_nederland` by >30 days | `geïmporteerd` |
+| Exported | `export_indicator == "Ja"` | `geëxporteerd` |
+| Suspicious mileage | `tellerstandoordeel != "Logisch"` | `verdachte kilometerstand (tellerstandoordeel: <value>)` |
+| Open recall | `openstaande_terugroepactie_indicator == "Ja"` | `openstaande terugroepactie` |
+| Pending inspection | `wacht_op_keuren != "Geen verstrekking in Open Data"` | `wacht op keuren: <value>` |
 
 ## Error Handling
 
