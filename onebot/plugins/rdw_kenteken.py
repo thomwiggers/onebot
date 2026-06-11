@@ -1,5 +1,6 @@
 import re
 import logging
+from datetime import date
 from typing import Self
 
 import irc3
@@ -85,6 +86,46 @@ def format_summary(plate: str, vehicle: dict, fuel: dict | None) -> str:
     return " | ".join(parts)
 
 
+def format_flags(plate: str, vehicle: dict) -> str | None:
+    """Return a warning line if suspicious conditions apply, else None."""
+    flags = []
+
+    first_toelating = vehicle.get("datum_eerste_toelating", "")
+    first_nl = vehicle.get("datum_eerste_tenaamstelling_in_nederland", "")
+    if first_toelating and first_nl:
+        dt_toelating = date(
+            int(first_toelating[:4]),
+            int(first_toelating[4:6]),
+            int(first_toelating[6:8]),
+        )
+        dt_nl = date(
+            int(first_nl[:4]),
+            int(first_nl[4:6]),
+            int(first_nl[6:8]),
+        )
+        if (dt_nl - dt_toelating).days > 30:
+            flags.append("geïmporteerd")
+
+    if vehicle.get("export_indicator") == "Ja":
+        flags.append("geëxporteerd")
+
+    tellerstand = vehicle.get("tellerstandoordeel", "Logisch")
+    if tellerstand and tellerstand != "Logisch":
+        flags.append(f"verdachte kilometerstand (tellerstandoordeel: {tellerstand})")
+
+    if vehicle.get("openstaande_terugroepactie_indicator") == "Ja":
+        flags.append("openstaande terugroepactie")
+
+    wacht = vehicle.get("wacht_op_keuren", "Geen verstrekking in Open Data")
+    if wacht and wacht != "Geen verstrekking in Open Data":
+        flags.append(f"wacht op keuren: {wacht}")
+
+    if not flags:
+        return None
+
+    return f"⚠ {plate}: {', '.join(flags)}"
+
+
 def _rdw_get(url: str, params: dict, app_token: str) -> list:
     headers = {"X-App-Token": app_token}
     response = requests.get(url, params=params, headers=headers, timeout=10)
@@ -136,6 +177,9 @@ class RdwKentekenPlugin:
             fuel = None
 
         self.bot.privmsg(target, format_summary(plate, vehicle, fuel))
+        flags = format_flags(plate, vehicle)
+        if flags:
+            self.bot.privmsg(target, flags)
 
     @classmethod
     def reload(cls, old: Self) -> Self:  # pragma: no cover

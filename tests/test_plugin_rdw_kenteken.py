@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from onebot.plugins.rdw_kenteken import (
     format_date,
     format_drivetrain,
+    format_flags,
     format_price,
     normalize_plate,
 )
@@ -121,4 +122,70 @@ class RdwCommandTestCase(BotTestCase):
             [
                 "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2021 | Benzine 1.0L 88kW EURO 6 AP | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h"
             ]
+        )
+
+    @patch("onebot.plugins.rdw_kenteken.requests.get")
+    def test_flags_imported_sends_second_message(self, mock_get):
+        imported_vehicle = {
+            **VEHICLE_RECORD,
+            "datum_eerste_toelating": "20200101",
+            "datum_eerste_tenaamstelling_in_nederland": "20211115",
+        }
+        mock_get.side_effect = [
+            _mock_response([imported_vehicle]),
+            _mock_response([FUEL_RECORD]),
+        ]
+        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+        self.assertSent(
+            [
+                "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2020 | Benzine 1.0L 88kW EURO 6 AP | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h",
+                "PRIVMSG #chan :⚠ N524KT: geïmporteerd",
+            ]
+        )
+
+
+class FormatFlagsTest(unittest.TestCase):
+    def test_no_flags_returns_none(self):
+        assert format_flags("N524KT", VEHICLE_RECORD) is None
+
+    def test_imported_when_nl_registration_much_later(self):
+        v = {
+            **VEHICLE_RECORD,
+            "datum_eerste_toelating": "20200101",
+            "datum_eerste_tenaamstelling_in_nederland": "20211115",
+        }
+        assert format_flags("N524KT", v) == "⚠ N524KT: geïmporteerd"
+
+    def test_not_imported_when_same_day(self):
+        assert format_flags("N524KT", VEHICLE_RECORD) is None
+
+    def test_exported(self):
+        v = {**VEHICLE_RECORD, "export_indicator": "Ja"}
+        assert format_flags("N524KT", v) == "⚠ N524KT: geëxporteerd"
+
+    def test_suspicious_mileage(self):
+        v = {**VEHICLE_RECORD, "tellerstandoordeel": "Niet logisch"}
+        result = format_flags("N524KT", v)
+        assert (
+            result
+            == "⚠ N524KT: verdachte kilometerstand (tellerstandoordeel: Niet logisch)"
+        )
+
+    def test_open_recall(self):
+        v = {**VEHICLE_RECORD, "openstaande_terugroepactie_indicator": "Ja"}
+        assert format_flags("N524KT", v) == "⚠ N524KT: openstaande terugroepactie"
+
+    def test_pending_inspection(self):
+        v = {**VEHICLE_RECORD, "wacht_op_keuren": "Wacht op keuren"}
+        assert format_flags("N524KT", v) == "⚠ N524KT: wacht op keuren: Wacht op keuren"
+
+    def test_multiple_flags_combined(self):
+        v = {
+            **VEHICLE_RECORD,
+            "export_indicator": "Ja",
+            "openstaande_terugroepactie_indicator": "Ja",
+        }
+        assert (
+            format_flags("N524KT", v)
+            == "⚠ N524KT: geëxporteerd, openstaande terugroepactie"
         )
