@@ -89,6 +89,56 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
         self.assertEqual(self.bot.sent, lines)
 
 
+class SuperAdminTestCase(BotTestCase):
+    """Test that the superadmin config value grants all_permissions via the guard."""
+
+    config = {
+        "cmd": "!",
+        "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
+        "onebot.plugins.acl": {"superadmin": "root@localhost"},
+    }
+
+    @patch("irc3.plugins.storage.Storage")
+    def setUp(self, mock):
+        super().setUp()
+        self.config["loop"] = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.config["loop"])
+        self.callFTU()
+        self.bot.db = MockDb()
+        self.bot.include("onebot.plugins.acl")
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
+
+    def assertSent(self, lines):
+        self.assertEqual(self.bot.sent, lines)
+
+    def test_superadmin_can_use_acl(self):
+        async def wrap():
+            self.bot.dispatch(":superadmin!root@localhost JOIN #chan")
+            self.bot.dispatch(
+                ":superadmin!root@localhost PRIVMSG #chan :!acl add bar admin"
+            )
+            await asyncio.sleep(0.001)
+
+        self.bot.loop.run_until_complete(wrap())
+        self.assertEqual(self.bot.db["foo@host"].get("permissions"), '["admin"]')
+        self.assertSent(["PRIVMSG #chan :Updated permissions for bar"])
+
+    def test_regular_user_cannot_use_acl(self):
+        async def wrap():
+            self.bot.dispatch(":regular!user@somehost JOIN #chan")
+            self.bot.dispatch(
+                ":regular!user@somehost PRIVMSG #chan :!acl add bar admin"
+            )
+            await asyncio.sleep(0.001)
+
+        self.bot.loop.run_until_complete(wrap())
+        self.assertSent(["PRIVMSG regular :You are not allowed to use the acl command"])
+
+
 class ACLTestCase(BotTestCase):
     config = {"cmd": "!", "onebot.plugins.acl": {"superadmin": "root@localhost"}}
 
