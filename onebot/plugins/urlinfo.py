@@ -467,11 +467,12 @@ class UrlInfo(object):
             page_title = page.get("title", title)
             extract = page.get("extract", "")
             summary = ""
+            max_message_len = 200
             if extract:
                 summary = extract.strip()
                 summary = summary.split("\n")[0]
-                if len(summary) > 50:
-                    summary = summary[:49] + "…"
+                if (len(title) + len(summary)) > max_message_len:
+                    summary = summary[: max(0, max_message_len - len(title) - 1)] + "…"
 
             return (
                 [f"“{page_title}”", f"— {summary}"] if summary else [f"“{page_title}”"]

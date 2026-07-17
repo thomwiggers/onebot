@@ -36,14 +36,18 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                         "https://en.wikipedia.org/wiki/Python_(programming_language)",
                         [
                             "“Python (programming language)”",
-                            "— Python is a high-level, general-purpose programmi…",
+                            ("— Python is a high-level, general-purpose programming language. "
+                            "Its design philosophy emphasizes code readability with the use of "
+                            "significant indentation. Python is dynamic…"),
                         ],
                     ),
                     (
                         "https://en.wikipedia.org/w/index.php?title=IRC",
                         [
                             "“IRC”",
-                            "— IRC (Internet Relay Chat) is a text-based chat sy…",
+                            ("— IRC (Internet Relay Chat) is a text-based chat system for instant messaging. "
+                            "IRC is designed for group communication in discussion forums, called "
+                            "channels, but also allows one-on-one communication…"),
                         ],
                     ),
                 ]:
@@ -99,6 +103,10 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
 
         session = MagicMock()
         url = "https://wiki.example.com/wiki/Some_Page"
+        extract_text = (
+            f"This is a very long extract that should be truncated because it "
+            f"exceeds two hundred characters in total length.{'.' * 100}"
+        )
 
         # Mock responses
         def side_effect(method, url, **kwargs):
@@ -136,7 +144,7 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                                 "123": {
                                     "pageid": 123,
                                     "title": "Some Page",
-                                    "extract": "This is a very long extract that should be truncated because it exceeds fifty characters in total length.",
+                                    "extract": extract_text,
                                     "length": 1000,
                                     "touched": "2023-01-01T00:00:00Z",
                                     "lastrevid": 500,
@@ -154,13 +162,13 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
         result = self.plugin._process_url(session, url)
 
         self.assertIsNotNone(result)
-        # "This is a very long extract that should be trunc…" (length 49 + …)
-        # "This is a very long extract that should be trunc" is 49 chars.
-        # "This is a very long extract that should be trunca" is 50 chars.
-        # The code does: if len(summary) > 50: summary = summary[:49] + "…"
-        expected_summary = "— This is a very long extract that should be trunca…"
-        self.assertEqual(result, ["“Some Page”", expected_summary])
-        self.assertLessEqual(len(result[1]) - 2, 50)  # -2 for "— "
+        # Expected summary should be truncated
+        expected_summary = f"— {extract_text[: (200 - len('Some Page') - 1)]}…"
+        self.assertEqual(result[0], "“Some Page”")
+        self.assertTrue(result[1].endswith("…"))
+        self.assertEqual(len(result[1]), len(expected_summary))
+        self.assertEqual(result[1], expected_summary)
+        self.assertLessEqual(len("".join(result)), 200 + 4)  # +4 for "“”" + "— "
 
     @patch("socket.getaddrinfo")
     def test_mediawiki_partial_html(self, mock_getaddrinfo):
