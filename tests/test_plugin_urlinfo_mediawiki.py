@@ -36,18 +36,22 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                         "https://en.wikipedia.org/wiki/Python_(programming_language)",
                         [
                             "“Python (programming language)”",
-                            ("— Python is a high-level, general-purpose programming language. "
-                            "Its design philosophy emphasizes code readability with the use of "
-                            "significant indentation. Python is dynamic…"),
+                            (
+                                "— Python is a high-level, general-purpose programming language. "
+                                "Its design philosophy emphasizes code readability with the use of "
+                                "significant indentation. Python is dynamic…"
+                            ),
                         ],
                     ),
                     (
                         "https://en.wikipedia.org/w/index.php?title=IRC",
                         [
                             "“IRC”",
-                            ("— IRC (Internet Relay Chat) is a text-based chat system for instant messaging. "
-                            "IRC is designed for group communication in discussion forums, called "
-                            "channels, but also allows one-on-one communication…"),
+                            (
+                                "— IRC (Internet Relay Chat) is a text-based chat system for instant messaging. "
+                                "IRC is designed for group communication in discussion forums, called "
+                                "channels, but also allows one-on-one communication…"
+                            ),
                         ],
                     ),
                 ]:
