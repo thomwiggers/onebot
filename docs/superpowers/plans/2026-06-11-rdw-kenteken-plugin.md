@@ -256,9 +256,11 @@ class RdwCommandTestCase(BotTestCase):
             _mock_response([FUEL_RECORD]),
         ]
         self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N-524-KT")
-        self.assertSent([
-            "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2021 | Benzine 1.0L 88kW EURO 6 AP | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h"
-        ])
+        self.assertSent(
+            [
+                "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2021 | Benzine 1.0L 88kW EURO 6 AP | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h"
+            ]
+        )
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -407,7 +409,10 @@ class FormatFlagsTest(unittest.TestCase):
     def test_suspicious_mileage(self):
         v = {**VEHICLE_RECORD, "tellerstandoordeel": "Niet logisch"}
         result = format_flags("N524KT", v)
-        assert result == "⚠ N524KT: verdachte kilometerstand (tellerstandoordeel: Niet logisch)"
+        assert (
+            result
+            == "⚠ N524KT: verdachte kilometerstand (tellerstandoordeel: Niet logisch)"
+        )
 
     def test_open_recall(self):
         v = {**VEHICLE_RECORD, "openstaande_terugroepactie_indicator": "Ja"}
@@ -423,28 +428,33 @@ class FormatFlagsTest(unittest.TestCase):
             "export_indicator": "Ja",
             "openstaande_terugroepactie_indicator": "Ja",
         }
-        assert format_flags("N524KT", v) == "⚠ N524KT: geëxporteerd, openstaande terugroepactie"
+        assert (
+            format_flags("N524KT", v)
+            == "⚠ N524KT: geëxporteerd, openstaande terugroepactie"
+        )
 ```
 
 Also add this integration test inside `RdwCommandTestCase`:
 
 ```python
-    @patch("onebot.plugins.rdw_kenteken.requests.get")
-    def test_flags_imported_sends_second_message(self, mock_get):
-        imported_vehicle = {
-            **VEHICLE_RECORD,
-            "datum_eerste_toelating": "20200101",
-            "datum_eerste_tenaamstelling_in_nederland": "20211115",
-        }
-        mock_get.side_effect = [
-            _mock_response([imported_vehicle]),
-            _mock_response([FUEL_RECORD]),
-        ]
-        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
-        self.assertSent([
+@patch("onebot.plugins.rdw_kenteken.requests.get")
+def test_flags_imported_sends_second_message(self, mock_get):
+    imported_vehicle = {
+        **VEHICLE_RECORD,
+        "datum_eerste_toelating": "20200101",
+        "datum_eerste_tenaamstelling_in_nederland": "20211115",
+    }
+    mock_get.side_effect = [
+        _mock_response([imported_vehicle]),
+        _mock_response([FUEL_RECORD]),
+    ]
+    self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+    self.assertSent(
+        [
             "PRIVMSG #chan :N524KT: KIA CEED Stationwagen | 2020 | Benzine 1.0L 88kW EURO 6 AP | Catalogus: €27.645 | APK: 06-08-2027 | Top: 190 km/h",
             "PRIVMSG #chan :⚠ N524KT: geïmporteerd",
-        ])
+        ]
+    )
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -485,9 +495,7 @@ def format_flags(plate: str, vehicle: dict) -> str | None:
 
     tellerstand = vehicle.get("tellerstandoordeel", "Logisch")
     if tellerstand and tellerstand != "Logisch":
-        flags.append(
-            f"verdachte kilometerstand (tellerstandoordeel: {tellerstand})"
-        )
+        flags.append(f"verdachte kilometerstand (tellerstandoordeel: {tellerstand})")
 
     if vehicle.get("openstaande_terugroepactie_indicator") == "Ja":
         flags.append("openstaande terugroepactie")
@@ -541,33 +549,36 @@ git commit -m "feat(rdw): add flags for suspicious vehicle conditions"
 - [ ] **Step 1: Add error handling tests inside `RdwCommandTestCase`**
 
 ```python
-    @patch("onebot.plugins.rdw_kenteken.requests.get")
-    def test_plate_not_found(self, mock_get):
-        mock_get.return_value = _mock_response([])
-        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw XXXXXX")
-        self.assertSent(["PRIVMSG #chan :Kenteken niet gevonden."])
+@patch("onebot.plugins.rdw_kenteken.requests.get")
+def test_plate_not_found(self, mock_get):
+    mock_get.return_value = _mock_response([])
+    self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw XXXXXX")
+    self.assertSent(["PRIVMSG #chan :Kenteken niet gevonden."])
 
-    @patch("onebot.plugins.rdw_kenteken.requests.get")
-    def test_http_error(self, mock_get):
-        mock_response = MagicMock()
-        mock_response.status_code = 500
-        mock_get.return_value.raise_for_status.side_effect = (
-            requests.exceptions.HTTPError(response=mock_response)
-        )
-        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
-        self.assertSent(["PRIVMSG #chan :Fout bij opvragen RDW data (HTTP 500)."])
 
-    @patch("onebot.plugins.rdw_kenteken.requests.get")
-    def test_timeout(self, mock_get):
-        mock_get.side_effect = requests.exceptions.Timeout()
-        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
-        self.assertSent(["PRIVMSG #chan :RDW verzoek verlopen."])
+@patch("onebot.plugins.rdw_kenteken.requests.get")
+def test_http_error(self, mock_get):
+    mock_response = MagicMock()
+    mock_response.status_code = 500
+    mock_get.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError(
+        response=mock_response
+    )
+    self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+    self.assertSent(["PRIVMSG #chan :Fout bij opvragen RDW data (HTTP 500)."])
 
-    @patch("onebot.plugins.rdw_kenteken.requests.get")
-    def test_request_exception(self, mock_get):
-        mock_get.side_effect = requests.exceptions.ConnectionError()
-        self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
-        self.assertSent(["PRIVMSG #chan :RDW verzoek mislukt."])
+
+@patch("onebot.plugins.rdw_kenteken.requests.get")
+def test_timeout(self, mock_get):
+    mock_get.side_effect = requests.exceptions.Timeout()
+    self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+    self.assertSent(["PRIVMSG #chan :RDW verzoek verlopen."])
+
+
+@patch("onebot.plugins.rdw_kenteken.requests.get")
+def test_request_exception(self, mock_get):
+    mock_get.side_effect = requests.exceptions.ConnectionError()
+    self.bot.dispatch(":user!user@host PRIVMSG #chan :!rdw N524KT")
+    self.assertSent(["PRIVMSG #chan :RDW verzoek mislukt."])
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
