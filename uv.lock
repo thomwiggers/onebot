@@ -582,7 +582,7 @@ requires-dist = [
     { name = "praw", specifier = ">=8.0.2" },
     { name = "redis", specifier = ">=8.0.1" },
     { name = "requests", specifier = ">=2.34.2" },
-    { name = "tekore", specifier = ">=6.1.1" },
+    { name = "tekore", specifier = ">=6.2.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1009,15 +1009,15 @@ wheels = [
 
 [[package]]
 name = "tekore"
-version = "6.1.1"
+version = "6.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/af/018e0e7557402b2822a9fb6248629d79cec92f6198b89e261e972e3c2994/tekore-6.1.1.tar.gz", hash = "sha256:5d5d13e31eceb97bd5d723703b009bd3e3cc54b8e33822b656650df1555b4dfc", size = 270451, upload-time = "2026-03-10T17:14:55.607Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/bd/0e1cfd14de8a58bef6ed3fc007abf31d88e2c9511b5c8131bc5fa4d32091/tekore-6.2.0.tar.gz", hash = "sha256:28bb06404e897aa66d7cbca2699c33ba7fdf7833a527c2b91226f44208e6930b", size = 271504, upload-time = "2026-07-27T16:07:39.69Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/33/e7a6e0b6a9d82a6e498ea23ab8644b1850acae2409c2848f6252804530da/tekore-6.1.1-py3-none-any.whl", hash = "sha256:5d266a4cf183ec46c66d0326baa6a10d719eb7393fd704cc4542c9d703a02d83", size = 75330, upload-time = "2026-03-10T17:14:53.376Z" },
+    { url = "https://files.pythonhosted.org/packages/75/bc/20b750ccdbb595d4bebb3c2a1a1f41e9901d4769a35507f46d24b334a754/tekore-6.2.0-py3-none-any.whl", hash = "sha256:00380de5ee1f08ff9778d959cec9fb71cf33270f4d2ccccece0d22728a87d9b5", size = 75669, upload-time = "2026-07-27T16:07:38.048Z" },
 ]
 
 [[package]]
