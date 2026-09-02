@@ -25,11 +25,11 @@ dependencies = [
   "beautifulsoup4>=4.15.0",
   "requests>=2.34.2",
   "isodate>=0.7.2",
-  "cryptography>=49.0.0",
+  "cryptography>=50.0.1",
   "tekore>=6.2.0",
-  "dateparser>=1.4.1",
-  "redis>=8.0.1",
-  "praw>=8.0.2",
+  "dateparser>=1.4.2",
+  "redis>=8.1.0",
+  "praw>=8.0.3",
 ]
 
 [project.urls]
