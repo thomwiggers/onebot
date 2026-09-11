@@ -240,8 +240,9 @@ class UsersPlugin:
             return
         if not IrcString(target).is_channel:
             # Private message: track the user without a channel, so commands
-            # sent in a query can still be identified.
-            if mask.nick not in self.active_users:
+            # sent in a query can still be identified. Ignore NOTICEs, which
+            # is what services (NickServ and friends) send us.
+            if event == "PRIVMSG" and mask.nick not in self.active_users:
                 self.log.debug("Found user %s via private message", mask.nick)
                 self.active_users[mask.nick] = self.create_user(mask, [])
             return

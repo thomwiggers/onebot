@@ -15,8 +15,18 @@ from typing import Optional
 from urllib.parse import quote
 
 from cryptography.fernet import Fernet
+from irc3.utils import IrcString
 
 from onebot.plugins.spotify import SpotifyResponseServer
+from onebot.plugins.users import User
+
+
+class MockDb(dict):
+    def set(self, k, **kwargs):
+        if not self.get(k):
+            self[k] = kwargs
+        else:
+            self[k].update(**kwargs)
 
 
 class FakeToken:
@@ -120,6 +130,26 @@ class SpotifyCallbackTestCase(unittest.TestCase):
         assert handler.errors == []
         assert b"Stored your token" in handler.wfile.written
         assert "somecode" in handler.seen
+
+    def test_stores_token_for_real_user_object(self):
+        """The real User.set_setting path, including async identification"""
+        db = MockDb()
+
+        async def id_func():
+            # identification is async (nickserv does a WHOIS here)
+            await asyncio.sleep(0)
+            return "nsaccount"
+
+        user = User(IrcString("bar!foo@host"), [], id_func, db)
+        handler = FakeHandler(
+            FakeBot(self.loop, user), self.key, make_path(self.key, "bar")
+        )
+
+        SpotifyResponseServer._do_callback(handler)
+
+        assert handler.errors == []
+        assert handler.responses == [200]
+        assert db["nsaccount"] == {"spotify_refresh_token": "refresh-token"}
 
     def test_unknown_user_does_not_crash(self):
         handler = FakeHandler(

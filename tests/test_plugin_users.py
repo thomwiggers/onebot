@@ -246,6 +246,16 @@ class UsersPluginTest(BotTestCase):
         self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
         assert user.channels == set(("#chan",))
 
+    def test_query_notice_is_ignored(self):
+        # services talk to us in NOTICEs; they're not users
+        self.bot.dispatch(
+            ":NickServ!NickServ@services. NOTICE {} :You are now identified".format(
+                self.bot.nick
+            )
+        )
+        assert self.bot.get_user("NickServ") is None
+        assert len(self.users.active_users) == 0
+
     def test_bot_part_keeps_users_from_other_channels(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         self.bot.dispatch(":bar2!foo@host JOIN #chan2")
