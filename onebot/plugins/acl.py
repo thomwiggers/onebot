@@ -27,13 +27,23 @@ class user_based_policy:
 
     def __init__(self, bot):
         self.bot = bot
-        self.bot.include("onebot.plugins.users")
         self.log = self.bot.log.getChild(__name__)
+        # NB: don't include the users plugin here. We're constructed from
+        # inside irc3.plugins.command.Commands' own constructor, so that
+        # plugin isn't registered yet, and any command the included plugin
+        # declares would register itself on a second, throwaway Commands
+        # instance and silently disappear. Include it in the bot config
+        # (onebot.plugins.acl already requires it).
 
     async def has_permission(self, mask, permission):
         """
         Returns if the user identified by ``mask`` has ``permission``
         """
+        if not hasattr(self.bot, "get_user"):
+            self.log.error(
+                "This guard needs the onebot.plugins.users plugin to be included"
+            )
+            return False
         user = self.bot.get_user(mask.nick)
         perms = []
         if user:

@@ -36,9 +36,49 @@ async def cmd2(bot, mask, target, args, **kwargs):
     bot.privmsg(target, "Done")
 
 
+class GuardDoesNotEatCommandsTestCase(BotTestCase):
+    """The guard is built from inside the Commands plugin's constructor.
+
+    Including the users plugin from there registered its commands on a
+    throwaway Commands instance, so they never showed up on the bot.
+    """
+
+    config = {
+        "includes": ["onebot.plugins.acl"],
+        "cmd": ".",
+        "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
+        "onebot.plugins.users": {"identify_by": "mask"},
+    }
+
+    @patch("irc3.plugins.storage.Storage")
+    def setUp(self, mock):
+        super().setUp()
+        self.config["loop"] = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.config["loop"])
+        self.callFTU()
+        self.bot.db = MockDb()
+
+    def tearDown(self):
+        super().tearDown()
+        self.bot.SIGINT()
+
+    def test_users_commands_are_registered(self):
+        commands = self.bot.get_plugin("irc3.plugins.command.Commands")
+        assert "whoami" in commands
+
+    def test_whoami_replies(self):
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+        self.bot.dispatch(":bar!foo@host PRIVMSG #chan :.whoami")
+        self.bot.loop.run_until_complete(asyncio.sleep(0.01))
+        assert self.bot.sent == [
+            "PRIVMSG bar :You are foo@host",
+            "PRIVMSG #chan :I've sent you a PRIVMSG",
+        ]
+
+
 class UserBasedGuardPolicyTestCase(BotTestCase):
     config = {
-        "includes": ["irc3.plugins.command", __name__],
+        "includes": ["irc3.plugins.command", "onebot.plugins.users", __name__],
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
     }
 
