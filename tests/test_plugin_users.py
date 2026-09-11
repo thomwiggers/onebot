@@ -223,20 +223,28 @@ class UsersPluginTest(BotTestCase):
         assert self.bot.get_user("bar2") is not None
 
     def test_privmsg_in_query(self):
-        # a query isn't a channel, so we track the user either way
+        # a query isn't a channel, so we track the user without one
         self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
         user = self.bot.get_user("bar")
         assert user is not None
         assert user.nick == "bar"
         assert user.host == "foo@host"
+        assert user.channels == set()
 
         # and a channel they're in is still registered on top of that
         self.users.channels.add("#chan")
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan :hi!")
-        assert "#chan" in user.channels
+        assert user.channels == set(("#chan",))
+        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
+        assert user.channels == set(("#chan",))
 
-    def test_privmsg_from_a_server(self):
-        # server notices have no nick to track
+    def test_notice_is_ignored(self):
+        # services talk to us in NOTICEs; they're not users
+        self.bot.dispatch(
+            ":NickServ!NickServ@services. NOTICE {} :identified".format(self.bot.nick)
+        )
+        self.users.channels.add("#chan")
+        self.bot.dispatch(":bar!foo@host NOTICE #chan :hi")
         self.bot.dispatch(":irc.example.org NOTICE {} :hello".format(self.bot.nick))
         assert len(self.users.active_users) == 0
 

@@ -245,15 +245,20 @@ class UsersPlugin:
         target: IrcString,
         data=None,
     ):
+        if event != "PRIVMSG":
+            # services talk to us in NOTICEs; they're not users
+            return
         if target.is_channel and target not in self.channels:
             self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
             return
         if not mask.is_nick:
             return
+        # a query isn't a channel, so there's nothing to register them in
+        channels = [target] if target.is_channel else []
         if mask.nick not in self.active_users:
-            self.log.debug("Found user %s via %s", mask.nick, event)
-            self.active_users[mask.nick] = self.create_user(mask, [target])
-        else:
+            self.log.debug("Found user %s via PRIVMSG", mask.nick)
+            self.active_users[mask.nick] = self.create_user(mask, channels)
+        elif target.is_channel:
             self.active_users[mask.nick].join(target)
 
     def connection_lost(self):
