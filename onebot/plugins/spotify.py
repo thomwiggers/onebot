@@ -24,7 +24,8 @@ Usage::
 
 """
 
-from typing import Self, Set
+from collections import deque
+from typing import Deque, Self
 import irc3
 from irc3.plugins.command import command
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -161,7 +162,9 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
     key: bytes
     tk_cred: tk.RefreshingCredentials
     bot: irc3.IrcBot
-    seen: Set[str] = set()
+    # Only used to answer a replayed code; old ones are of no interest,
+    # so the oldest fall off rather than growing for the bot's lifetime.
+    seen: Deque[str] = deque(maxlen=100)
 
     def do_GET(self):
         """Handle GET requests"""
@@ -212,7 +215,7 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
             self.bot.log.exception("Failed to handle Spotify callback")
             self.send_error(500, message=f"exception: {e}")
         else:
-            self.seen.add(code)
+            self.seen.append(code)
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"Stored your token")

@@ -11,6 +11,7 @@ Tests for the Spotify OAuth callback handler.
 import asyncio
 import threading
 import unittest
+from collections import deque
 from typing import Optional
 from urllib.parse import quote
 
@@ -85,7 +86,7 @@ class FakeHandler:
         self.key = key
         self.path = path
         self.tk_cred = FakeCredentials()
-        self.seen = set()
+        self.seen = deque(maxlen=100)
         self.wfile = FakeWFile()
         self.responses = []
         self.errors = []
@@ -163,7 +164,7 @@ class SpotifyCallbackTestCase(unittest.TestCase):
         assert len(handler.errors) == 1
         assert handler.errors[0][0] == 404
         # The code isn't burned, so the user can retry
-        assert handler.seen == set()
+        assert list(handler.seen) == []
 
     def test_failing_store_reports_error(self):
         class FailingUser(FakeUser):
@@ -178,7 +179,7 @@ class SpotifyCallbackTestCase(unittest.TestCase):
 
         assert handler.responses == []
         assert handler.errors[0][0] == 500
-        assert handler.seen == set()
+        assert list(handler.seen) == []
 
     def test_invalid_state_is_rejected(self):
         other_key = Fernet.generate_key()
@@ -191,12 +192,26 @@ class SpotifyCallbackTestCase(unittest.TestCase):
         assert handler.errors[0][0] == 403
         assert handler.responses == []
 
+    def test_only_the_last_100_codes_are_remembered(self):
+        bot = FakeBot(self.loop, FakeUser())
+        # the handler class shares one deque between requests
+        seen = deque(maxlen=100)
+        for i in range(101):
+            path = make_path(self.key, "bar", code=str(i))
+            handler = FakeHandler(bot, self.key, path)
+            handler.seen = seen
+            SpotifyResponseServer._do_callback(handler)
+
+        assert len(seen) == 100
+        assert "0" not in seen
+        assert "100" in seen
+
     def test_replayed_code_is_not_processed_twice(self):
         user = FakeUser()
         handler = FakeHandler(
             FakeBot(self.loop, user), self.key, make_path(self.key, "bar")
         )
-        handler.seen.add("somecode")
+        handler.seen.append("somecode")
 
         SpotifyResponseServer._do_callback(handler)
 
