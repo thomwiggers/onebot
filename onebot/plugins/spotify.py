@@ -24,7 +24,8 @@ Usage::
 
 """
 
-from typing import Self, Set
+from collections import deque
+from typing import Deque, Self
 import irc3
 from irc3.plugins.command import command
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -161,7 +162,9 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
     key: bytes
     tk_cred: tk.RefreshingCredentials
     bot: irc3.IrcBot
-    seen: Set[str] = set()
+    # Only used to answer a replayed code; old ones are of no interest,
+    # so the oldest fall off rather than growing for the bot's lifetime.
+    seen: Deque[str] = deque(maxlen=100)
 
     def do_GET(self):
         """Handle GET requests"""
@@ -182,21 +185,37 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b"Processed your token already")
             return
-        self.seen.add(code)
         try:
             qs = self.path[len("/callback?") :]
             params = parse_qs(qs)
-            state = fernet.decrypt(params["state"][0].encode(), ttl=120).decode()
-            user = self.bot.get_user(state)
+            # Generous ttl: logging into Spotify and approving the scopes
+            # takes a lot longer than it does to click the link.
+            nick = fernet.decrypt(params["state"][0].encode(), ttl=600).decode()
+            user = self.bot.get_user(nick)
+            if user is None:
+                self.send_error(
+                    404,
+                    message="I lost track of you, say something to me on IRC "
+                    "and run the command again",
+                )
+                return
             user_token = self.tk_cred.request_user_token(code)
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(b"Stored your token")
+            # Block until the token is actually stored: we're on a request
+            # thread, not the bot's event loop, so waiting here is safe and
+            # keeps the success response honest.
             asyncio.run_coroutine_threadsafe(
                 user.set_setting("spotify_refresh_token", user_token.refresh_token),
                 self.bot.loop,
-            )
+            ).result(timeout=30)
         except InvalidToken:
             self.send_error(403, message="Token expired, try again")
         except tk.BadRequest as e:
             self.send_error(500, message=f"exception: {e}")
+        except Exception as e:
+            self.bot.log.exception("Failed to handle Spotify callback")
+            self.send_error(500, message=f"exception: {e}")
+        else:
+            self.seen.append(code)
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"Stored your token")

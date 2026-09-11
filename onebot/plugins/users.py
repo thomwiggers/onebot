@@ -7,6 +7,15 @@
 Keeps track of the users in channels. Also provides an authorisation system.
 This plugin uses WHOIS to figure out someones NickServ account and then links
 that to an automatically created, in-bot account.
+
+.. note::
+
+    This plugin can't declare commands. ``onebot.plugins.acl``'s guard
+    includes it from inside ``irc3.plugins.command.Commands``' own
+    constructor, so the Commands plugin isn't registered yet: a command
+    declared here registers itself on a second, throwaway Commands
+    instance and silently disappears. Put commands that need this plugin
+    in ``onebot.plugins.acl`` instead.
 """
 
 from __future__ import unicode_literals, print_function
@@ -113,7 +122,7 @@ class User:
 
     def part(self, channel) -> None:
         """Register that the user parted a channel"""
-        self.channels.remove(channel)
+        self.channels.discard(channel)
 
     def still_in_channels(self) -> bool:
         """Is the user still in channels?"""
@@ -236,12 +245,20 @@ class UsersPlugin:
         target: IrcString,
         data=None,
     ):
-        if target not in self.channels:
+        if event != "PRIVMSG":
+            # services talk to us in NOTICEs; they're not users
             return
-        if mask.is_nick and mask.nick not in self.active_users:
+        if target.is_channel and target not in self.channels:
+            self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
+            return
+        if not mask.is_nick:
+            return
+        # a query isn't a channel, so there's nothing to register them in
+        channels = [target] if target.is_channel else []
+        if mask.nick not in self.active_users:
             self.log.debug("Found user %s via PRIVMSG", mask.nick)
-            self.active_users[mask.nick] = self.create_user(mask, [target])
-        else:
+            self.active_users[mask.nick] = self.create_user(mask, channels)
+        elif target.is_channel:
             self.active_users[mask.nick].join(target)
 
     def connection_lost(self):
@@ -292,7 +309,7 @@ class UsersPlugin:
         statusmsg = self.bot.server_config["STATUSMSG"]
         nicknames = data.split(" ")
         if channel not in self.channels:
-            self.log.warning("I got NAMES for a channel I'm not in: %", channel)
+            self.log.warning("I got NAMES for a channel I'm not in: %s", channel)
             return
         for item in nicknames:
             nick = item.strip(statusmsg)
@@ -339,16 +356,17 @@ class UsersPlugin:
 
             return User(mask, channels, mask_id_func, self.bot.db)
         if self.identifying_method == "nickserv":
+            account: Optional[str] = None
 
             async def get_account() -> str:
+                nonlocal account
                 assert mask.nick is not None
-                user = self.get_user(mask.nick)
-                if hasattr(user, "account"):
-                    return user.account
+                if account is not None:
+                    return account
                 result = await self.bot.async_cmds.whois(mask.nick)
                 if result["success"] and "account" in result:
-                    user.account = str(result["account"])
-                    return user.account
+                    account = str(result["account"])
+                    return account
                 else:
                     assert mask.host is not None
                     return mask.host

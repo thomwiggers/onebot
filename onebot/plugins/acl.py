@@ -96,6 +96,27 @@ class ACLPlugin:
                 self.config["superadmin"], permissions=json.dumps(["all_permissions"])
             )
 
+    @command
+    async def whoami(self, mask, target, args):
+        """Show who I think you are and what you may do
+
+        %%whoami
+        """
+        user = self.bot.get_user(mask.nick)
+        if user is None:
+            return "I have no idea who you are."
+        perms = await user.get_setting("permissions", [])
+        response = "You are {id_}".format(id_=await user.id())
+        if perms:
+            response += " with permissions: {perms}".format(perms=", ".join(perms))
+        else:
+            response += " without any permissions"
+        # The identity is a NickServ account under the default configuration,
+        # which isn't ours to announce in a channel.
+        self.bot.privmsg(mask.nick, response)
+        if target.is_channel:
+            return "I've sent you a PRIVMSG"
+
     @command(permission="admin", show_in_help_list=False)
     async def acl(self, mask, target, args) -> None:
         """Administrate the ACL

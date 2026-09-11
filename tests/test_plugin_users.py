@@ -215,6 +215,39 @@ class UsersPluginTest(BotTestCase):
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan2 :hi!")
         assert user.channels == set(("#chan", "#chan2"))
 
+    def test_bot_part_keeps_users_from_other_channels(self):
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+        self.bot.dispatch(":bar2!foo@host JOIN #chan2")
+        self.bot.dispatch(":{}!foo@bar PART #chan".format(self.bot.nick))
+        assert self.bot.get_user("bar") is None
+        assert self.bot.get_user("bar2") is not None
+
+    def test_privmsg_in_query(self):
+        # a query isn't a channel, so we track the user without one
+        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
+        user = self.bot.get_user("bar")
+        assert user is not None
+        assert user.nick == "bar"
+        assert user.host == "foo@host"
+        assert user.channels == set()
+
+        # and a channel they're in is still registered on top of that
+        self.users.channels.add("#chan")
+        self.bot.dispatch(":bar!foo@host PRIVMSG #chan :hi!")
+        assert user.channels == set(("#chan",))
+        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
+        assert user.channels == set(("#chan",))
+
+    def test_notice_is_ignored(self):
+        # services talk to us in NOTICEs; they're not users
+        self.bot.dispatch(
+            ":NickServ!NickServ@services. NOTICE {} :identified".format(self.bot.nick)
+        )
+        self.users.channels.add("#chan")
+        self.bot.dispatch(":bar!foo@host NOTICE #chan :hi")
+        self.bot.dispatch(":irc.example.org NOTICE {} :hello".format(self.bot.nick))
+        assert len(self.users.active_users) == 0
+
     def test_who_on_join(self):
         self.bot.dispatch(":{}!bar@baz JOIN #chan2".format(self.bot.nick))
         self.assertSent(["WHO #chan2"])
