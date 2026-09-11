@@ -246,7 +246,8 @@ class UsersPlugin:
         data=None,
     ):
         if target not in self.channels:
-            self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
+            if target.is_channel:
+                self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
             return
         if mask.is_nick and mask.nick not in self.active_users:
             self.log.debug("Found user %s via PRIVMSG", mask.nick)

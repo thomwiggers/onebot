@@ -15,7 +15,6 @@ from typing import Self
 
 import irc3
 from irc3.plugins.command import command
-from irc3.utils import IrcString
 
 
 class user_based_policy:
@@ -115,7 +114,7 @@ class ACLPlugin:
         # The identity is a NickServ account under the default configuration,
         # which isn't ours to announce in a channel.
         self.bot.privmsg(mask.nick, response)
-        if IrcString(target).is_channel:
+        if target.is_channel:
             return "I've sent you a PRIVMSG"
 
     @command(permission="admin", show_in_help_list=False)
