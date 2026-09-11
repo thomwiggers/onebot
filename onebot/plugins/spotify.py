@@ -185,7 +185,9 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
         try:
             qs = self.path[len("/callback?") :]
             params = parse_qs(qs)
-            nick = fernet.decrypt(params["state"][0].encode(), ttl=120).decode()
+            # Generous ttl: logging into Spotify and approving the scopes
+            # takes a lot longer than it does to click the link.
+            nick = fernet.decrypt(params["state"][0].encode(), ttl=600).decode()
             user = self.bot.get_user(nick)
             if user is None:
                 self.send_error(

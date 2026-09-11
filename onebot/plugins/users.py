@@ -267,6 +267,7 @@ class UsersPlugin:
                 self.active_users[mask.nick] = self.create_user(mask, [])
             return
         if target not in self.channels:
+            self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
             return
         if mask.nick not in self.active_users:
             self.log.debug("Found user %s via PRIVMSG", mask.nick)
@@ -328,7 +329,7 @@ class UsersPlugin:
         statusmsg = self.bot.server_config["STATUSMSG"]
         nicknames = data.split(" ")
         if channel not in self.channels:
-            self.log.warning("I got NAMES for a channel I'm not in: %", channel)
+            self.log.warning("I got NAMES for a channel I'm not in: %s", channel)
             return
         for item in nicknames:
             nick = item.strip(statusmsg)
