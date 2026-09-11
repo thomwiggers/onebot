@@ -26,6 +26,7 @@ from typing import (
 )
 
 import irc3
+from irc3.plugins.command import command
 from irc3.plugins.storage import Storage
 from irc3.utils import IrcString
 
@@ -152,7 +153,11 @@ class UsersPlugin:
         - ``nickserv``: Parse nickserv info from ``WHOIS``.
     """
 
-    requires = ["irc3.plugins.storage", "irc3.plugins.asynchronious"]
+    requires = [
+        "irc3.plugins.command",
+        "irc3.plugins.storage",
+        "irc3.plugins.asynchronious",
+    ]
 
     def __init__(self, bot: irc3.IrcBot):
         """Initialises the plugin"""
@@ -173,6 +178,17 @@ class UsersPlugin:
         if not user:
             self.log.warning("Couldn't find %s!", nick)
         return user
+
+    @command
+    async def whoami(self, mask: IrcString, target: IrcString, args) -> str:
+        """Show who I think you are
+
+        %%whoami
+        """
+        user = self.get_user(mask.nick)
+        if user is None:
+            return "I have no idea who you are."
+        return "You are {id_} ({mask})".format(id_=await user.id(), mask=user.mask)
 
     @irc3.extend
     def deserialize_setting(self, value: Any) -> Any:
