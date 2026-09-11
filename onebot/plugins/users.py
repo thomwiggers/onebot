@@ -245,12 +245,13 @@ class UsersPlugin:
         target: IrcString,
         data=None,
     ):
-        if target not in self.channels:
-            if target.is_channel:
-                self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
+        if target.is_channel and target not in self.channels:
+            self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
             return
-        if mask.is_nick and mask.nick not in self.active_users:
-            self.log.debug("Found user %s via PRIVMSG", mask.nick)
+        if not mask.is_nick:
+            return
+        if mask.nick not in self.active_users:
+            self.log.debug("Found user %s via %s", mask.nick, event)
             self.active_users[mask.nick] = self.create_user(mask, [target])
         else:
             self.active_users[mask.nick].join(target)

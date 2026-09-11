@@ -195,8 +195,8 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
             if user is None:
                 self.send_error(
                     404,
-                    message="I lost track of you, say something in a channel "
-                    "I'm in and run the command again",
+                    message="I lost track of you, say something to me on IRC "
+                    "and run the command again",
                 )
                 return
             user_token = self.tk_cred.request_user_token(code)
