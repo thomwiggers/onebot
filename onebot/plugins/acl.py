@@ -15,6 +15,7 @@ from typing import Self
 
 import irc3
 from irc3.plugins.command import command
+from irc3.utils import IrcString
 
 
 class user_based_policy:
@@ -27,23 +28,13 @@ class user_based_policy:
 
     def __init__(self, bot):
         self.bot = bot
+        self.bot.include("onebot.plugins.users")
         self.log = self.bot.log.getChild(__name__)
-        # NB: don't include the users plugin here. We're constructed from
-        # inside irc3.plugins.command.Commands' own constructor, so that
-        # plugin isn't registered yet, and any command the included plugin
-        # declares would register itself on a second, throwaway Commands
-        # instance and silently disappear. Include it in the bot config
-        # (onebot.plugins.acl already requires it).
 
     async def has_permission(self, mask, permission):
         """
         Returns if the user identified by ``mask`` has ``permission``
         """
-        if not hasattr(self.bot, "get_user"):
-            self.log.error(
-                "This guard needs the onebot.plugins.users plugin to be included"
-            )
-            return False
         user = self.bot.get_user(mask.nick)
         perms = []
         if user:
@@ -105,6 +96,27 @@ class ACLPlugin:
             self.bot.db.set(
                 self.config["superadmin"], permissions=json.dumps(["all_permissions"])
             )
+
+    @command
+    async def whoami(self, mask, target, args):
+        """Show who I think you are and what you may do
+
+        %%whoami
+        """
+        user = self.bot.get_user(mask.nick)
+        if user is None:
+            return "I have no idea who you are."
+        perms = await user.get_setting("permissions", [])
+        response = "You are {id_}".format(id_=await user.id())
+        if perms:
+            response += " with permissions: {perms}".format(perms=", ".join(perms))
+        else:
+            response += " without any permissions"
+        # The identity is a NickServ account under the default configuration,
+        # which isn't ours to announce in a channel.
+        self.bot.privmsg(mask.nick, response)
+        if IrcString(target).is_channel:
+            return "I've sent you a PRIVMSG"
 
     @command(permission="admin", show_in_help_list=False)
     async def acl(self, mask, target, args) -> None:

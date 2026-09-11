@@ -36,12 +36,8 @@ async def cmd2(bot, mask, target, args, **kwargs):
     bot.privmsg(target, "Done")
 
 
-class GuardDoesNotEatCommandsTestCase(BotTestCase):
-    """The guard is built from inside the Commands plugin's constructor.
-
-    Including the users plugin from there registered its commands on a
-    throwaway Commands instance, so they never showed up on the bot.
-    """
+class WhoamiTestCase(BotTestCase):
+    """Test the whoami command with a realistic config"""
 
     config = {
         "includes": ["onebot.plugins.acl"],
@@ -62,23 +58,48 @@ class GuardDoesNotEatCommandsTestCase(BotTestCase):
         super().tearDown()
         self.bot.SIGINT()
 
-    def test_users_commands_are_registered(self):
+    def test_whoami_is_registered(self):
         commands = self.bot.get_plugin("irc3.plugins.command.Commands")
         assert "whoami" in commands
 
-    def test_whoami_replies(self):
+    def test_whoami_without_permissions(self):
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+        self.bot.dispatch(":bar!foo@host PRIVMSG #chan :.whoami")
+        self.bot.loop.run_until_complete(asyncio.sleep(0.01))
+        # the identity itself never hits the channel
+        assert self.bot.sent == [
+            "PRIVMSG bar :You are foo@host without any permissions",
+            "PRIVMSG #chan :I've sent you a PRIVMSG",
+        ]
+
+    def test_whoami_with_permissions(self):
+        self.bot.db["foo@host"] = {"permissions": '["admin", "view"]'}
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan :.whoami")
         self.bot.loop.run_until_complete(asyncio.sleep(0.01))
         assert self.bot.sent == [
-            "PRIVMSG bar :You are foo@host",
+            "PRIVMSG bar :You are foo@host with permissions: admin, view",
             "PRIVMSG #chan :I've sent you a PRIVMSG",
         ]
+
+    def test_whoami_in_query(self):
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+        self.bot.dispatch(":bar!foo@host PRIVMSG {} :.whoami".format(self.bot.nick))
+        self.bot.loop.run_until_complete(asyncio.sleep(0.01))
+        assert self.bot.sent == [
+            "PRIVMSG bar :You are foo@host without any permissions"
+        ]
+
+    def test_whoami_unknown_user(self):
+        # we're not in #chan, so we never saw this user
+        self.bot.dispatch(":bar!foo@host PRIVMSG #chan :.whoami")
+        self.bot.loop.run_until_complete(asyncio.sleep(0.01))
+        assert self.bot.sent == ["PRIVMSG #chan :I have no idea who you are."]
 
 
 class UserBasedGuardPolicyTestCase(BotTestCase):
     config = {
-        "includes": ["irc3.plugins.command", "onebot.plugins.users", __name__],
+        "includes": ["irc3.plugins.command", __name__],
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
     }
 

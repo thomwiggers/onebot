@@ -69,22 +69,6 @@ class UsersPluginTestWithNickserv(BotTestCase):
         self.bot.loop.run_until_complete(task)
         assert task.result() == "nsaccount"
 
-    def test_identify_user_known_only_from_query(self):
-        """Users that only ever PM the bot should still be identifiable"""
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi".format(self.bot.nick))
-        self.bot.loop.run_until_complete(asyncio.sleep(0.001))
-        user = self.bot.get_user("bar")
-        assert user, "User should exist!"
-        task = asyncio.ensure_future(user.id())
-        self.bot.loop.run_until_complete(asyncio.sleep(0.001))
-
-        self.bot.dispatch(":localhost 311 me bar foo host * :realname")
-        self.bot.dispatch(":localhost 330 me bar nsaccount :is logged in as")
-        self.bot.dispatch(":localhost 318 me bar :End")
-
-        self.bot.loop.run_until_complete(task)
-        assert task.result() == "nsaccount"
-
 
 class UsersPluginTestWithWhatcd(BotTestCase):
     """Test the What.CD identifying method"""
@@ -231,31 +215,6 @@ class UsersPluginTest(BotTestCase):
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan2 :hi!")
         assert user.channels == set(("#chan", "#chan2"))
 
-    def test_privmsg_in_query(self):
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
-        user = self.bot.get_user("bar")
-        assert user is not None
-        assert user.nick == "bar"
-        assert user.host == "foo@host"
-        assert user.channels == set()
-
-        # a query doesn't make us forget channels, and parting a channel the
-        # user was never seen in doesn't drop them either
-        self.bot.dispatch(":bar!foo@host JOIN #chan")
-        assert user.channels == set(("#chan",))
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
-        assert user.channels == set(("#chan",))
-
-    def test_query_notice_is_ignored(self):
-        # services talk to us in NOTICEs; they're not users
-        self.bot.dispatch(
-            ":NickServ!NickServ@services. NOTICE {} :You are now identified".format(
-                self.bot.nick
-            )
-        )
-        assert self.bot.get_user("NickServ") is None
-        assert len(self.users.active_users) == 0
-
     def test_bot_part_keeps_users_from_other_channels(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         self.bot.dispatch(":bar2!foo@host JOIN #chan2")
@@ -295,50 +254,6 @@ class UsersPluginTest(BotTestCase):
         msg = "baz: hello"
         redacted = self.bot.redact_nicks(msg, target="#chan")
         assert redacted == "b·az: hello"
-
-
-class UsersPluginWhoamiTest(BotTestCase):
-    """Test the whoami command, which needs a real event loop"""
-
-    config = {
-        "includes": ["onebot.plugins.users"],
-        "cmd": "!",
-    }
-
-    @patch("irc3.plugins.storage.Storage")
-    def setUp(self, mock):
-        self.config["loop"] = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.config["loop"])
-        self.callFTU()
-        self.bot.db = MockDb()
-        self.users = self.bot.get_plugin("onebot.plugins.users.UsersPlugin")
-
-    def tearDown(self):
-        super().tearDown()
-        self.bot.SIGINT()
-
-    def test_whoami(self):
-        self.bot.dispatch(":bar!foo@host JOIN #chan")
-        self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!whoami")
-        self.bot.loop.run_until_complete(asyncio.sleep(0.01))
-        # the identity itself never hits the channel
-        assert self.bot.sent == [
-            "PRIVMSG bar :You are foo@host",
-            "PRIVMSG #chan :I've sent you a PRIVMSG",
-        ]
-
-    def test_whoami_in_query(self):
-        nick = self.bot.nick
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :!whoami".format(nick))
-        self.bot.loop.run_until_complete(asyncio.sleep(0.01))
-        assert self.bot.sent == ["PRIVMSG bar :You are foo@host"]
-
-    def test_whoami_unknown_user(self):
-        # we're not in #chan, so we never saw this user
-        self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!whoami")
-        self.bot.loop.run_until_complete(asyncio.sleep(0.01))
-        assert self.bot.get_user("bar") is None
-        assert self.bot.sent == ["PRIVMSG #chan :I have no idea who you are."]
 
 
 class UserObjectTest(unittest.IsolatedAsyncioTestCase):

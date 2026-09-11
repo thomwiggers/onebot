@@ -7,6 +7,15 @@
 Keeps track of the users in channels. Also provides an authorisation system.
 This plugin uses WHOIS to figure out someones NickServ account and then links
 that to an automatically created, in-bot account.
+
+.. note::
+
+    This plugin can't declare commands. ``onebot.plugins.acl``'s guard
+    includes it from inside ``irc3.plugins.command.Commands``' own
+    constructor, so the Commands plugin isn't registered yet: a command
+    declared here registers itself on a second, throwaway Commands
+    instance and silently disappears. Put commands that need this plugin
+    in ``onebot.plugins.acl`` instead.
 """
 
 from __future__ import unicode_literals, print_function
@@ -26,7 +35,6 @@ from typing import (
 )
 
 import irc3
-from irc3.plugins.command import command
 from irc3.plugins.storage import Storage
 from irc3.utils import IrcString
 
@@ -114,7 +122,7 @@ class User:
 
     def part(self, channel) -> None:
         """Register that the user parted a channel"""
-        self.channels.remove(channel)
+        self.channels.discard(channel)
 
     def still_in_channels(self) -> bool:
         """Is the user still in channels?"""
@@ -153,11 +161,7 @@ class UsersPlugin:
         - ``nickserv``: Parse nickserv info from ``WHOIS``.
     """
 
-    requires = [
-        "irc3.plugins.command",
-        "irc3.plugins.storage",
-        "irc3.plugins.asynchronious",
-    ]
+    requires = ["irc3.plugins.storage", "irc3.plugins.asynchronious"]
 
     def __init__(self, bot: irc3.IrcBot):
         """Initialises the plugin"""
@@ -178,21 +182,6 @@ class UsersPlugin:
         if not user:
             self.log.warning("Couldn't find %s!", nick)
         return user
-
-    @command
-    async def whoami(self, mask: IrcString, target: IrcString, args):
-        """Show who I think you are
-
-        %%whoami
-        """
-        user = self.get_user(mask.nick)
-        if user is None:
-            return "I have no idea who you are."
-        # The identity can be a NickServ account, which isn't ours to
-        # announce in a channel, so it always goes out in a query.
-        self.bot.privmsg(mask.nick, "You are {id_}".format(id_=await user.id()))
-        if IrcString(target).is_channel:
-            return "I've sent you a PRIVMSG"
 
     @irc3.extend
     def deserialize_setting(self, value: Any) -> Any:
@@ -256,20 +245,10 @@ class UsersPlugin:
         target: IrcString,
         data=None,
     ):
-        if not mask.is_nick:
-            return
-        if not IrcString(target).is_channel:
-            # Private message: track the user without a channel, so commands
-            # sent in a query can still be identified. Ignore NOTICEs, which
-            # is what services (NickServ and friends) send us.
-            if event == "PRIVMSG" and mask.nick not in self.active_users:
-                self.log.debug("Found user %s via private message", mask.nick)
-                self.active_users[mask.nick] = self.create_user(mask, [])
-            return
         if target not in self.channels:
             self.log.debug("Ignoring %s in %s: not a channel I'm in", event, target)
             return
-        if mask.nick not in self.active_users:
+        if mask.is_nick and mask.nick not in self.active_users:
             self.log.debug("Found user %s via PRIVMSG", mask.nick)
             self.active_users[mask.nick] = self.create_user(mask, [target])
         else:
@@ -302,8 +281,6 @@ class UsersPlugin:
         if nick == self.bot.nick:
             self.log.info("%s left %s by %s", nick, channel, kwargs["event"])
             for n, user in self.active_users.copy().items():
-                if channel not in user.channels:
-                    continue
                 user.part(channel)
                 if not user.still_in_channels():
                     del self.active_users[n]
@@ -313,12 +290,8 @@ class UsersPlugin:
         if nick not in self.active_users:
             return
 
-        user = self.active_users[nick]
-        if channel not in user.channels:
-            return
-
-        user.part(channel)
-        if not user.still_in_channels():
+        self.active_users[nick].part(channel)
+        if not self.active_users[nick].still_in_channels():
             self.log.debug("Lost %s out of sight", mask.nick)
             del self.active_users[nick]
 
