@@ -236,9 +236,18 @@ class UsersPlugin:
         target: IrcString,
         data=None,
     ):
+        if not mask.is_nick:
+            return
+        if not IrcString(target).is_channel:
+            # Private message: track the user without a channel, so commands
+            # sent in a query can still be identified.
+            if mask.nick not in self.active_users:
+                self.log.debug("Found user %s via private message", mask.nick)
+                self.active_users[mask.nick] = self.create_user(mask, [])
+            return
         if target not in self.channels:
             return
-        if mask.is_nick and mask.nick not in self.active_users:
+        if mask.nick not in self.active_users:
             self.log.debug("Found user %s via PRIVMSG", mask.nick)
             self.active_users[mask.nick] = self.create_user(mask, [target])
         else:
@@ -271,6 +280,8 @@ class UsersPlugin:
         if nick == self.bot.nick:
             self.log.info("%s left %s by %s", nick, channel, kwargs["event"])
             for n, user in self.active_users.copy().items():
+                if channel not in user.channels:
+                    continue
                 user.part(channel)
                 if not user.still_in_channels():
                     del self.active_users[n]
@@ -280,8 +291,12 @@ class UsersPlugin:
         if nick not in self.active_users:
             return
 
-        self.active_users[nick].part(channel)
-        if not self.active_users[nick].still_in_channels():
+        user = self.active_users[nick]
+        if channel not in user.channels:
+            return
+
+        user.part(channel)
+        if not user.still_in_channels():
             self.log.debug("Lost %s out of sight", mask.nick)
             del self.active_users[nick]
 
@@ -339,16 +354,17 @@ class UsersPlugin:
 
             return User(mask, channels, mask_id_func, self.bot.db)
         if self.identifying_method == "nickserv":
+            account: Optional[str] = None
 
             async def get_account() -> str:
+                nonlocal account
                 assert mask.nick is not None
-                user = self.get_user(mask.nick)
-                if hasattr(user, "account"):
-                    return user.account
+                if account is not None:
+                    return account
                 result = await self.bot.async_cmds.whois(mask.nick)
                 if result["success"] and "account" in result:
-                    user.account = str(result["account"])
-                    return user.account
+                    account = str(result["account"])
+                    return account
                 else:
                     assert mask.host is not None
                     return mask.host

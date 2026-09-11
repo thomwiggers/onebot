@@ -69,6 +69,22 @@ class UsersPluginTestWithNickserv(BotTestCase):
         self.bot.loop.run_until_complete(task)
         assert task.result() == "nsaccount"
 
+    def test_identify_user_known_only_from_query(self):
+        """Users that only ever PM the bot should still be identifiable"""
+        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi".format(self.bot.nick))
+        self.bot.loop.run_until_complete(asyncio.sleep(0.001))
+        user = self.bot.get_user("bar")
+        assert user, "User should exist!"
+        task = asyncio.ensure_future(user.id())
+        self.bot.loop.run_until_complete(asyncio.sleep(0.001))
+
+        self.bot.dispatch(":localhost 311 me bar foo host * :realname")
+        self.bot.dispatch(":localhost 330 me bar nsaccount :is logged in as")
+        self.bot.dispatch(":localhost 318 me bar :End")
+
+        self.bot.loop.run_until_complete(task)
+        assert task.result() == "nsaccount"
+
 
 class UsersPluginTestWithWhatcd(BotTestCase):
     """Test the What.CD identifying method"""
@@ -214,6 +230,28 @@ class UsersPluginTest(BotTestCase):
         self.users.channels.add("#chan2")
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan2 :hi!")
         assert user.channels == set(("#chan", "#chan2"))
+
+    def test_privmsg_in_query(self):
+        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
+        user = self.bot.get_user("bar")
+        assert user is not None
+        assert user.nick == "bar"
+        assert user.host == "foo@host"
+        assert user.channels == set()
+
+        # a query doesn't make us forget channels, and parting a channel the
+        # user was never seen in doesn't drop them either
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+        assert user.channels == set(("#chan",))
+        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
+        assert user.channels == set(("#chan",))
+
+    def test_bot_part_keeps_users_from_other_channels(self):
+        self.bot.dispatch(":bar!foo@host JOIN #chan")
+        self.bot.dispatch(":bar2!foo@host JOIN #chan2")
+        self.bot.dispatch(":{}!foo@bar PART #chan".format(self.bot.nick))
+        assert self.bot.get_user("bar") is None
+        assert self.bot.get_user("bar2") is not None
 
     def test_who_on_join(self):
         self.bot.dispatch(":{}!bar@baz JOIN #chan2".format(self.bot.nick))
