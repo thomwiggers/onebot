@@ -180,7 +180,7 @@ class UsersPlugin:
         return user
 
     @command
-    async def whoami(self, mask: IrcString, target: IrcString, args) -> str:
+    async def whoami(self, mask: IrcString, target: IrcString, args):
         """Show who I think you are
 
         %%whoami
@@ -188,7 +188,11 @@ class UsersPlugin:
         user = self.get_user(mask.nick)
         if user is None:
             return "I have no idea who you are."
-        return "You are {id_} ({mask})".format(id_=await user.id(), mask=user.mask)
+        # The identity can be a NickServ account, which isn't ours to
+        # announce in a channel, so it always goes out in a query.
+        self.bot.privmsg(mask.nick, "You are {id_}".format(id_=await user.id()))
+        if IrcString(target).is_channel:
+            return "I've sent you a PRIVMSG"
 
     @irc3.extend
     def deserialize_setting(self, value: Any) -> Any:

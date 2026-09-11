@@ -321,13 +321,17 @@ class UsersPluginWhoamiTest(BotTestCase):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan :!whoami")
         self.bot.loop.run_until_complete(asyncio.sleep(0.01))
-        assert self.bot.sent == ["PRIVMSG #chan :You are foo@host (bar!foo@host)"]
+        # the identity itself never hits the channel
+        assert self.bot.sent == [
+            "PRIVMSG bar :You are foo@host",
+            "PRIVMSG #chan :I've sent you a PRIVMSG",
+        ]
 
     def test_whoami_in_query(self):
         nick = self.bot.nick
         self.bot.dispatch(":bar!foo@host PRIVMSG {} :!whoami".format(nick))
         self.bot.loop.run_until_complete(asyncio.sleep(0.01))
-        assert self.bot.sent == ["PRIVMSG bar :You are foo@host (bar!foo@host)"]
+        assert self.bot.sent == ["PRIVMSG bar :You are foo@host"]
 
     def test_whoami_unknown_user(self):
         # we're not in #chan, so we never saw this user
