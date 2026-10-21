@@ -1,10 +1,11 @@
+import socket
 import unittest
 from unittest.mock import MagicMock, patch
-import socket
+
 import requests
 from betamax import Betamax
-from onebot.plugins.urlinfo import UrlInfo
 
+from onebot.plugins.urlinfo import UrlInfo
 
 with Betamax.configure() as config:
     config.cassette_library_dir = "tests/fixtures/cassettes"
@@ -85,7 +86,7 @@ class MediaWikiUrlInfoTestCase(unittest.TestCase):
                         }
                     },
                 )
-            return MagicMock(ok=True, json=lambda: {})
+            return MagicMock(ok=True, json=dict)
 
         session.get.side_effect = side_effect
 

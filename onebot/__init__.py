@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Main onebot class and the command line runner"""
 
 import locale
 
 import irc3
-
 
 __author__ = "Thom Wiggers"
 __email__ = "thom@thomwiggers.nl"
@@ -27,15 +25,16 @@ class OneBot(irc3.IrcBot):
         if "locale" in kwargs:
             locale.setlocale(locale.LC_ALL, kwargs["locale"])
 
-        super(OneBot, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 def run(argv=None):  # pragma: no cover
     """Run OneBot from a config file"""
-    import sys
     import argparse
     import os
-    from irc3 import utils, config
+    import sys
+
+    from irc3 import config, utils
 
     parser = argparse.ArgumentParser(
         prog="onebot",

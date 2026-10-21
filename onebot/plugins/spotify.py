@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 """
 ======================================================
 :mod:`onebot.plugins.spotify` Spotify now playing plugin for OneBot
@@ -24,17 +23,17 @@ Usage::
 
 """
 
-from collections import deque
-from typing import Deque, Self
-import irc3
-from irc3.plugins.command import command
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from urllib.parse import parse_qs
-import threading
 import asyncio
+import threading
+from collections import deque
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import ClassVar, Self
+from urllib.parse import parse_qs
 
-from cryptography.fernet import Fernet, InvalidToken
+import irc3
 import tekore as tk
+from cryptography.fernet import Fernet, InvalidToken
+from irc3.plugins.command import command
 
 
 @irc3.plugin
@@ -44,7 +43,7 @@ class SpotifyPlugin:
     * now playing functionality
     """
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
         "onebot.plugins.users",
     ]
@@ -164,7 +163,7 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
     bot: irc3.IrcBot
     # Only used to answer a replayed code; old ones are of no interest,
     # so the oldest fall off rather than growing for the bot's lifetime.
-    seen: Deque[str] = deque(maxlen=100)
+    seen: ClassVar[deque[str]] = deque(maxlen=100)
 
     def do_GET(self):
         """Handle GET requests"""

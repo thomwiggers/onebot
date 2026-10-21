@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
 test_onebot_urlinfo
 ----------------------------------
@@ -8,24 +5,22 @@ test_onebot_urlinfo
 Tests for urlinfo module.
 """
 
-import os.path
 import logging
+import os
+import os.path
 import socket
 import unittest
-from unittest.mock import MagicMock, patch
 from pathlib import Path
-import os
-
-
-from onebot.testing import BotTestCase
-from onebot.plugins.urlinfo import _find_urls
+from typing import ClassVar
+from unittest.mock import MagicMock, patch
 
 import requests
-
-from .test_plugin_users import MockDb
-
 from betamax import Betamax
 
+from onebot.plugins.urlinfo import _find_urls
+from onebot.testing import BotTestCase
+
+from .test_plugin_users import MockDb
 
 with Betamax.configure() as config:
     config.cassette_library_dir = "tests/fixtures/cassettes"
@@ -47,7 +42,7 @@ def mock_requests_get(*args, **kwargs):
             self._file_size = self._file_name.stat().st_size
             self.headers = {
                 "Content-Type": "text/html",
-                "Content-Length": "{}".format(self._file_size),
+                "Content-Length": f"{self._file_size}",
             }
             self.content = self._file_name.read_bytes()
             self._filehandle = self._file_name.open()
@@ -61,7 +56,7 @@ def mock_requests_get(*args, **kwargs):
 class UrlInfoTestCase(BotTestCase):
     """Test the URLInfo module"""
 
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.urlinfo", "irc3.plugins.command"],
         "cmd": "!",
         "onebot.plugins.urlinfo": {"twitter_bearer_token": "foo"},
@@ -69,7 +64,7 @@ class UrlInfoTestCase(BotTestCase):
 
     def setUp(self):
         """Set up the test class"""
-        super(UrlInfoTestCase, self).setUp()
+        super().setUp()
         self.callFTU()
         self.bot.db = MockDb({"the@boss": {"permissions": {"all_permissions"}}})
         self.bot.log = logging.getLogger("test")
@@ -106,9 +101,7 @@ class UrlInfoTestCase(BotTestCase):
             ("http://nos.nl/(test)test)", ["http://nos.nl/(test)test"]),
             ("<http://nos.nl/test>", ["http://nos.nl/test"]),
         ]:
-            self.assertEqual(
-                expected, _find_urls(message), "String: {}".format(message)
-            )
+            self.assertEqual(expected, _find_urls(message), f"String: {message}")
 
     def test_og_title_preferred_over_title_tag(self):
         """og:title is used instead of <title> when present."""
@@ -149,25 +142,29 @@ class UrlInfoTestCase(BotTestCase):
                 "https://twitter.com/i/web/status/1440605916642959371",
                 "https://x.com/",
             ]:
-                with self.subTest(url=url):
-                    with Betamax(session).use_cassette("twitter", record="none"):
-                        result = self.plugin._process_url(session, url)
-                        self.assertIsNone(result)
+                with (
+                    self.subTest(url=url),
+                    Betamax(session).use_cassette("twitter", record="none"),
+                ):
+                    result = self.plugin._process_url(session, url)
+                    self.assertIsNone(result)
 
     def test_url_nos(self) -> None:
-        with requests.Session() as session:
-            with Betamax(session).use_cassette("test_url_nos"):
-                for url, expected_title in [
-                    (
-                        "https://nos.nl/l/2512497",
-                        "“Renovatie Binnenhof-complex opnieuw duurder, extra kosten 'aanzienlijk'”",
-                    ),
-                ]:
-                    with self.subTest(url=url):
-                        result = self.plugin._process_url(session, url)
-                        self.assertIsNotNone(result)
-                        title = " ".join(result)
-                        self.assertEqual(title, expected_title)
+        with (
+            requests.Session() as session,
+            Betamax(session).use_cassette("test_url_nos"),
+        ):
+            for url, expected_title in [
+                (
+                    "https://nos.nl/l/2512497",
+                    "“Renovatie Binnenhof-complex opnieuw duurder, extra kosten 'aanzienlijk'”",
+                ),
+            ]:
+                with self.subTest(url=url):
+                    result = self.plugin._process_url(session, url)
+                    self.assertIsNotNone(result)
+                    title = " ".join(result)
+                    self.assertEqual(title, expected_title)
 
     def test_instagram(self):
         """Instagram reel URLs show og:title instead of the generic page title."""

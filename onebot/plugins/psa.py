@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.psa` PSA
@@ -7,15 +6,17 @@
 This plugin allows admins to send broadcasts
 """
 
+from typing import ClassVar
+
 from irc3 import plugin
 from irc3.plugins.command import command
 
 
 @plugin
-class PSAPlugin(object):
+class PSAPlugin:
     """PSA Plugin"""
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
         "irc3.plugins.userlist",
     ]

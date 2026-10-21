@@ -5,8 +5,8 @@ import json
 import multiprocessing
 import resource
 import sys
+from contextlib import redirect_stderr, redirect_stdout, suppress
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from contextlib import redirect_stdout, redirect_stderr
 
 TIMEOUT = 5
 LISTEN_PORT = 8080
@@ -22,10 +22,8 @@ def set_resource_limits():
     # Disable core dumps
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     # Limit number of processes to 0 (can't fork)
-    try:
+    with suppress(ValueError, OSError):
         resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
-    except Exception:
-        pass
     # Limit file size creation
     resource.setrlimit(resource.RLIMIT_FSIZE, (0, 0))
 
@@ -40,8 +38,8 @@ def run_user_code(cmd, pipe):
         try:
             code = compile(cmd, "<PEBKAC>", "single")
             try:
-                exec(code, {}, {})
-            except Exception as e:
+                exec(code, {}, {})  # noqa: S102 -- sandboxed by design
+            except Exception as e:  # noqa: BLE001 -- report any user-code error
                 print(e, file=sys.stderr)
         except (SyntaxError, OverflowError, ValueError) as e:
             print(e, file=sys.stderr)

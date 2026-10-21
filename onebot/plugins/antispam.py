@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.antispam` PSA
@@ -11,11 +10,11 @@ Config options:
 
 """
 
-from collections import defaultdict
 import hashlib
-from typing import Self
+from collections import defaultdict
+from typing import ClassVar, Self
 
-from irc3 import rfc, plugin
+from irc3 import plugin, rfc
 from irc3.dec import event
 
 
@@ -29,7 +28,7 @@ def _hash(string):
 class PSAPlugin:
     """PSA Plugin"""
 
-    requires = ["irc3.plugins.userlist", "onebot.plugins.users"]
+    requires: ClassVar[list[str]] = ["irc3.plugins.userlist", "onebot.plugins.users"]
 
     def __init__(self, bot):
         self.bot = bot
@@ -49,7 +48,7 @@ class PSAPlugin:
                 if nick in words:
                     highlights += 1
                 if highlights >= self.max_highlights:
-                    self.log.info("Kicking {} for highlightspam", mask.nick)
+                    self.log.info("Kicking %s for highlightspam", mask.nick)
                     self.bot.kick(
                         target, mask.nick, "Don't excessively highlight people."
                     )
@@ -64,12 +63,12 @@ class PSAPlugin:
         if data == last_line:
             num += 1
             if num >= self.max_repeats:
-                self.log.info("Kicking {} for spamming", mask.nick)
+                self.log.info("Kicking %s for spamming", mask.nick)
                 self.bot.kick(
                     target,
                     mask.nick,
                     "Try to come up with something more creative. "
-                    "({} repeating lines)".format(num),
+                    f"({num} repeating lines)",
                 )
         else:
             await user.set_setting("last_line", data)

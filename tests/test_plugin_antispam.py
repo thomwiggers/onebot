@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
 test_onebot_antispam
 ----------------------------------
@@ -8,10 +5,12 @@ test_onebot_antispam
 Tests for antispam module.
 """
 
-from irc3.testing import patch
-from onebot.testing import BotTestCase
-
 import asyncio
+from typing import ClassVar
+
+from irc3.testing import patch
+
+from onebot.testing import BotTestCase
 
 from .test_plugin_users import MockDb
 
@@ -21,7 +20,7 @@ async def empty():
 
 
 class AntispamTestCase(BotTestCase):
-    config = {"cmd": "!"}
+    config: ClassVar[dict] = {"cmd": "!"}
 
     def assertSent(self, lines):
         """Assert that these lines have been sent"""
@@ -29,7 +28,7 @@ class AntispamTestCase(BotTestCase):
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):
-        super(AntispamTestCase, self).setUp()
+        super().setUp()
         self.config["loop"] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config["loop"])
         self.callFTU()
@@ -68,7 +67,9 @@ class AntispamTestCase(BotTestCase):
         self.bot.loop.run_until_complete(wrap())
         self.assertSent(
             [
-                "KICK #chan a :Try to come up with something more "
-                "creative. (5 repeating lines)"
+                (
+                    "KICK #chan a :Try to come up with something more "
+                    "creative. (5 repeating lines)"
+                )
             ]
         )

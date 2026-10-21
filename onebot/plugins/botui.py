@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.botui` Bot Control plugin
@@ -10,12 +9,13 @@ Based on http://git.io/v3HVL by gawel
 """
 
 from typing import Self
+
+from irc3 import event, plugin
 from irc3.plugins.command import command
-from irc3 import plugin, event
 
 
 @plugin
-class BotUI(object):
+class BotUI:
     """Bot User Interface plugin
 
     Configuration settings:
@@ -39,7 +39,7 @@ class BotUI(object):
     def onInvite(self, sender, target, channel) -> None:
         """Will send a message to the admin or automatically join a channel
         when it gets invited."""
-        self._log.info("%s invited me to %s." % (sender, channel))
+        self._log.info(f"{sender} invited me to {channel}.")
 
         if self._autojoin:
             if target.nick == self.bot.nick:
@@ -51,7 +51,7 @@ class BotUI(object):
                 "you candy. -- Linda Festa",
             )
             if self._admin:
-                self.bot.notice(self._admin, "%s invited me to %s." % (sender, channel))
+                self.bot.notice(self._admin, f"{sender} invited me to {channel}.")
 
     @command(permission="operator", show_in_help_list=False)
     def join(self, mask, target, args):
@@ -64,7 +64,7 @@ class BotUI(object):
         channel = args["<channel>"]
 
         if args["<password>"] is not None:
-            channel += " %s" % args["<password>"]
+            channel += " {}".format(args["<password>"])
 
         self.bot.join(channel)
 
@@ -89,7 +89,7 @@ class BotUI(object):
             %%quit [<reason>...]
         """
         reason = " ".join(args["<reason>"] or [])
-        self.bot.quit("{} -- {}".format(reason, mask.nick).strip())
+        self.bot.quit(f"{reason} -- {mask.nick}".strip())
         self.bot.loop.stop()
 
     @command(permission="admin", show_in_help_list=False)
@@ -130,7 +130,7 @@ class BotUI(object):
         %%quote <string>...
         """
         cmd = " ".join(args["<string>"] or [])
-        self.bot.privmsg(target, "Sending {}".format(cmd))
+        self.bot.privmsg(target, f"Sending {cmd}")
         self.bot.send(cmd)
 
     @command(name="reload", permission="admin", show_in_help_list=False)
@@ -139,8 +139,6 @@ class BotUI(object):
 
         %%reload <plugin>
         """
-        self.bot.registry.includes
-
         if "".join(args["<plugin>"]) in self.bot.registry.includes:
             self.bot.reload(args["<plugin>"])
             self.bot.privmsg(target, "{} reloaded".format(args["<plugin>"]))
@@ -156,7 +154,7 @@ class BotUI(object):
         import sys
 
         reason = " ".join(args["<reason>"] or [])
-        self.bot.quit("{} -- {} (restart)".format(reason, mask.nick).strip())
+        self.bot.quit(f"{reason} -- {mask.nick} (restart)".strip())
         self.bot.loop.stop()
         sys.exit(2)
 

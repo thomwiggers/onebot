@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 """
 ======================================================
 :mod:`onebot.plugins.wolframalpha` WolframAlpha queries
@@ -18,24 +17,23 @@ Usage::
 """
 
 import urllib.parse
+from typing import ClassVar
 
 import irc3
-from irc3.plugins.command import command
-
 import requests
-
+from irc3.plugins.command import command
 
 WOLFRAM_API_URL = "https://api.wolframalpha.com/v1/result"
 
 
 @irc3.plugin
-class WolframAlphaPlugin(object):
+class WolframAlphaPlugin:
     """Plugin to provide:
 
     * Wolfram Alpha queries from IRC
     """
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
     ]
 

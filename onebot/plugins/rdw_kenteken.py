@@ -1,7 +1,7 @@
-import re
 import logging
+import re
 from datetime import date
-from typing import Self
+from typing import ClassVar, Self
 
 import irc3
 import requests
@@ -137,7 +137,7 @@ def _rdw_get(url: str, params: dict, app_token: str) -> list:
 class RdwKentekenPlugin:
     """Plugin for looking up Dutch vehicle registration data."""
 
-    requires = ["irc3.plugins.command"]
+    requires: ClassVar[list[str]] = ["irc3.plugins.command"]
 
     def __init__(self, bot):
         self.bot = bot

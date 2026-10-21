@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
 test_onebot_botui
 ----------------------------------
@@ -8,31 +5,39 @@ test_onebot_botui
 Tests for botui module.
 """
 
+from typing import ClassVar
+
 from irc3.testing import patch
+
 from onebot.testing import BotTestCase
 
 from .test_plugin_users import MockDb
 
 
 class BotUITestCase(BotTestCase):
-    config = {"includes": ["onebot.plugins.botui", "irc3.plugins.command"], "cmd": "!"}
+    config: ClassVar[dict] = {
+        "includes": ["onebot.plugins.botui", "irc3.plugins.command"],
+        "cmd": "!",
+    }
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):
-        super(BotUITestCase, self).setUp()
+        super().setUp()
         self.callFTU()
         self.bot.db = MockDb({"the@boss": {"permissions": {"all_permissions"}}})
 
     def test_invite(self):
-        self.bot.dispatch(":im!the@boss INVITE {}!the@bot #chan".format(self.bot.nick))
+        self.bot.dispatch(f":im!the@boss INVITE {self.bot.nick}!the@bot #chan")
         self.assertSent(
             [
-                "PRIVMSG im :Never accept an invitation from a stranger "
-                "unless he gives you candy. -- Linda Festa"
+                (
+                    "PRIVMSG im :Never accept an invitation from a stranger "
+                    "unless he gives you candy. -- Linda Festa"
+                )
             ]
         )
         self.bot.get_plugin("onebot.plugins.botui.BotUI")._autojoin = True
-        self.bot.dispatch(":im!the@boss INVITE {}!the@bot #chan".format(self.bot.nick))
+        self.bot.dispatch(f":im!the@boss INVITE {self.bot.nick}!the@bot #chan")
         self.assertSent(["JOIN #chan"])
 
     def test_join(self):
@@ -59,7 +64,7 @@ class BotUITestCase(BotTestCase):
 
     def test_mode(self):
         self.bot.dispatch(":im!the@boss PRIVMSG #chan :!mode +B")
-        self.assertSent(["MODE {} +B".format(self.bot.nick)])
+        self.assertSent([f"MODE {self.bot.nick} +B"])
 
     def test_msg(self):
         self.bot.dispatch(":im!the@boss PRIVMSG #chan :!msg #foo best bot")

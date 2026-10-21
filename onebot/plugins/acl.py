@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.acl` Access Control plugin
@@ -11,7 +10,7 @@ settings with each user.
 
 import asyncio
 import json
-from typing import Self
+from typing import ClassVar, Self
 
 import irc3
 from irc3.plugins.command import command
@@ -44,10 +43,9 @@ class user_based_policy:
         if "ignore" in perms and permission is None:
             return False
 
-        if permission is None or permission in perms or "all_permissions" in perms:
-            return True
-
-        return False
+        return bool(
+            permission is None or permission in perms or "all_permissions" in perms
+        )
 
     async def __call__(self, predicates, meth, client, target, args, **kwargs):
         permitted = await self.has_permission(client, predicates.get("permission"))
@@ -60,7 +58,7 @@ class user_based_policy:
         self.log.info("Denied access to command %s to user %s", cmd_name, client)
         self.bot.privmsg(
             client.nick,
-            "You are not allowed to use the {command} command".format(command=cmd_name),
+            f"You are not allowed to use the {cmd_name} command",
         )
 
 
@@ -76,13 +74,19 @@ class ACLPlugin:
           `all_permissions`. username depends on mask chosen
     """
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
         "onebot.plugins.users",
         "irc3.plugins.storage",
     ]
 
-    available_permissions = ["operator", "admin", "wiki", "view", "ignore"]
+    available_permissions: ClassVar[list[str]] = [
+        "operator",
+        "admin",
+        "wiki",
+        "view",
+        "ignore",
+    ]
 
     def __init__(self, bot):
         self.bot = bot
@@ -106,7 +110,7 @@ class ACLPlugin:
         if user is None:
             return "I have no idea who you are."
         perms = await user.get_setting("permissions", [])
-        response = "You are {id_}".format(id_=await user.id())
+        response = f"You are {await user.id()}"
         if perms:
             response += " with permissions: {perms}".format(perms=", ".join(perms))
         else:
@@ -143,7 +147,7 @@ class ACLPlugin:
             if not user:
                 self.bot.privmsg(
                     target,
-                    ("I don't know {user}. Please use --by-id".format(user=username)),
+                    (f"I don't know {username}. Please use --by-id"),
                 )
                 return
             current_permissions = await user.get_setting("permissions", [])

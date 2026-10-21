@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 test_plugin_spotify
 -------------------
@@ -12,7 +9,6 @@ import asyncio
 import threading
 import unittest
 from collections import deque
-from typing import Optional
 from urllib.parse import quote
 
 from cryptography.fernet import Fernet
@@ -59,7 +55,7 @@ class FakeLog:
 
 
 class FakeBot:
-    def __init__(self, loop, user: Optional[FakeUser]):
+    def __init__(self, loop, user: FakeUser | None):
         self.loop = loop
         self.user = user
         self.log = FakeLog()
@@ -169,7 +165,7 @@ class SpotifyCallbackTestCase(unittest.TestCase):
     def test_failing_store_reports_error(self):
         class FailingUser(FakeUser):
             async def set_setting(self, setting, value):
-                raise Exception("database on fire")
+                raise RuntimeError("database on fire")
 
         handler = FakeHandler(
             FakeBot(self.loop, FailingUser()), self.key, make_path(self.key, "bar")

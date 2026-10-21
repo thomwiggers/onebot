@@ -15,11 +15,12 @@ Config:
       onebot.plugins.python
 """
 
-from typing import Self
-import irc3
-from irc3.plugins.command import command
-import requests
 import os
+from typing import Self
+
+import irc3
+import requests
+from irc3.plugins.command import command
 
 
 @irc3.plugin

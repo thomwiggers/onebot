@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
 test_onebot_acl
 ----------------------------------
@@ -9,9 +6,10 @@ Tests for ACL module.
 """
 
 import asyncio
+from typing import ClassVar
 
-from irc3.testing import patch
 from irc3.plugins.command import command
+from irc3.testing import patch
 
 from onebot.testing import BotTestCase
 
@@ -39,7 +37,7 @@ async def cmd2(bot, mask, target, args, **kwargs):
 class WhoamiTestCase(BotTestCase):
     """Test the whoami command with a realistic config"""
 
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.acl"],
         "cmd": ".",
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
@@ -84,7 +82,7 @@ class WhoamiTestCase(BotTestCase):
 
     def test_whoami_in_query(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :.whoami".format(self.bot.nick))
+        self.bot.dispatch(f":bar!foo@host PRIVMSG {self.bot.nick} :.whoami")
         self.bot.loop.run_until_complete(asyncio.sleep(0.01))
         assert self.bot.sent == [
             "PRIVMSG bar :You are foo@host without any permissions"
@@ -98,7 +96,7 @@ class WhoamiTestCase(BotTestCase):
 
 
 class UserBasedGuardPolicyTestCase(BotTestCase):
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["irc3.plugins.command", __name__],
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
     }
@@ -153,7 +151,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
 class SuperAdminTestCase(BotTestCase):
     """Test that the superadmin config value grants all_permissions via the guard."""
 
-    config = {
+    config: ClassVar[dict] = {
         "cmd": "!",
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
         "onebot.plugins.acl": {"superadmin": "root@localhost"},
@@ -201,7 +199,10 @@ class SuperAdminTestCase(BotTestCase):
 
 
 class ACLTestCase(BotTestCase):
-    config = {"cmd": "!", "onebot.plugins.acl": {"superadmin": "root@localhost"}}
+    config: ClassVar[dict] = {
+        "cmd": "!",
+        "onebot.plugins.acl": {"superadmin": "root@localhost"},
+    }
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):
@@ -259,8 +260,10 @@ class ACLTestCase(BotTestCase):
         self.assertEqual(self.bot.db.get("bat", {}).get("permissions", []), [])
         self.assertSent(
             [
-                "PRIVMSG #chan :Invalid permission level. Available permissions: "
-                "operator, admin, wiki, view, ignore"
+                (
+                    "PRIVMSG #chan :Invalid permission level. Available permissions: "
+                    "operator, admin, wiki, view, ignore"
+                )
             ]
         )
 

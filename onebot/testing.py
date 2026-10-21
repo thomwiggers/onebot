@@ -1,8 +1,10 @@
 import asyncio
+import contextlib
+from unittest.mock import MagicMock, create_autospec, patch
 
 import irc3
-from irc3.testing import BotTestCase as Irc3BotTestCase, call_later, call_soon
-from unittest.mock import create_autospec, MagicMock, patch
+from irc3.testing import BotTestCase as Irc3BotTestCase
+from irc3.testing import call_later, call_soon
 
 __all__ = ["BotTestCase", "IrcBot", "patch"]
 __unittest = True
@@ -44,7 +46,7 @@ class IrcBot(irc3.IrcBot):
 
     @property
     def sent(self):
-        values = [tuple(c)[0][0] for c in self.protocol.write.call_args_list]
+        values = [next(iter(c))[0] for c in self.protocol.write.call_args_list]
         self.protocol.write.reset_mock()
         return values
 
@@ -73,14 +75,14 @@ class BotTestCase(Irc3BotTestCase):
         if loop.is_closed():
             return
         try:
-            pending = asyncio.all_tasks(loop)
-            for task in pending:
-                task.cancel()
-            if pending:
-                loop.run_until_complete(
-                    asyncio.gather(*pending, return_exceptions=True)
-                )
-        except Exception:
-            pass
+            # run_until_complete raises RuntimeError if the loop is still running
+            with contextlib.suppress(RuntimeError):
+                pending = asyncio.all_tasks(loop)
+                for task in pending:
+                    task.cancel()
+                if pending:
+                    loop.run_until_complete(
+                        asyncio.gather(*pending, return_exceptions=True)
+                    )
         finally:
             loop.close()

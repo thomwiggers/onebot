@@ -6,15 +6,14 @@
 This plugin allows to query stonks
 """
 
-from typing import Self
-import requests
 import json
+import logging
 import re
+from typing import ClassVar, Self
 
 import irc3
+import requests
 from irc3.plugins.command import command
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -77,10 +76,10 @@ def stonks(symbol):
 
 
 @irc3.plugin
-class StonksPlugin(object):
+class StonksPlugin:
     """Stonks Plugin"""
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
     ]
 
