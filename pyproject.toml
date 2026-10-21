@@ -27,7 +27,7 @@ dependencies = [
   "isodate>=0.7.2",
   "cryptography>=50.0.1",
   "tekore>=6.2.0",
-  "dateparser>=1.4.2",
+  "dateparser>=1.4.3",
   "redis>=8.1.0",
   "praw>=8.0.3",
 ]
