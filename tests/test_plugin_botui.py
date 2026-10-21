@@ -27,8 +27,10 @@ class BotUITestCase(BotTestCase):
         self.bot.dispatch(f":im!the@boss INVITE {self.bot.nick}!the@bot #chan")
         self.assertSent(
             [
-                "PRIVMSG im :Never accept an invitation from a stranger "
-                "unless he gives you candy. -- Linda Festa"
+                (
+                    "PRIVMSG im :Never accept an invitation from a stranger "
+                    "unless he gives you candy. -- Linda Festa"
+                )
             ]
         )
         self.bot.get_plugin("onebot.plugins.botui.BotUI")._autojoin = True

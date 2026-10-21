@@ -258,8 +258,10 @@ class ACLTestCase(BotTestCase):
         self.assertEqual(self.bot.db.get("bat", {}).get("permissions", []), [])
         self.assertSent(
             [
-                "PRIVMSG #chan :Invalid permission level. Available permissions: "
-                "operator, admin, wiki, view, ignore"
+                (
+                    "PRIVMSG #chan :Invalid permission level. Available permissions: "
+                    "operator, admin, wiki, view, ignore"
+                )
             ]
         )
 

@@ -43,10 +43,9 @@ class user_based_policy:
         if "ignore" in perms and permission is None:
             return False
 
-        if permission is None or permission in perms or "all_permissions" in perms:
-            return True
-
-        return False
+        return bool(
+            permission is None or permission in perms or "all_permissions" in perms
+        )
 
     async def __call__(self, predicates, meth, client, target, args, **kwargs):
         permitted = await self.has_permission(client, predicates.get("permission"))

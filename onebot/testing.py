@@ -45,7 +45,7 @@ class IrcBot(irc3.IrcBot):
 
     @property
     def sent(self):
-        values = [tuple(c)[0][0] for c in self.protocol.write.call_args_list]
+        values = [next(iter(c))[0] for c in self.protocol.write.call_args_list]
         self.protocol.write.reset_mock()
         return values
 

@@ -252,8 +252,10 @@ class LastfmPluginTest(BotTestCase):
             await one_moment()
             self.assertSent(
                 [
-                    "PRIVMSG #chan :bar is not currently playing "
-                    "anything (last seen 3 days, 2 minutes ago)."
+                    (
+                        "PRIVMSG #chan :bar is not currently playing "
+                        "anything (last seen 3 days, 2 minutes ago)."
+                    )
                 ]
             )
             response = await self.lastfm.now_playing_response(
@@ -322,8 +324,10 @@ class LastfmPluginTest(BotTestCase):
         self.assertSent(
             [
                 "PRIVMSG #chan :bar is now playing “Etherwood – Weightless” (♥).",
-                "PRIVMSG #chan :bar (foo on Last.FM) is now playing "
-                "“Etherwood – Weightless” (♥).",
+                (
+                    "PRIVMSG #chan :bar (foo on Last.FM) is now playing "
+                    "“Etherwood – Weightless” (♥)."
+                ),
             ]
         )
 

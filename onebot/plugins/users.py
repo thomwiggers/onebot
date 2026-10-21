@@ -101,7 +101,7 @@ class User:
     async def get_settings(self) -> dict[str, Any]:
         """Get this users settings"""
         id_ = await self.id()
-        return self._get_database().get(id_, dict())  # type: ignore
+        return self._get_database().get(id_, {})  # type: ignore
 
     async def get_setting(self, setting, default=None) -> Any:
         """Gets a setting for the users. Can be any type."""
@@ -255,7 +255,7 @@ class UsersPlugin:
 
     def connection_lost(self):
         self.channels = set()
-        self.active_users = dict()
+        self.active_users = {}
 
     def join(self, nick: IrcString, mask: IrcString, channel: IrcString, **kwargs):
         self.log.debug("%s joined channel %s", nick, channel)

@@ -117,20 +117,20 @@ class UsersPluginTest(BotTestCase):
         assert user.host == "foo@host"
         assert user.mask.host == "foo@host"
         assert user.mask.nick == "bar"
-        assert user.channels == set(("#chan",))
+        assert user.channels == {"#chan"}
         self.bot.dispatch(":bar!foo@host JOIN #chan2")
-        assert user.channels == set(("#chan", "#chan2"))
+        assert user.channels == {"#chan", "#chan2"}
 
     def test_join_part_kick(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         assert "#chan" in self.users.channels
         self.bot.dispatch(":bar!foo@host JOIN #chan2")
-        assert self.bot.get_user("bar").channels == set(("#chan", "#chan2"))
+        assert self.bot.get_user("bar").channels == {"#chan", "#chan2"}
         self.bot.dispatch(":bar!foo@host PART #chan")
-        assert self.bot.get_user("bar").channels == set(("#chan2",))
+        assert self.bot.get_user("bar").channels == {"#chan2"}
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         self.bot.dispatch(":adm!in@other KICK #chan bar")
-        assert self.bot.get_user("bar").channels == set(("#chan2",))
+        assert self.bot.get_user("bar").channels == {"#chan2"}
         self.bot.dispatch(":bar!foo@host PART #chan2")
         assert self.bot.get_user("bar") is None
 
@@ -186,7 +186,7 @@ class UsersPluginTest(BotTestCase):
         user = self.bot.get_user("bar")
         assert user.nick == "bar"
         assert user.host == "~user@host"
-        assert user.channels == set(("#chan",))
+        assert user.channels == {"#chan"}
 
         # Test adding chans to existing users
         self.users.channels.add("#chn2")
@@ -207,10 +207,10 @@ class UsersPluginTest(BotTestCase):
         user = self.bot.get_user("bar")
         assert user.nick == "bar"
         assert user.host == "foo@host"
-        assert user.channels == set(("#chan",))
+        assert user.channels == {"#chan"}
         self.users.channels.add("#chan2")
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan2 :hi!")
-        assert user.channels == set(("#chan", "#chan2"))
+        assert user.channels == {"#chan", "#chan2"}
 
     def test_bot_part_keeps_users_from_other_channels(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
@@ -231,9 +231,9 @@ class UsersPluginTest(BotTestCase):
         # and a channel they're in is still registered on top of that
         self.users.channels.add("#chan")
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan :hi!")
-        assert user.channels == set(("#chan",))
+        assert user.channels == {"#chan"}
         self.bot.dispatch(f":bar!foo@host PRIVMSG {self.bot.nick} :hi!")
-        assert user.channels == set(("#chan",))
+        assert user.channels == {"#chan"}
 
     def test_notice_is_ignored(self):
         # services talk to us in NOTICEs; they're not users
@@ -312,13 +312,13 @@ class UserObjectTest(unittest.IsolatedAsyncioTestCase):
         assert not self.user.still_in_channels()
 
     def test_join_part(self):
-        self.user.channels = set(["#foo"])
+        self.user.channels = {"#foo"}
         self.user.join("#foo")
-        assert self.user.channels == set(["#foo"])
+        assert self.user.channels == {"#foo"}
         self.user.join("#bar")
-        assert self.user.channels == set(["#foo", "#bar"])
+        assert self.user.channels == {"#foo", "#bar"}
         self.user.part("#foo")
-        assert self.user.channels == set(["#bar"])
+        assert self.user.channels == {"#bar"}
         self.user.part("#bar")
         assert self.user.channels == set()
 

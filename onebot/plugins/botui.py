@@ -39,7 +39,7 @@ class BotUI:
     def onInvite(self, sender, target, channel) -> None:
         """Will send a message to the admin or automatically join a channel
         when it gets invited."""
-        self._log.info("%s invited me to %s." % (sender, channel))
+        self._log.info(f"{sender} invited me to {channel}.")
 
         if self._autojoin:
             if target.nick == self.bot.nick:
@@ -51,7 +51,7 @@ class BotUI:
                 "you candy. -- Linda Festa",
             )
             if self._admin:
-                self.bot.notice(self._admin, "%s invited me to %s." % (sender, channel))
+                self.bot.notice(self._admin, f"{sender} invited me to {channel}.")
 
     @command(permission="operator", show_in_help_list=False)
     def join(self, mask, target, args):
@@ -64,7 +64,7 @@ class BotUI:
         channel = args["<channel>"]
 
         if args["<password>"] is not None:
-            channel += " %s" % args["<password>"]
+            channel += " {}".format(args["<password>"])
 
         self.bot.join(channel)
 

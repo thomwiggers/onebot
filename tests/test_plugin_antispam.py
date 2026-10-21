@@ -68,7 +68,9 @@ class AntispamTestCase(BotTestCase):
         self.bot.loop.run_until_complete(wrap())
         self.assertSent(
             [
-                "KICK #chan a :Try to come up with something more "
-                "creative. (5 repeating lines)"
+                (
+                    "KICK #chan a :Try to come up with something more "
+                    "creative. (5 repeating lines)"
+                )
             ]
         )
