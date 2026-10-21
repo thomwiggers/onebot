@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.psa` PSA
@@ -8,14 +7,14 @@ This plugin allows admins to send broadcasts
 """
 
 from json import JSONDecodeError
+
+import requests
 from irc3 import plugin
 from irc3.plugins.command import command
 
-import requests
-
 
 @plugin
-class HassPlugin(object):
+class HassPlugin:
     """HomeAssistant Plugin"""
 
     requires = [

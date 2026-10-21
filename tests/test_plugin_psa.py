@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 test_plugin_psa
@@ -9,6 +8,7 @@ Tests for PSA module
 """
 
 from irc3.testing import patch
+
 from onebot.testing import BotTestCase
 
 from .test_plugin_users import MockDb
@@ -19,7 +19,7 @@ class PSATestCase(BotTestCase):
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):
-        super(PSATestCase, self).setUp()
+        super().setUp()
         self.callFTU()
         self.bot.db = MockDb({"the@boss": {"permissions": {"all_permissions"}}})
 

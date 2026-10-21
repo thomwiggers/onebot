@@ -1,7 +1,7 @@
-import requests
-import pickle
 import json
+import pickle
 
+import requests
 
 if __name__ == "__main__":
     with open("sites.json", "r") as f:
@@ -11,7 +11,7 @@ if __name__ == "__main__":
         for url, data in sites.items():
             result = session.post(url, data=data)
             if result.ok:
-                print("logged in to {}".format(url))
+                print(f"logged in to {url}")
 
         with open("cookies.jar", "wb") as f:
             pickle.dump(session.cookies, f)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.botui` Bot Control plugin
@@ -10,12 +9,13 @@ Based on http://git.io/v3HVL by gawel
 """
 
 from typing import Self
+
+from irc3 import event, plugin
 from irc3.plugins.command import command
-from irc3 import plugin, event
 
 
 @plugin
-class BotUI(object):
+class BotUI:
     """Bot User Interface plugin
 
     Configuration settings:
@@ -89,7 +89,7 @@ class BotUI(object):
             %%quit [<reason>...]
         """
         reason = " ".join(args["<reason>"] or [])
-        self.bot.quit("{} -- {}".format(reason, mask.nick).strip())
+        self.bot.quit(f"{reason} -- {mask.nick}".strip())
         self.bot.loop.stop()
 
     @command(permission="admin", show_in_help_list=False)
@@ -130,7 +130,7 @@ class BotUI(object):
         %%quote <string>...
         """
         cmd = " ".join(args["<string>"] or [])
-        self.bot.privmsg(target, "Sending {}".format(cmd))
+        self.bot.privmsg(target, f"Sending {cmd}")
         self.bot.send(cmd)
 
     @command(name="reload", permission="admin", show_in_help_list=False)
@@ -156,7 +156,7 @@ class BotUI(object):
         import sys
 
         reason = " ".join(args["<reason>"] or [])
-        self.bot.quit("{} -- {} (restart)".format(reason, mask.nick).strip())
+        self.bot.quit(f"{reason} -- {mask.nick} (restart)".strip())
         self.bot.loop.stop()
         sys.exit(2)
 

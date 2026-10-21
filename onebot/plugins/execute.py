@@ -22,9 +22,10 @@ Config:
 irc3 also has a plugin now, might be more useful.
 """
 
-from typing import Self
-import irc3
 import time
+from typing import Self
+
+import irc3
 
 
 class ExecutePlugin:

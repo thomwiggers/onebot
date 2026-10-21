@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.psa` PSA
@@ -12,7 +11,7 @@ from irc3.plugins.command import command
 
 
 @plugin
-class PSAPlugin(object):
+class PSAPlugin:
     """PSA Plugin"""
 
     requires = [

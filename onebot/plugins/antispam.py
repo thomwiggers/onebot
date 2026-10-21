@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.antispam` PSA
@@ -11,11 +10,11 @@ Config options:
 
 """
 
-from collections import defaultdict
 import hashlib
+from collections import defaultdict
 from typing import Self
 
-from irc3 import rfc, plugin
+from irc3 import plugin, rfc
 from irc3.dec import event
 
 
@@ -69,7 +68,7 @@ class PSAPlugin:
                     target,
                     mask.nick,
                     "Try to come up with something more creative. "
-                    "({} repeating lines)".format(num),
+                    f"({num} repeating lines)",
                 )
         else:
             await user.set_setting("last_line", data)

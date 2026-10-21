@@ -5,8 +5,8 @@ import json
 import multiprocessing
 import resource
 import sys
+from contextlib import redirect_stderr, redirect_stdout
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from contextlib import redirect_stdout, redirect_stderr
 
 TIMEOUT = 5
 LISTEN_PORT = 8080

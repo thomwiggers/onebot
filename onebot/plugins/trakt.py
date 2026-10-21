@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 """
 ======================================================
 :mod:`onebot.plugins.trakt` Trakt.TV plugin for OneBot
@@ -27,9 +26,8 @@ import asyncio
 from typing import Self
 
 import irc3
-from irc3.plugins.command import command
-
 import requests
+from irc3.plugins.command import command
 
 
 @irc3.plugin
@@ -94,7 +92,7 @@ class TrakttvPlugin:
         user = mask.nick
 
         request = requests.get(
-            "https://api.trakt.tv/users/{}/watching".format(trakt_user),
+            f"https://api.trakt.tv/users/{trakt_user}/watching",
             headers={
                 "Content-Type": "application/json",
                 "trakt-api-version": "2",
@@ -103,7 +101,7 @@ class TrakttvPlugin:
         )
         response = [user]
         if args["<user>"]:
-            response.append("({} on Trakt.tv)".format(trakt_user))
+            response.append(f"({trakt_user} on Trakt.tv)")
         if request.status_code == 204:
             response.append("You're not playing anything")
         elif request.status_code == 200:
@@ -131,7 +129,7 @@ class TrakttvPlugin:
             response.append(
                 "Something went wrong. "
                 "Is your account set to private? "
-                "Status code: {}".format(request.status_code)
+                f"Status code: {request.status_code}"
             )
         return " ".join(response)
 

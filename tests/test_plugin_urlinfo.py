@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 test_onebot_urlinfo
@@ -8,24 +7,21 @@ test_onebot_urlinfo
 Tests for urlinfo module.
 """
 
-import os.path
 import logging
+import os
+import os.path
 import socket
 import unittest
-from unittest.mock import MagicMock, patch
 from pathlib import Path
-import os
-
-
-from onebot.testing import BotTestCase
-from onebot.plugins.urlinfo import _find_urls
+from unittest.mock import MagicMock, patch
 
 import requests
-
-from .test_plugin_users import MockDb
-
 from betamax import Betamax
 
+from onebot.plugins.urlinfo import _find_urls
+from onebot.testing import BotTestCase
+
+from .test_plugin_users import MockDb
 
 with Betamax.configure() as config:
     config.cassette_library_dir = "tests/fixtures/cassettes"
@@ -47,7 +43,7 @@ def mock_requests_get(*args, **kwargs):
             self._file_size = self._file_name.stat().st_size
             self.headers = {
                 "Content-Type": "text/html",
-                "Content-Length": "{}".format(self._file_size),
+                "Content-Length": f"{self._file_size}",
             }
             self.content = self._file_name.read_bytes()
             self._filehandle = self._file_name.open()
@@ -69,7 +65,7 @@ class UrlInfoTestCase(BotTestCase):
 
     def setUp(self):
         """Set up the test class"""
-        super(UrlInfoTestCase, self).setUp()
+        super().setUp()
         self.callFTU()
         self.bot.db = MockDb({"the@boss": {"permissions": {"all_permissions"}}})
         self.bot.log = logging.getLogger("test")
@@ -106,9 +102,7 @@ class UrlInfoTestCase(BotTestCase):
             ("http://nos.nl/(test)test)", ["http://nos.nl/(test)test"]),
             ("<http://nos.nl/test>", ["http://nos.nl/test"]),
         ]:
-            self.assertEqual(
-                expected, _find_urls(message), "String: {}".format(message)
-            )
+            self.assertEqual(expected, _find_urls(message), f"String: {message}")
 
     def test_og_title_preferred_over_title_tag(self):
         """og:title is used instead of <title> when present."""

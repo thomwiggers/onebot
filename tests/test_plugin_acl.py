@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 test_onebot_acl
@@ -10,8 +9,8 @@ Tests for ACL module.
 
 import asyncio
 
-from irc3.testing import patch
 from irc3.plugins.command import command
+from irc3.testing import patch
 
 from onebot.testing import BotTestCase
 
@@ -84,7 +83,7 @@ class WhoamiTestCase(BotTestCase):
 
     def test_whoami_in_query(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :.whoami".format(self.bot.nick))
+        self.bot.dispatch(f":bar!foo@host PRIVMSG {self.bot.nick} :.whoami")
         self.bot.loop.run_until_complete(asyncio.sleep(0.01))
         assert self.bot.sent == [
             "PRIVMSG bar :You are foo@host without any permissions"

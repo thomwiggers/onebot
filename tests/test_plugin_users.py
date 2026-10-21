@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 """
 test_onebot
@@ -8,16 +7,14 @@ test_onebot
 Tests for `onebot` module.
 """
 
-from __future__ import unicode_literals
-
 import asyncio
 import unittest
 
 from irc3.testing import patch
 from irc3.utils import IrcString
-from onebot.testing import BotTestCase
 
 from onebot.plugins.users import User
+from onebot.testing import BotTestCase
 
 
 class MockDb(dict):
@@ -144,7 +141,7 @@ class UsersPluginTest(BotTestCase):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         self.bot.dispatch(":bar2!foo@host JOIN #chan")
         self.bot.dispatch(":bar3!foo@host JOIN #chan")
-        self.bot.dispatch(":{}!foo@bar PART #chan".format(self.bot.nick))
+        self.bot.dispatch(f":{self.bot.nick}!foo@bar PART #chan")
         assert self.bot.get_user("bar") is None
         assert self.bot.get_user("bar2") is None
         assert self.bot.get_user("bar3") is None
@@ -167,7 +164,7 @@ class UsersPluginTest(BotTestCase):
         assert self.bot.get_user("bar") is None
 
         self.bot.dispatch(":bar!foo@host JOIN #chan")
-        msg = ":{}!foo@bar QUIT :quitmsg".format(self.bot.nick)
+        msg = f":{self.bot.nick}!foo@bar QUIT :quitmsg"
         self.bot.dispatch(msg)
         assert self.bot.get_user("bar") is None
         assert self.users.channels == set()
@@ -218,13 +215,13 @@ class UsersPluginTest(BotTestCase):
     def test_bot_part_keeps_users_from_other_channels(self):
         self.bot.dispatch(":bar!foo@host JOIN #chan")
         self.bot.dispatch(":bar2!foo@host JOIN #chan2")
-        self.bot.dispatch(":{}!foo@bar PART #chan".format(self.bot.nick))
+        self.bot.dispatch(f":{self.bot.nick}!foo@bar PART #chan")
         assert self.bot.get_user("bar") is None
         assert self.bot.get_user("bar2") is not None
 
     def test_privmsg_in_query(self):
         # a query isn't a channel, so we track the user without one
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
+        self.bot.dispatch(f":bar!foo@host PRIVMSG {self.bot.nick} :hi!")
         user = self.bot.get_user("bar")
         assert user is not None
         assert user.nick == "bar"
@@ -235,21 +232,21 @@ class UsersPluginTest(BotTestCase):
         self.users.channels.add("#chan")
         self.bot.dispatch(":bar!foo@host PRIVMSG #chan :hi!")
         assert user.channels == set(("#chan",))
-        self.bot.dispatch(":bar!foo@host PRIVMSG {} :hi!".format(self.bot.nick))
+        self.bot.dispatch(f":bar!foo@host PRIVMSG {self.bot.nick} :hi!")
         assert user.channels == set(("#chan",))
 
     def test_notice_is_ignored(self):
         # services talk to us in NOTICEs; they're not users
         self.bot.dispatch(
-            ":NickServ!NickServ@services. NOTICE {} :identified".format(self.bot.nick)
+            f":NickServ!NickServ@services. NOTICE {self.bot.nick} :identified"
         )
         self.users.channels.add("#chan")
         self.bot.dispatch(":bar!foo@host NOTICE #chan :hi")
-        self.bot.dispatch(":irc.example.org NOTICE {} :hello".format(self.bot.nick))
+        self.bot.dispatch(f":irc.example.org NOTICE {self.bot.nick} :hello")
         assert len(self.users.active_users) == 0
 
     def test_who_on_join(self):
-        self.bot.dispatch(":{}!bar@baz JOIN #chan2".format(self.bot.nick))
+        self.bot.dispatch(f":{self.bot.nick}!bar@baz JOIN #chan2")
         self.assertSent(["WHO #chan2"])
 
     def test_redact_nicks(self):

@@ -1,8 +1,9 @@
 import asyncio
+from unittest.mock import MagicMock, create_autospec, patch
 
 import irc3
-from irc3.testing import BotTestCase as Irc3BotTestCase, call_later, call_soon
-from unittest.mock import create_autospec, MagicMock, patch
+from irc3.testing import BotTestCase as Irc3BotTestCase
+from irc3.testing import call_later, call_soon
 
 __all__ = ["BotTestCase", "IrcBot", "patch"]
 __unittest = True

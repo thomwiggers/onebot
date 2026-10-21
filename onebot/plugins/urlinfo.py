@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ================================================
 :mod:`onebot.plugins.urlinfo` Urlinfo plugin
@@ -9,30 +8,30 @@ This plugin shows information about urls posted.
 
 """
 
-from contextlib import closing
+import datetime
+import ipaddress
 import logging
 import os
-import re
 import pickle
-import ipaddress
+import re
 import socket
 import time
-import datetime
 import warnings
+from collections.abc import Callable
+from contextlib import closing
 from io import StringIO
-from typing import Callable, List, Optional, Self, Tuple
-from urllib.parse import urlparse, parse_qs, unquote, ParseResult, urljoin
+from typing import Self
+from urllib.parse import ParseResult, parse_qs, unquote, urljoin, urlparse
 
-from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+import praw
+import praw.exceptions
+import praw.models
+import prawcore
 import requests
 import requests.exceptions
-from irc3 import plugin, event
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+from irc3 import event, plugin
 from isodate import parse_duration
-
-import prawcore
-import praw
-import praw.models
-import praw.exceptions
 
 YOUTUBE_URLS = [
     "www.youtube.com",
@@ -66,7 +65,7 @@ def timedelta_format(duration: datetime.timedelta):
         return "%dm%ds" % (minutes, seconds)
 
 
-def _read_body(response) -> Tuple[int, Optional[str]]:
+def _read_body(response) -> tuple[int, str | None]:
     """Count the size of the body of files"""
     content = StringIO()
     size = 0
@@ -88,7 +87,7 @@ def _read_body(response) -> Tuple[int, Optional[str]]:
 URL_PATTERN = re.compile(r"\bhttps?://\S+")
 
 
-def _find_urls(string: str) -> List[str]:
+def _find_urls(string: str) -> list[str]:
     """Find all URLs in a string, stripping trailing punctuation and matching brackets."""
     urls = []
     for match in URL_PATTERN.finditer(string):
@@ -126,7 +125,7 @@ USER_AGENT_STRING = "OneBot by /u/DutchDudeWCD"
 
 
 @plugin
-class UrlInfo(object):
+class UrlInfo:
     """Bot User Interface plugin
 
     Configuration settings:
@@ -156,9 +155,9 @@ class UrlInfo(object):
         self.ignored_apps: list[str] = self.config.get("ignored_apps", ["pdf"])
         self.ignored_channels: list[str] = self.config.get("ignored_channels", [])
         self.ignored_nicks: list[str] = self.config.get("ignored_nicks", [])
-        self.youtube_api_key: Optional[str] = self.config.get("youtube_api_key")
-        reddit_client_id: Optional[str] = self.config.get("reddit_client_id")
-        reddit_client_secret: Optional[str] = self.config.get("reddit_client_secret")
+        self.youtube_api_key: str | None = self.config.get("youtube_api_key")
+        reddit_client_id: str | None = self.config.get("reddit_client_id")
+        reddit_client_secret: str | None = self.config.get("reddit_client_secret")
         self.cookiejar = None
         if cookiejar_file:
             with open(cookiejar_file, "rb") as f:
@@ -170,9 +169,12 @@ class UrlInfo(object):
         for key, value in self.bot.config.items():
             if key.startswith(prefix):
                 site_name = key[len(prefix) :]
-                if site_name.startswith('"') and site_name.endswith('"'):
-                    site_name = site_name[1:-1]
-                elif site_name.startswith("'") and site_name.endswith("'"):
+                if (
+                    site_name.startswith('"')
+                    and site_name.endswith('"')
+                    or site_name.startswith("'")
+                    and site_name.endswith("'")
+                ):
                     site_name = site_name[1:-1]
                 self.mediawiki_sites[site_name] = value
         self.mediawiki_logged_in = set()
@@ -190,7 +192,7 @@ class UrlInfo(object):
             )
 
         # URL processors
-        self.url_processors: List[Callable[..., Optional[list[str]]]] = [
+        self.url_processors: list[Callable[..., list[str] | None]] = [
             self._process_url_local,
             self._process_url_urlmap,
             self._process_url_mediawiki,
@@ -202,7 +204,7 @@ class UrlInfo(object):
 
     def _process_url(
         self, session: requests.Session, url: str, **kwargs
-    ) -> Optional[list[str]]:
+    ) -> list[str] | None:
         i = 0
         redirects = 0
         while i < len(self.url_processors):
@@ -361,7 +363,7 @@ class UrlInfo(object):
 
     def _process_url_mediawiki(
         self, session: requests.Session, url: str, **kwargs
-    ) -> Optional[list[str]]:
+    ) -> list[str] | None:
         parsed = urlparse(url)
         hostname = parsed.hostname
 
@@ -408,7 +410,7 @@ class UrlInfo(object):
 
     def _process_wikipedia(
         self, session: requests.Session, parsed: ParseResult
-    ) -> Optional[list[str]]:
+    ) -> list[str] | None:
         """Handle public Wikipedia URLs without requiring config."""
         title = self._mediawiki_get_title(parsed)
         if not title:
@@ -421,7 +423,7 @@ class UrlInfo(object):
             self.log.error("Wikipedia error: %s", e)
             return None
 
-    def _mediawiki_get_title(self, parsed_url: ParseResult) -> Optional[str]:
+    def _mediawiki_get_title(self, parsed_url: ParseResult) -> str | None:
         """Extract MediaWiki page title from URL."""
         title = None
         if "/wiki/" in parsed_url.path:
@@ -434,7 +436,7 @@ class UrlInfo(object):
 
     def _mediawiki_request_info(
         self, session: requests.Session, api_url: str, title: str
-    ) -> Optional[list[str]]:
+    ) -> list[str] | None:
         """Request page info and extract from MediaWiki API."""
         params = {
             "action": "query",
@@ -712,7 +714,7 @@ class UrlInfo(object):
             or mask.nick in self.ignored_nicks
         )
 
-    def _process_urls(self, urls: List[str]) -> List[str]:
+    def _process_urls(self, urls: list[str]) -> list[str]:
         """Process a list of URLs and return formatted messages."""
         messages = []
         with requests.Session() as session:

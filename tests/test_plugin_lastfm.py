@@ -1,26 +1,24 @@
-# -*- coding: utf8 -*-
-from __future__ import unicode_literals, print_function
-
 import asyncio
 import calendar
 import datetime
 import json
 import os.path
-from typing import Any, Dict
-from unittest.mock import AsyncMock
 import unittest
+from typing import Any
+from unittest.mock import AsyncMock
 
 import lastfm.exceptions
 from freezegun import freeze_time
-from irc3.testing import patch, MagicMock
-from onebot.testing import BotTestCase
+from irc3.testing import MagicMock, patch
 from irc3.utils import IrcString
 
+from onebot.testing import BotTestCase
 
-def _get_fixture(fixture_name: str) -> Dict[Any, Any]:
+
+def _get_fixture(fixture_name: str) -> dict[Any, Any]:
     """Reads a fixture from a file"""
     with open(
-        os.path.join(os.path.dirname(__file__), "fixtures/{}".format(fixture_name)), "r"
+        os.path.join(os.path.dirname(__file__), f"fixtures/{fixture_name}"), "r"
     ) as f:
         return json.load(f)
 
@@ -28,7 +26,6 @@ def _get_fixture(fixture_name: str) -> Dict[Any, Any]:
 async def one_moment():
     with freeze_time(tick=True):
         await asyncio.sleep(0.01)
-    return
 
 
 @freeze_time("2014-01-01")
@@ -75,7 +72,7 @@ class LastfmPluginTest(BotTestCase):
 
     @patch("irc3.plugins.storage.Storage", spec=True)
     def setUp(self, mock):
-        super(LastfmPluginTest, self).setUp()
+        super().setUp()
         self.config["loop"] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config["loop"])
         self.callFTU()

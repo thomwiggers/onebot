@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 """
 ======================================================
 :mod:`onebot.plugins.lastfm` Last.FM plugin for OneBot
@@ -24,12 +23,12 @@ Usage::
 """
 
 from datetime import datetime
-from typing import Any, Dict, Self
+from operator import itemgetter
+from typing import Any, Self
 
 import irc3
 import lastfm.exceptions
 import musicbrainzngs
-from operator import itemgetter
 from irc3.plugins.command import command
 from lastfm import lfm
 
@@ -58,7 +57,7 @@ class LastfmPlugin:
         except KeyError:  # pragma: no cover
             raise Exception(
                 "You need to set the Last.FM api_key and api_scret "
-                "in the config section [{}]".format(__name__)
+                f"in the config section [{__name__}]"
             )
 
     @command
@@ -111,7 +110,7 @@ class LastfmPlugin:
             errmsg = str(e)
             # filter out common failure and show status
             if errmsg == "No user with that name was found":
-                errmsg = "No Last.fm user found for {username}".format(username=user)
+                errmsg = f"No Last.fm user found for {user}"
             else:
                 self.log.exception(
                     "Operation failed when fetching recent tracks", exc_info=e
@@ -120,20 +119,20 @@ class LastfmPlugin:
             if lastfm_user != user and lastfm_user in errmsg:  # pragma: no cover
                 errmsg = "(Error message withheld)"
                 self.log.critical("Error message contained user name!")
-            return "{user}: Error: {message}".format(user=user, message=errmsg)
+            return f"{user}: Error: {errmsg}"
         except Exception as e:  # pragma: no cover
             self.log.exception("Fatal exception when calling last.fm", exc_info=e)
             return (
-                "{user}: Fatal exception occurred. Aborting. "
-                "Check http://status.last.fm".format(user=user)
+                f"{user}: Fatal exception occurred. Aborting. "
+                "Check http://status.last.fm"
             )
         else:
-            response = ["{user}".format(user=user)]
+            response = [f"{user}"]
 
             # Append 'on lastfm' to differentiate between !np lastfmnick and
             # !np someone_else_in_channel. The latter we don't and won't do.
             if args["<user>"]:
-                response.append("({nick} on Last.FM)".format(nick=lastfm_user))
+                response.append(f"({lastfm_user} on Last.FM)")
 
             # Empty result
             if "track" not in result or (
@@ -183,9 +182,9 @@ class LastfmPlugin:
                         minutes = time_ago.seconds // 60
                         seconds = time_ago.seconds % 60
                         if minutes > 0:
-                            response.append("({}m{:02}s ago)".format(minutes, seconds))
+                            response.append(f"({minutes}m{seconds:02}s ago)")
                         else:  # pragma: no cover
-                            response.append("({}s ago)".format(seconds))
+                            response.append(f"({seconds}s ago)")
 
                     if "tags" in info and len(info["tags"]) > 0:
                         response.append("({})".format(", ".join(info["tags"][:4])))
@@ -201,7 +200,7 @@ class LastfmPlugin:
         else:  # pragma: no cover
             return nick
 
-    def fetch_extra_trackinfo(self, username: str, info: Dict[str, Any]) -> None:
+    def fetch_extra_trackinfo(self, username: str, info: dict[str, Any]) -> None:
         """Updates info with extra trackinfo from the last.fm API and
         MusicBrainz API"""
         try:
@@ -248,28 +247,28 @@ def _time_ago(time: datetime) -> str:
     time_ago = datetime.utcnow() - time
     timestr = []
     if time_ago.days > 1:
-        timestr.append("{} days".format(time_ago.days))
+        timestr.append(f"{time_ago.days} days")
     elif time_ago.days == 1:
         timestr.append("1 day")
 
     # hours
     hours = time_ago.seconds // (60 * 60)
     if hours > 1:
-        timestr.append("{} hours".format(hours))
+        timestr.append(f"{hours} hours")
     elif hours == 1:
         timestr.append("1 hour")
 
     # minutes
     minutes = time_ago.seconds % (60 * 60) // 60
     if minutes > 1:
-        timestr.append("{} minutes".format(minutes))
+        timestr.append(f"{minutes} minutes")
     elif minutes == 1:
         timestr.append("1 minute")
 
     return ", ".join(timestr)
 
 
-def _parse_trackinfo(track: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_trackinfo(track: dict[str, Any]) -> dict[str, Any]:
     """Parses the track info into something more comprehensible"""
     now_playing = False
     if "@attr" in track and "nowplaying" in track["@attr"]:

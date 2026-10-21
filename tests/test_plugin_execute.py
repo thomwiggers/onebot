@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 test_onebot_execute
@@ -18,7 +17,7 @@ class ExecutePluginTestCase(BotTestCase):
     }
 
     def setUp(self):
-        super(ExecutePluginTestCase, self).setUp()
+        super().setUp()
         self.callFTU()
         self.bot.db = {}
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 test_onebot_antispam
@@ -8,10 +7,11 @@ test_onebot_antispam
 Tests for antispam module.
 """
 
-from irc3.testing import patch
-from onebot.testing import BotTestCase
-
 import asyncio
+
+from irc3.testing import patch
+
+from onebot.testing import BotTestCase
 
 from .test_plugin_users import MockDb
 
@@ -29,7 +29,7 @@ class AntispamTestCase(BotTestCase):
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):
-        super(AntispamTestCase, self).setUp()
+        super().setUp()
         self.config["loop"] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.config["loop"])
         self.callFTU()

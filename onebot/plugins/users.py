@@ -1,4 +1,3 @@
-# -*- coding: utf8 -*-
 """
 ==============================================
 :mod:`onebot.plugins.users` Users plugin
@@ -18,20 +17,13 @@ that to an automatically created, in-bot account.
     in ``onebot.plugins.acl`` instead.
 """
 
-from __future__ import unicode_literals, print_function
-
 import json
 import re
+from collections.abc import Awaitable, Callable, Iterable
 from typing import (
     Any,
-    Awaitable,
-    Callable,
-    Dict,
-    Iterable,
     Literal,
-    Optional,
     Self,
-    Set,
 )
 
 import irc3
@@ -67,9 +59,9 @@ class User:
     ):
         self.nick = mask.nick
         self.host = mask.host
-        self.channels: Set[str] = set()
+        self.channels: set[str] = set()
         self.id: Callable[[], Awaitable[str]] = id_
-        self.database: Optional[Storage] = database
+        self.database: Storage | None = database
         try:
             if isinstance(channels, str):
                 raise ValueError("You must specify a list of channels!")
@@ -81,7 +73,7 @@ class User:
     @property
     def mask(self) -> IrcString:
         """Get the mask of this user"""
-        return IrcString("{}!{}".format(self.nick, self.host))
+        return IrcString(f"{self.nick}!{self.host}")
 
     def _get_database(self) -> Storage:
         if self.database is None:
@@ -106,7 +98,7 @@ class User:
         id_ = await self.id()
         self._get_database().set(id_, **{setting: value})
 
-    async def get_settings(self) -> Dict[str, Any]:
+    async def get_settings(self) -> dict[str, Any]:
         """Get this users settings"""
         id_ = await self.id()
         return self._get_database().get(id_, dict())  # type: ignore
@@ -188,7 +180,7 @@ class UsersPlugin:
         return deserialize_setting(value)
 
     @irc3.extend
-    def redact_nicks(self, message: str, target: Optional[str] = None) -> str:
+    def redact_nicks(self, message: str, target: str | None = None) -> str:
         """Redacts all known nicks in the message.
 
         If target is provided, only redacts nicks that are in that channel.
@@ -270,7 +262,7 @@ class UsersPlugin:
         # This can only be observed if we're in that channel
         self.channels.add(channel)
         if nick == self.bot.nick:
-            self.bot.send("WHO {}".format(channel))
+            self.bot.send(f"WHO {channel}")
 
         if nick not in self.active_users:
             self.active_users[nick] = self.create_user(mask, [channel])
@@ -333,15 +325,13 @@ class UsersPlugin:
         Should only be processed for channels we are currently in!
         """
         if channel not in self.channels:
-            self.log.debug(
-                "Got WHO for channel I'm not in: {chan}".format(chan=channel)
-            )
+            self.log.debug(f"Got WHO for channel I'm not in: {channel}")
             return
 
         self.log.debug("Got WHO for %s: %s (%s)", channel, nick, host)
 
         if nick not in self.active_users:
-            mask = IrcString("{}!{}@{}".format(nick, username, host))
+            mask = IrcString(f"{nick}!{username}@{host}")
             self.active_users[nick] = self.create_user(mask, [channel])
         else:
             self.active_users[nick].join(channel)
@@ -356,7 +346,7 @@ class UsersPlugin:
 
             return User(mask, channels, mask_id_func, self.bot.db)
         if self.identifying_method == "nickserv":
-            account: Optional[str] = None
+            account: str | None = None
 
             async def get_account() -> str:
                 nonlocal account
@@ -380,11 +370,7 @@ class UsersPlugin:
                 if match:
                     return match.group(1)
                 else:
-                    self.log.debug(
-                        "Failed to extract what.cd user namefrom {mask}".format(
-                            mask=mask
-                        )
-                    )
+                    self.log.debug(f"Failed to extract what.cd user namefrom {mask}")
                     return mask.host
 
             return User(mask, channels, id_func, self.bot.db)
