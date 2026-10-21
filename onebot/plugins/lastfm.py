@@ -55,10 +55,10 @@ class LastfmPlugin:
                 self.config.get("cache_file"),
             )
         except KeyError:  # pragma: no cover
-            raise Exception(
-                "You need to set the Last.FM api_key and api_scret "
+            raise ValueError(
+                "You need to set the Last.FM api_key and api_secret "
                 f"in the config section [{__name__}]"
-            )
+            ) from None
 
     @command
     async def np(self, mask, target, args) -> str:

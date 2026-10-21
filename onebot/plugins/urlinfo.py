@@ -58,11 +58,11 @@ def timedelta_format(duration: datetime.timedelta):
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
     if days > 0:
-        return "%dd%dh%dm%ds" % (days, hours, minutes, seconds)
+        return f"{days}d{hours}h{minutes}m{seconds}s"
     elif hours > 0:
-        return "%dh%dm%ds" % (hours, minutes, seconds)
+        return f"{hours}h{minutes}m{seconds}s"
     else:
-        return "%dm%ds" % (minutes, seconds)
+        return f"{minutes}m{seconds}s"
 
 
 def _read_body(response) -> tuple[int, str | None]:

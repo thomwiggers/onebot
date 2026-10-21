@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 test_onebot
 ----------------------------------
@@ -293,9 +291,9 @@ class UserObjectTest(unittest.IsolatedAsyncioTestCase):
         super().tearDown()
 
     def test_user_needs_channels(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             User(IrcString("nick!user@host"), None, lambda x: "id")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             User(IrcString("nick!user@host"), "#chan", lambda x: "id")
 
     def test_init(self):

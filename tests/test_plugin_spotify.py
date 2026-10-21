@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 test_plugin_spotify
 -------------------
@@ -167,7 +165,7 @@ class SpotifyCallbackTestCase(unittest.TestCase):
     def test_failing_store_reports_error(self):
         class FailingUser(FakeUser):
             async def set_setting(self, setting, value):
-                raise Exception("database on fire")
+                raise RuntimeError("database on fire")
 
         handler = FakeHandler(
             FakeBot(self.loop, FailingUser()), self.key, make_path(self.key, "bar")

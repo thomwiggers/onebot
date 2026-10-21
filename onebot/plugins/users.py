@@ -63,13 +63,14 @@ class User:
         self.channels: set[str] = set()
         self.id: Callable[[], Awaitable[str]] = id_
         self.database: Storage | None = database
+        if isinstance(channels, str):
+            raise TypeError("You must specify a list of channels!")
         try:
-            if isinstance(channels, str):
-                raise ValueError("You must specify a list of channels!")
-            for c in iter(channels):
-                self.channels.add(c)
+            self.channels.update(channels)
         except TypeError:
-            raise ValueError("You need to specify in which channel this user is!")
+            raise TypeError(
+                "You need to specify in which channel this user is!"
+            ) from None
 
     @property
     def mask(self) -> IrcString:
@@ -78,7 +79,7 @@ class User:
 
     def _get_database(self) -> Storage:
         if self.database is None:
-            raise Exception("No database set for this user.")
+            raise RuntimeError("No database set for this user.")
         return self.database
 
     async def set_settings(self, settings) -> None:
@@ -165,7 +166,7 @@ class UsersPlugin:
         config = bot.config.get(__name__, {})
         method = config.get("identify_by", "mask")
         if method not in ("mask", "nickserv", "whatcd"):
-            raise Exception(
+            raise ValueError(
                 "Invalid configuration: UsersPlugin.identifying_method invalid"
             )
         self.identifying_method: Literal["mask", "nickserv", "whatcd"] = method
