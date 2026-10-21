@@ -91,7 +91,8 @@ class TrakttvPlugin:
             trakt_user = await self.get_trakt_nick(mask.nick)
         user = mask.nick
 
-        request = requests.get(
+        request = await asyncio.to_thread(
+            requests.get,
             f"https://api.trakt.tv/users/{trakt_user}/watching",
             headers={
                 "Content-Type": "application/json",

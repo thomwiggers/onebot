@@ -48,7 +48,7 @@ class PSAPlugin:
                 if nick in words:
                     highlights += 1
                 if highlights >= self.max_highlights:
-                    self.log.info("Kicking {} for highlightspam", mask.nick)
+                    self.log.info("Kicking %s for highlightspam", mask.nick)
                     self.bot.kick(
                         target, mask.nick, "Don't excessively highlight people."
                     )
@@ -63,7 +63,7 @@ class PSAPlugin:
         if data == last_line:
             num += 1
             if num >= self.max_repeats:
-                self.log.info("Kicking {} for spamming", mask.nick)
+                self.log.info("Kicking %s for spamming", mask.nick)
                 self.bot.kick(
                     target,
                     mask.nick,

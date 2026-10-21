@@ -41,7 +41,7 @@ def _get_patched_time_fixture(fixture_name, **kwargs):
             seconds
     """
     fixture = _get_fixture(fixture_name)
-    date = datetime.datetime.utcnow().replace(microsecond=0)
+    date = datetime.datetime.now(datetime.UTC).replace(microsecond=0)
     date -= datetime.timedelta(**kwargs)
     if not isinstance(fixture["track"], list):
         fixture["track"]["date"]["uts"] = str(calendar.timegm(date.timetuple()))

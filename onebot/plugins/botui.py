@@ -139,8 +139,6 @@ class BotUI:
 
         %%reload <plugin>
         """
-        self.bot.registry.includes
-
         if "".join(args["<plugin>"]) in self.bot.registry.includes:
             self.bot.reload(args["<plugin>"])
             self.bot.privmsg(target, "{} reloaded".format(args["<plugin>"]))

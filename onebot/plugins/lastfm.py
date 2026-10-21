@@ -22,7 +22,7 @@ Usage::
 
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from operator import itemgetter
 from typing import Any, Self
 
@@ -146,7 +146,7 @@ class LastfmPlugin:
                     track = result["track"][0]
                 info = _parse_trackinfo(track)
 
-                time_ago = datetime.utcnow() - info["playtime"]
+                time_ago = datetime.now(UTC) - info["playtime"]
                 if time_ago.days > 0 or time_ago.seconds > (20 * 60):
                     response.append(
                         "is not currently playing anything "
@@ -244,7 +244,7 @@ class LastfmPlugin:
 
 def _time_ago(time: datetime) -> str:
     """Represent time past as a friendly string"""
-    time_ago = datetime.utcnow() - time
+    time_ago = datetime.now(UTC) - time
     timestr = []
     if time_ago.days > 1:
         timestr.append(f"{time_ago.days} days")
@@ -273,9 +273,9 @@ def _parse_trackinfo(track: dict[str, Any]) -> dict[str, Any]:
     now_playing = False
     if "@attr" in track and "nowplaying" in track["@attr"]:
         now_playing = bool(track["@attr"]["nowplaying"])
-        playtime = datetime.utcnow()
+        playtime = datetime.now(UTC)
     else:
-        playtime = datetime.utcfromtimestamp(int(track["date"]["uts"]))
+        playtime = datetime.fromtimestamp(int(track["date"]["uts"]), tz=UTC)
 
     loved = False
     if "loved" in track:
