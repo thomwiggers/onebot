@@ -142,25 +142,29 @@ class UrlInfoTestCase(BotTestCase):
                 "https://twitter.com/i/web/status/1440605916642959371",
                 "https://x.com/",
             ]:
-                with self.subTest(url=url):
-                    with Betamax(session).use_cassette("twitter", record="none"):
-                        result = self.plugin._process_url(session, url)
-                        self.assertIsNone(result)
+                with (
+                    self.subTest(url=url),
+                    Betamax(session).use_cassette("twitter", record="none"),
+                ):
+                    result = self.plugin._process_url(session, url)
+                    self.assertIsNone(result)
 
     def test_url_nos(self) -> None:
-        with requests.Session() as session:
-            with Betamax(session).use_cassette("test_url_nos"):
-                for url, expected_title in [
-                    (
-                        "https://nos.nl/l/2512497",
-                        "“Renovatie Binnenhof-complex opnieuw duurder, extra kosten 'aanzienlijk'”",
-                    ),
-                ]:
-                    with self.subTest(url=url):
-                        result = self.plugin._process_url(session, url)
-                        self.assertIsNotNone(result)
-                        title = " ".join(result)
-                        self.assertEqual(title, expected_title)
+        with (
+            requests.Session() as session,
+            Betamax(session).use_cassette("test_url_nos"),
+        ):
+            for url, expected_title in [
+                (
+                    "https://nos.nl/l/2512497",
+                    "“Renovatie Binnenhof-complex opnieuw duurder, extra kosten 'aanzienlijk'”",
+                ),
+            ]:
+                with self.subTest(url=url):
+                    result = self.plugin._process_url(session, url)
+                    self.assertIsNotNone(result)
+                    title = " ".join(result)
+                    self.assertEqual(title, expected_title)
 
     def test_instagram(self):
         """Instagram reel URLs show og:title instead of the generic page title."""

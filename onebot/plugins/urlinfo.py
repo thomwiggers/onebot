@@ -241,8 +241,9 @@ class UrlInfo:
                     or ip.is_reserved
                 ):
                     raise UrlSkipException()
-        except Exception:
-            raise UrlSkipException()
+        except (OSError, ValueError):
+            # Unresolvable host or unparseable address
+            raise UrlSkipException() from None
 
     def _process_url_urlmap(self, session, url: str, **kwargs) -> None:
         o = urlparse(url)
@@ -384,15 +385,18 @@ class UrlInfo:
             return None
 
         for attempt in range(2):
-            if "username" in site_config and "password" in site_config:
-                if hostname not in self.mediawiki_logged_in:
-                    self._mediawiki_login(
-                        session,
-                        api_url,
-                        site_config["username"],
-                        site_config["password"],
-                        hostname,
-                    )
+            if (
+                "username" in site_config
+                and "password" in site_config
+                and hostname not in self.mediawiki_logged_in
+            ):
+                self._mediawiki_login(
+                    session,
+                    api_url,
+                    site_config["username"],
+                    site_config["password"],
+                    hostname,
+                )
 
             try:
                 result = self._mediawiki_request_info(session, api_url, title)
@@ -402,8 +406,8 @@ class UrlInfo:
                         continue
                     return None
                 return result
-            except Exception as e:
-                self.log.error("MediaWiki error: %s", e)
+            except Exception:
+                self.log.exception("MediaWiki error")
                 return None
 
         return None
@@ -419,8 +423,8 @@ class UrlInfo:
         api_url = f"https://{parsed.hostname}/w/api.php"
         try:
             return self._mediawiki_request_info(session, api_url, title)
-        except Exception as e:
-            self.log.error("Wikipedia error: %s", e)
+        except Exception:
+            self.log.exception("Wikipedia error")
             return None
 
     def _mediawiki_get_title(self, parsed_url: ParseResult) -> str | None:
@@ -556,8 +560,8 @@ class UrlInfo:
                     session, api_url, username, password, hostname
                 )
 
-        except Exception as e:
-            self.log.error("MediaWiki login failed: %s", e)
+        except Exception:
+            self.log.exception("MediaWiki login failed")
             self._mediawiki_login_html(session, api_url, username, password, hostname)
 
     def _mediawiki_login_html(self, session, api_url, username, password, hostname):
@@ -606,8 +610,8 @@ class UrlInfo:
             else:
                 self.log.warning("HTML Login failed for %s", api_url)
 
-        except Exception as e:
-            self.log.error("HTML Login exception: %s", e)
+        except Exception:
+            self.log.exception("HTML Login exception")
 
     def _process_url_default(
         self, session: requests.Session, url: str, **kwargs
@@ -617,9 +621,12 @@ class UrlInfo:
             with closing(
                 session.get(url, allow_redirects=False, timeout=4, stream=True)
             ) as response:
-                if response.status_code in (301, 302, 307, 308):
-                    if response.next and response.next.url:
-                        raise UrlRedirectException(response.next.url)
+                if (
+                    response.status_code in (301, 302, 307, 308)
+                    and response.next
+                    and response.next.url
+                ):
+                    raise UrlRedirectException(response.next.url)
 
                 return self._handle_default_response(response)
         except UrlRedirectException:

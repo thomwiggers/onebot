@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from unittest.mock import MagicMock, create_autospec, patch
 
 import irc3
@@ -74,14 +75,14 @@ class BotTestCase(Irc3BotTestCase):
         if loop.is_closed():
             return
         try:
-            pending = asyncio.all_tasks(loop)
-            for task in pending:
-                task.cancel()
-            if pending:
-                loop.run_until_complete(
-                    asyncio.gather(*pending, return_exceptions=True)
-                )
-        except Exception:
-            pass
+            # run_until_complete raises RuntimeError if the loop is still running
+            with contextlib.suppress(RuntimeError):
+                pending = asyncio.all_tasks(loop)
+                for task in pending:
+                    task.cancel()
+                if pending:
+                    loop.run_until_complete(
+                        asyncio.gather(*pending, return_exceptions=True)
+                    )
         finally:
             loop.close()
