@@ -9,7 +9,7 @@ This plugin allows to query stonks
 import json
 import logging
 import re
-from typing import Self
+from typing import ClassVar, Self
 
 import irc3
 import requests
@@ -79,7 +79,7 @@ def stonks(symbol):
 class StonksPlugin:
     """Stonks Plugin"""
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
     ]
 

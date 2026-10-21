@@ -17,6 +17,7 @@ Usage::
 """
 
 import urllib.parse
+from typing import ClassVar
 
 import irc3
 import requests
@@ -32,7 +33,7 @@ class WolframAlphaPlugin:
     * Wolfram Alpha queries from IRC
     """
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
     ]
 

@@ -22,6 +22,7 @@ import re
 from collections.abc import Awaitable, Callable, Iterable
 from typing import (
     Any,
+    ClassVar,
     Literal,
     Self,
 )
@@ -153,7 +154,10 @@ class UsersPlugin:
         - ``nickserv``: Parse nickserv info from ``WHOIS``.
     """
 
-    requires = ["irc3.plugins.storage", "irc3.plugins.asynchronious"]
+    requires: ClassVar[list[str]] = [
+        "irc3.plugins.storage",
+        "irc3.plugins.asynchronious",
+    ]
 
     def __init__(self, bot: irc3.IrcBot):
         """Initialises the plugin"""

@@ -24,7 +24,7 @@ Usage::
 
 from datetime import UTC, datetime
 from operator import itemgetter
-from typing import Any, Self
+from typing import Any, ClassVar, Self
 
 import irc3
 import lastfm.exceptions
@@ -40,7 +40,7 @@ class LastfmPlugin:
     * now playing functionality
     """
 
-    requires = ["irc3.plugins.command", "onebot.plugins.users"]
+    requires: ClassVar[list[str]] = ["irc3.plugins.command", "onebot.plugins.users"]
 
     def __init__(self, bot):
         """Initialise the plugin"""

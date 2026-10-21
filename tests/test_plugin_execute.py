@@ -7,11 +7,13 @@ test_onebot_execute
 Tests for Execute plugin
 """
 
+from typing import ClassVar
+
 from onebot.testing import BotTestCase
 
 
 class ExecutePluginTestCase(BotTestCase):
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.execute"],
         "onebot.plugins.execute": {"commands": ["command1", "command2"]},
     }

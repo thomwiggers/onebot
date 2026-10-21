@@ -1,4 +1,5 @@
 import unittest
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import requests
@@ -103,7 +104,7 @@ def _mock_response(data):
 
 
 class RdwCommandTestCase(BotTestCase):
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.rdw_kenteken", "irc3.plugins.command"],
         "cmd": "!",
         "onebot.plugins.rdw_kenteken": {"rdw_app_token": "test-token"},

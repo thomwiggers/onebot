@@ -23,7 +23,7 @@ Usage::
 """
 
 import asyncio
-from typing import Self
+from typing import ClassVar, Self
 
 import irc3
 import requests
@@ -37,7 +37,7 @@ class TrakttvPlugin:
     * now watching functionality
     """
 
-    requires = ["irc3.plugins.command", "onebot.plugins.users"]
+    requires: ClassVar[list[str]] = ["irc3.plugins.command", "onebot.plugins.users"]
 
     def __init__(self, bot):
         """Initialise the plugin"""

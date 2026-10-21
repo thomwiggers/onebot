@@ -13,6 +13,7 @@ import os.path
 import socket
 import unittest
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import requests
@@ -57,7 +58,7 @@ def mock_requests_get(*args, **kwargs):
 class UrlInfoTestCase(BotTestCase):
     """Test the URLInfo module"""
 
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.urlinfo", "irc3.plugins.command"],
         "cmd": "!",
         "onebot.plugins.urlinfo": {"twitter_bearer_token": "foo"},

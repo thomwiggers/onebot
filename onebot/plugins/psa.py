@@ -6,6 +6,8 @@
 This plugin allows admins to send broadcasts
 """
 
+from typing import ClassVar
+
 from irc3 import plugin
 from irc3.plugins.command import command
 
@@ -14,7 +16,7 @@ from irc3.plugins.command import command
 class PSAPlugin:
     """PSA Plugin"""
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
         "irc3.plugins.userlist",
     ]

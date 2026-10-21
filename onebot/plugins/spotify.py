@@ -27,7 +27,7 @@ import asyncio
 import threading
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Self
+from typing import ClassVar, Self
 from urllib.parse import parse_qs
 
 import irc3
@@ -43,7 +43,7 @@ class SpotifyPlugin:
     * now playing functionality
     """
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
         "onebot.plugins.users",
     ]
@@ -163,7 +163,7 @@ class SpotifyResponseServer(BaseHTTPRequestHandler):
     bot: irc3.IrcBot
     # Only used to answer a replayed code; old ones are of no interest,
     # so the oldest fall off rather than growing for the bot's lifetime.
-    seen: deque[str] = deque(maxlen=100)
+    seen: ClassVar[deque[str]] = deque(maxlen=100)
 
     def do_GET(self):
         """Handle GET requests"""

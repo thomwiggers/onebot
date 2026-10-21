@@ -8,6 +8,7 @@ Tests for antispam module.
 """
 
 import asyncio
+from typing import ClassVar
 
 from irc3.testing import patch
 
@@ -21,7 +22,7 @@ async def empty():
 
 
 class AntispamTestCase(BotTestCase):
-    config = {"cmd": "!"}
+    config: ClassVar[dict] = {"cmd": "!"}
 
     def assertSent(self, lines):
         """Assert that these lines have been sent"""

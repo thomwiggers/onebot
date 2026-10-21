@@ -7,6 +7,8 @@ test_plugin_psa
 Tests for PSA module
 """
 
+from typing import ClassVar
+
 from irc3.testing import patch
 
 from onebot.testing import BotTestCase
@@ -15,7 +17,10 @@ from .test_plugin_users import MockDb
 
 
 class PSATestCase(BotTestCase):
-    config = {"includes": ["onebot.plugins.psa", "irc3.plugins.command"], "cmd": "!"}
+    config: ClassVar[dict] = {
+        "includes": ["onebot.plugins.psa", "irc3.plugins.command"],
+        "cmd": "!",
+    }
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):

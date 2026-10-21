@@ -7,6 +7,7 @@ This plugin allows admins to send broadcasts
 """
 
 from json import JSONDecodeError
+from typing import ClassVar
 
 import requests
 from irc3 import plugin
@@ -17,7 +18,7 @@ from irc3.plugins.command import command
 class HassPlugin:
     """HomeAssistant Plugin"""
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
     ]
 

@@ -8,6 +8,7 @@ Tests for ACL module.
 """
 
 import asyncio
+from typing import ClassVar
 
 from irc3.plugins.command import command
 from irc3.testing import patch
@@ -38,7 +39,7 @@ async def cmd2(bot, mask, target, args, **kwargs):
 class WhoamiTestCase(BotTestCase):
     """Test the whoami command with a realistic config"""
 
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.acl"],
         "cmd": ".",
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
@@ -97,7 +98,7 @@ class WhoamiTestCase(BotTestCase):
 
 
 class UserBasedGuardPolicyTestCase(BotTestCase):
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["irc3.plugins.command", __name__],
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
     }
@@ -152,7 +153,7 @@ class UserBasedGuardPolicyTestCase(BotTestCase):
 class SuperAdminTestCase(BotTestCase):
     """Test that the superadmin config value grants all_permissions via the guard."""
 
-    config = {
+    config: ClassVar[dict] = {
         "cmd": "!",
         "irc3.plugins.command": {"guard": "onebot.plugins.acl.user_based_policy"},
         "onebot.plugins.acl": {"superadmin": "root@localhost"},
@@ -200,7 +201,10 @@ class SuperAdminTestCase(BotTestCase):
 
 
 class ACLTestCase(BotTestCase):
-    config = {"cmd": "!", "onebot.plugins.acl": {"superadmin": "root@localhost"}}
+    config: ClassVar[dict] = {
+        "cmd": "!",
+        "onebot.plugins.acl": {"superadmin": "root@localhost"},
+    }
 
     @patch("irc3.plugins.storage.Storage")
     def setUp(self, mock):

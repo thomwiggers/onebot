@@ -10,7 +10,7 @@ settings with each user.
 
 import asyncio
 import json
-from typing import Self
+from typing import ClassVar, Self
 
 import irc3
 from irc3.plugins.command import command
@@ -74,13 +74,19 @@ class ACLPlugin:
           `all_permissions`. username depends on mask chosen
     """
 
-    requires = [
+    requires: ClassVar[list[str]] = [
         "irc3.plugins.command",
         "onebot.plugins.users",
         "irc3.plugins.storage",
     ]
 
-    available_permissions = ["operator", "admin", "wiki", "view", "ignore"]
+    available_permissions: ClassVar[list[str]] = [
+        "operator",
+        "admin",
+        "wiki",
+        "view",
+        "ignore",
+    ]
 
     def __init__(self, bot):
         self.bot = bot

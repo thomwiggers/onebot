@@ -4,7 +4,7 @@ import datetime
 import json
 import os.path
 import unittest
-from typing import Any
+from typing import Any, ClassVar
 from unittest.mock import AsyncMock
 
 import lastfm.exceptions
@@ -61,7 +61,7 @@ async def get_lastfm_nick_mock(nick):
 class LastfmPluginTest(BotTestCase):
     """Test the LastFM plugin"""
 
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.lastfm"],
         "onebot.plugins.lastfm": {"api_key": "", "api_secret": ""},
         "onebot.plugins.users": {"identified_by": "mask"},

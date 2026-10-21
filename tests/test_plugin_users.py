@@ -9,6 +9,7 @@ Tests for `onebot` module.
 
 import asyncio
 import unittest
+from typing import ClassVar
 
 from irc3.testing import patch
 from irc3.utils import IrcString
@@ -28,7 +29,7 @@ class MockDb(dict):
 class UsersPluginTestWithNickserv(BotTestCase):
     """Test the NickServ identifying method"""
 
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.users"],
         "cmd": "!",
         "onebot.plugins.users": {"identify_by": "nickserv"},
@@ -70,7 +71,7 @@ class UsersPluginTestWithNickserv(BotTestCase):
 class UsersPluginTestWithWhatcd(BotTestCase):
     """Test the What.CD identifying method"""
 
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.users"],
         "cmd": "!",
         "onebot.plugins.users": {"identify_by": "whatcd"},
@@ -99,7 +100,7 @@ class UsersPluginTestWithWhatcd(BotTestCase):
 
 
 class UsersPluginTest(BotTestCase):
-    config = {
+    config: ClassVar[dict] = {
         "includes": ["onebot.plugins.users"],
         "cmd": "!",
     }

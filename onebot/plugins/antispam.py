@@ -12,7 +12,7 @@ Config options:
 
 import hashlib
 from collections import defaultdict
-from typing import Self
+from typing import ClassVar, Self
 
 from irc3 import plugin, rfc
 from irc3.dec import event
@@ -28,7 +28,7 @@ def _hash(string):
 class PSAPlugin:
     """PSA Plugin"""
 
-    requires = ["irc3.plugins.userlist", "onebot.plugins.users"]
+    requires: ClassVar[list[str]] = ["irc3.plugins.userlist", "onebot.plugins.users"]
 
     def __init__(self, bot):
         self.bot = bot
