@@ -1,24 +1,30 @@
 version: 2
+
+# One monthly PR for all version updates, across ecosystems. The develop
+# ruleset requires PRs to be up to date, so separate PRs would leave each other
+# behind after every merge, and Dependabot does not rebase those promptly.
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: monthly
+
 updates:
 - package-ecosystem: github-actions
   directory: "/"
-  schedule:
-    interval: monthly
-  open-pull-requests-limit: 10
+  patterns:
+    - "*"
+  multi-ecosystem-group: dependencies
   groups:
-    github-actions:
-      applies-to: version-updates
+    actions-security:
+      applies-to: security-updates
       patterns:
         - "*"
 - package-ecosystem: uv
   directory: "/"
-  schedule:
-    interval: monthly
+  patterns:
+    - "*"
+  multi-ecosystem-group: dependencies
   groups:
-    python-packages:
-      applies-to: version-updates
-      patterns:
-        - "*"
     python-security:
       applies-to: security-updates
       patterns:
