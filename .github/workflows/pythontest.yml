@@ -51,3 +51,30 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+
+  # Merge Dependabot PRs once the jobs above have passed. This job is skipped
+  # when any of them fails, so a broken update stays open for a human.
+  automerge:
+    name: Merge Dependabot PR
+    needs: [test]
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Squash-merge
+        run: gh pr merge "$PR" --squash --match-head-commit "$SHA"
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+      # Merges made with GITHUB_TOKEN do not trigger push workflows, so start
+      # the publish run by hand.
+      - name: Start publish run on develop
+        run: |
+          gh workflow run docker-publish.yml --ref develop
+          gh workflow run python-sandbox-publish.yml --ref develop

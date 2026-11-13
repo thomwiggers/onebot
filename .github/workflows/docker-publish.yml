@@ -12,6 +12,8 @@ on:
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "develop", "master" ]
+  # Started by the automerge job in pythontest.yml after a Dependabot merge.
+  workflow_dispatch:
 
 env:
   # Use docker.io for Docker Hub if empty
