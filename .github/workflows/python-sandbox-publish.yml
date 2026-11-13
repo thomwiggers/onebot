@@ -12,6 +12,8 @@ on:
     paths:
       - 'python-sandbox/**'
       - '.github/workflows/python-sandbox-publish.yml'
+  # Started by the automerge job in pythontest.yml after a Dependabot merge.
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
